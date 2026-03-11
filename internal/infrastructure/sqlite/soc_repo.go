@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/soc"
+	"github.com/syntrex/gomcp/internal/domain/soc"
 )
 
 // SOCRepo provides SQLite persistence for SOC events, incidents, and sensors.

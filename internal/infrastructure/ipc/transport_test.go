@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sentinel-community/gomcp/internal/domain/alert"
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
-	"github.com/sentinel-community/gomcp/internal/domain/peer"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/ipc"
+	"github.com/syntrex/gomcp/internal/domain/alert"
+	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/peer"
+	"github.com/syntrex/gomcp/internal/infrastructure/ipc"
 )
 
 // mockStore is a minimal in-memory FactStore for testing.

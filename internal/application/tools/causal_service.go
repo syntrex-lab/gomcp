@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sentinel-community/gomcp/internal/domain/causal"
+	"github.com/syntrex/gomcp/internal/domain/causal"
 )
 
 // CausalService implements MCP tool logic for causal reasoning chains.

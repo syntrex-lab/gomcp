@@ -1,4 +1,4 @@
-module github.com/sentinel-community/gomcp
+module github.com/syntrex/gomcp
 
 go 1.25
 

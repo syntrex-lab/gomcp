@@ -11,11 +11,11 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	"github.com/sentinel-community/gomcp/internal/application/orchestrator"
-	"github.com/sentinel-community/gomcp/internal/application/tools"
-	"github.com/sentinel-community/gomcp/internal/domain/mimicry"
-	"github.com/sentinel-community/gomcp/internal/domain/oracle"
-	"github.com/sentinel-community/gomcp/internal/domain/peer"
+	"github.com/syntrex/gomcp/internal/application/orchestrator"
+	"github.com/syntrex/gomcp/internal/application/tools"
+	"github.com/syntrex/gomcp/internal/domain/mimicry"
+	"github.com/syntrex/gomcp/internal/domain/oracle"
+	"github.com/syntrex/gomcp/internal/domain/peer"
 )
 
 // --- v3.3 Tools Registration ---

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/sqlite"
+	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

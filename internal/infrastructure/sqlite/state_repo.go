@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/session"
+	"github.com/syntrex/gomcp/internal/domain/session"
 )
 
 // StateRepo implements session.StateStore using SQLite.

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/memory"
 )
 
 // RelevanceScorer computes relevance scores for facts based on multiple signals:

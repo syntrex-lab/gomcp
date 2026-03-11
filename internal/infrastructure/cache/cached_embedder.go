@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sentinel-community/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex/gomcp/internal/domain/vectorstore"
 	bolt "go.etcd.io/bbolt"
 )
 

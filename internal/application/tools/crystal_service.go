@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 
-	"github.com/sentinel-community/gomcp/internal/domain/crystal"
+	"github.com/syntrex/gomcp/internal/domain/crystal"
 )
 
 // CrystalService implements MCP tool logic for code crystal operations.

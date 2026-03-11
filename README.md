@@ -2,7 +2,7 @@
 
 High-performance Go-native MCP server for the RLM Toolkit. Replaces the Python FastMCP server with a single static binary — no interpreter, no virtualenv, no startup lag.
 
-Part of the [sentinel-community](https://github.com/sentinel-community) AI security platform.
+Part of the [Syntrex](https://github.com/syntrex/syntrex) AI security platform.
 
 ## Features
 
@@ -320,4 +320,4 @@ GoMCP uses **stdio transport** with **line-delimited JSON** (one JSON object per
 
 ## License
 
-Part of the sentinel-community project.
+Part of the Syntrex project. MIT License.

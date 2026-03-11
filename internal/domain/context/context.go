@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/memory"
 )
 
 // Default configuration values.

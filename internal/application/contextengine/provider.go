@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/memory"
 
-	ctxdomain "github.com/sentinel-community/gomcp/internal/domain/context"
+	ctxdomain "github.com/syntrex/gomcp/internal/domain/context"
 )
 
 // StoreFactProvider adapts FactStore + HotCache to the FactProvider interface,

@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/memory"
 )
 
 // Version info set at build time via ldflags.

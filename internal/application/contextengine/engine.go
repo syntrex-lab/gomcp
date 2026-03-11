@@ -12,7 +12,7 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	ctxdomain "github.com/sentinel-community/gomcp/internal/domain/context"
+	ctxdomain "github.com/syntrex/gomcp/internal/domain/context"
 )
 
 // InteractionLogger records tool calls for crash-safe memory.

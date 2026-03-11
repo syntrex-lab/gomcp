@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/sentinel-community/gomcp/internal/domain/crystal"
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/crystal"
+	"github.com/syntrex/gomcp/internal/domain/memory"
 )
 
 // ThreatFinding represents a single finding from the threat model scanner.

@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/oracle"
-	"github.com/sentinel-community/gomcp/internal/domain/peer"
-	domsoc "github.com/sentinel-community/gomcp/internal/domain/soc"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/audit"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/sqlite"
+	"github.com/syntrex/gomcp/internal/domain/oracle"
+	"github.com/syntrex/gomcp/internal/domain/peer"
+	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	"github.com/syntrex/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
 )
 
 const (

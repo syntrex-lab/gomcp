@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	domsoc "github.com/sentinel-community/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
 )
 
 func TestGenerateReport_EmptyEvents(t *testing.T) {

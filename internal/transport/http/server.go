@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	appsoc "github.com/sentinel-community/gomcp/internal/application/soc"
+	appsoc "github.com/syntrex/gomcp/internal/application/soc"
 )
 
 // Server provides HTTP API endpoints for SOC monitoring.

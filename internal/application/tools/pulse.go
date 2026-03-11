@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/memory"
 )
 
 // ProjectPulse generates auto-documentation from L0/L1 facts (v3.7 Cerebro).

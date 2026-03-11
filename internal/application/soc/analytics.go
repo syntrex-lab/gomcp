@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	domsoc "github.com/sentinel-community/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
 )
 
 // ─── Analytics Types ──────────────────────────────────────

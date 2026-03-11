@@ -18,11 +18,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/alert"
-	"github.com/sentinel-community/gomcp/internal/domain/entropy"
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
-	"github.com/sentinel-community/gomcp/internal/domain/peer"
-	"github.com/sentinel-community/gomcp/internal/domain/synapse"
+	"github.com/syntrex/gomcp/internal/domain/alert"
+	"github.com/syntrex/gomcp/internal/domain/entropy"
+	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/peer"
+	"github.com/syntrex/gomcp/internal/domain/synapse"
 )
 
 // Config holds orchestrator configuration.

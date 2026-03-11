@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/sentinel-community/gomcp/internal/domain/circuitbreaker"
-	"github.com/sentinel-community/gomcp/internal/domain/entropy"
-	"github.com/sentinel-community/gomcp/internal/domain/oracle"
+	"github.com/syntrex/gomcp/internal/domain/circuitbreaker"
+	"github.com/syntrex/gomcp/internal/domain/entropy"
+	"github.com/syntrex/gomcp/internal/domain/oracle"
 )
 
 func TestPipeline_AllowsNormalText(t *testing.T) {

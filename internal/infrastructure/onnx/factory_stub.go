@@ -5,7 +5,7 @@ package onnx
 import (
 	"log"
 
-	"github.com/sentinel-community/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex/gomcp/internal/domain/vectorstore"
 )
 
 // NewEmbedderWithFallback returns FTS5 fallback embedder when built without ONNX.

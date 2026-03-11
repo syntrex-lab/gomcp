@@ -13,7 +13,7 @@ package mimicry
 import (
 	"testing"
 
-	"github.com/sentinel-community/gomcp/internal/domain/oracle"
+	"github.com/syntrex/gomcp/internal/domain/oracle"
 	"github.com/stretchr/testify/assert"
 )
 

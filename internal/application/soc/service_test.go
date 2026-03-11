@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	domsoc "github.com/sentinel-community/gomcp/internal/domain/soc"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/sqlite"
+	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
 )
 
 // newTestService creates a SOC service backed by in-memory SQLite, without a decision logger.

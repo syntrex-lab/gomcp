@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/synapse"
+	"github.com/syntrex/gomcp/internal/domain/synapse"
 )
 
 // SynapseRepo implements synapse.SynapseStore using SQLite.

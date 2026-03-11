@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/soc"
+	"github.com/syntrex/gomcp/internal/domain/soc"
 )
 
 func setupSOCRepo(t *testing.T) *SOCRepo {

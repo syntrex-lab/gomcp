@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/sentinel-community/gomcp/internal/domain/memory"
-	"github.com/sentinel-community/gomcp/internal/domain/peer"
+	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex/gomcp/internal/domain/peer"
 )
 
 func newTestOrchestrator(t *testing.T, cfg Config) (*Orchestrator, *inMemoryStore) {

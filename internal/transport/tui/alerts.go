@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/sentinel-community/gomcp/internal/domain/alert"
+	"github.com/syntrex/gomcp/internal/domain/alert"
 )
 
 var (

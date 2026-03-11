@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sentinel-community/gomcp/internal/domain/alert"
+	"github.com/syntrex/gomcp/internal/domain/alert"
 )
 
 // ---------- State Machine (v3.2) ----------

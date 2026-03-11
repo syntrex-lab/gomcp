@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	appsoc "github.com/sentinel-community/gomcp/internal/application/soc"
-	"github.com/sentinel-community/gomcp/internal/domain/peer"
-	domsoc "github.com/sentinel-community/gomcp/internal/domain/soc"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/audit"
-	"github.com/sentinel-community/gomcp/internal/infrastructure/sqlite"
+	appsoc "github.com/syntrex/gomcp/internal/application/soc"
+	"github.com/syntrex/gomcp/internal/domain/peer"
+	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	"github.com/syntrex/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
 )
 
 // newTestServerWithSOC extends newTestServer with a fully wired SOC Service.
