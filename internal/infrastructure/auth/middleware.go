@@ -24,8 +24,15 @@ func NewJWTMiddleware(secret []byte) *JWTMiddleware {
 		secret: secret,
 		PublicPaths: map[string]bool{
 			"/health":          true,
+			"/healthz":         true,
+			"/readyz":          true,
+			"/metrics":         true,
 			"/api/auth/login":  true,
 			"/api/auth/refresh": true,
+			"/api/auth/register": true,
+			"/api/auth/verify":   true,
+			"/api/auth/plans":    true,
+			"/api/v1/scan":       true, // public demo scanner
 			"/api/soc/events/stream": true, // SSE uses query param auth
 			"/api/soc/stream":         true, // SSE live feed (EventSource can't send headers)
 			"/api/soc/ws":             true, // WebSocket-style SSE push
