@@ -53,12 +53,15 @@ func NewNativeSentinelCore() (*NativeSentinelCore, error) {
 
 // sentinelAnalyzeResult matches the JSON returned by sentinel_analyze().
 type sentinelAnalyzeResult struct {
-	Confidence   float64  `json:"confidence"`
-	Categories   []string `json:"categories"`
-	IsThreat     bool     `json:"is_threat"`
-	InputLength  int      `json:"input_length"`
-	AnalyzeCount uint64   `json:"analyze_count"`
-	Error        string   `json:"error,omitempty"`
+	Confidence       float64  `json:"confidence"`
+	Categories       []string `json:"categories"`
+	IsThreat         bool     `json:"is_threat"`
+	InputLength      int      `json:"input_length"`
+	AnalyzeCount     uint64   `json:"analyze_count"`
+	EnginesTriggered int      `json:"engines_triggered"`
+	ProcessingTimeUs uint64   `json:"processing_time_us"`
+	Indicators       []string `json:"indicators"`
+	Error            string   `json:"error,omitempty"`
 }
 
 // analyze sends text through the Rust sentinel-core analysis pipeline.
@@ -112,8 +115,8 @@ func (n *NativeSentinelCore) ScanPrompt(_ context.Context, prompt string) (*Scan
 		ThreatType:  threatType,
 		Severity:    severity,
 		Confidence:  res.Confidence,
-		Details:     fmt.Sprintf("categories=%v", res.Categories),
-		Indicators:  res.Categories,
+		Details:     fmt.Sprintf("engines=%d categories=%v", res.EnginesTriggered, res.Categories),
+		Indicators:  res.Indicators,
 		Duration:    time.Since(start),
 		Timestamp:   time.Now(),
 	}, nil
