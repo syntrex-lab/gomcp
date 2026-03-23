@@ -124,20 +124,18 @@ func (s *TenantStore) migrate() error {
 			stripe_customer_id TEXT DEFAULT '',
 			stripe_sub_id     TEXT DEFAULT '',
 			owner_user_id     TEXT NOT NULL,
-			active            INTEGER NOT NULL DEFAULT 1,
-			created_at        TEXT NOT NULL,
+			active            BOOLEAN NOT NULL DEFAULT true,
+			created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			events_this_month INTEGER NOT NULL DEFAULT 0,
-			month_reset_at    TEXT NOT NULL
+			month_reset_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		);
-		-- Add tenant_id to users table if not exists
-		-- SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we use a trick
 	`)
 	if err != nil {
 		return err
 	}
 
 	// Add tenant_id column to users if missing
-	_, _ = s.db.Exec(`ALTER TABLE users ADD COLUMN tenant_id TEXT DEFAULT ''`)
+	_, _ = s.db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS tenant_id TEXT DEFAULT ''`)
 	return nil
 }
 
@@ -154,13 +152,11 @@ func (s *TenantStore) loadFromDB() {
 	defer s.mu.Unlock()
 	for rows.Next() {
 		var t Tenant
-		var createdAt, monthReset string
 		if err := rows.Scan(&t.ID, &t.Name, &t.Slug, &t.PlanID, &t.PaymentCustomerID,
-			&t.PaymentSubID, &t.OwnerUserID, &t.Active, &createdAt, &t.EventsThisMonth, &monthReset); err != nil {
+			&t.PaymentSubID, &t.OwnerUserID, &t.Active, &t.CreatedAt, &t.EventsThisMonth, &t.MonthResetAt); err != nil {
+			slog.Warn("load tenant row scan", "error", err)
 			continue
 		}
-		t.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
-		t.MonthResetAt, _ = time.Parse(time.RFC3339, monthReset)
 		s.tenants[t.ID] = &t
 	}
 	slog.Info("tenants loaded from DB", "count", len(s.tenants))
@@ -171,12 +167,21 @@ func (s *TenantStore) persistTenant(t *Tenant) {
 		return
 	}
 	_, err := s.db.Exec(`
-		INSERT OR REPLACE INTO tenants (id, name, slug, plan_id, stripe_customer_id, stripe_sub_id,
+		INSERT INTO tenants (id, name, slug, plan_id, stripe_customer_id, stripe_sub_id,
 			owner_user_id, active, created_at, events_this_month, month_reset_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (id) DO UPDATE SET
+			name = EXCLUDED.name,
+			slug = EXCLUDED.slug,
+			plan_id = EXCLUDED.plan_id,
+			stripe_customer_id = EXCLUDED.stripe_customer_id,
+			stripe_sub_id = EXCLUDED.stripe_sub_id,
+			active = EXCLUDED.active,
+			events_this_month = EXCLUDED.events_this_month,
+			month_reset_at = EXCLUDED.month_reset_at`,
 		t.ID, t.Name, t.Slug, t.PlanID, t.PaymentCustomerID, t.PaymentSubID,
-		t.OwnerUserID, t.Active, t.CreatedAt.Format(time.RFC3339),
-		t.EventsThisMonth, t.MonthResetAt.Format(time.RFC3339),
+		t.OwnerUserID, t.Active, t.CreatedAt,
+		t.EventsThisMonth, t.MonthResetAt,
 	)
 	if err != nil {
 		slog.Error("persist tenant", "id", t.ID, "error", err)
