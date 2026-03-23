@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"unsafe"
 )
 
 // NativeShield wraps the C Shield engine via CGo FFI.
