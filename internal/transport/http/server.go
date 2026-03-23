@@ -32,6 +32,7 @@ type Server struct {
 	metrics          *Metrics
 	logger           *RequestLogger
 	sentinelCore     engines.SentinelCore
+	shieldEngine     engines.Shield
 	jwtAuth          *auth.JWTMiddleware
 	userStore        *auth.UserStore
 	tenantStore      *auth.TenantStore
@@ -78,6 +79,11 @@ func (s *Server) SetEmailService(svc *email.Service) {
 // SetSentinelCore sets the Rust-native detection engine for real-time scanning.
 func (s *Server) SetSentinelCore(core engines.SentinelCore) {
 	s.sentinelCore = core
+}
+
+// SetShieldEngine sets the C-native Shield engine for payload inspection.
+func (s *Server) SetShieldEngine(shield engines.Shield) {
+	s.shieldEngine = shield
 }
 
 // SetJWTAuth enables JWT authentication with the given secret.

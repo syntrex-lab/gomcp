@@ -158,6 +158,15 @@ func main() {
 		logger.Info("sentinel-core: Rust engine initialized", "version", sentinelCore.Version())
 	}
 
+	// Shield — C-native payload inspection engine (§4)
+	shieldEngine, shieldErr := engines.NewNativeShield()
+	if shieldErr != nil {
+		logger.Warn("shield: C engine not available, using stub", "error", shieldErr)
+	} else {
+		srv.SetShieldEngine(shieldEngine)
+		logger.Info("shield: C engine initialized", "version", shieldEngine.Version())
+	}
+
 	// OpenTelemetry tracing (§P4B) — enabled when OTEL_EXPORTER_OTLP_ENDPOINT is set
 	otelEndpoint := env("OTEL_EXPORTER_OTLP_ENDPOINT", "")
 	tp, otelErr := tracing.InitTracer(context.Background(), otelEndpoint)

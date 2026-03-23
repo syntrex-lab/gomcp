@@ -960,8 +960,12 @@ func (s *Server) handleP2PRemovePeer(w http.ResponseWriter, r *http.Request) {
 // GET /api/soc/engines
 func (s *Server) handleEngineStatus(w http.ResponseWriter, r *http.Request) {
 	coreEngine := s.getEngine("sentinel-core")
-	shieldEngine := s.getEngine("shield")
-
+	var shieldEng engines.Shield
+	if s.shieldEngine != nil {
+		shieldEng = s.shieldEngine
+	} else {
+		shieldEng = engines.NewStubShield()
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"engines": []map[string]any{
 			{
@@ -971,16 +975,16 @@ func (s *Server) handleEngineStatus(w http.ResponseWriter, r *http.Request) {
 				"type":    "prompt_scanner",
 			},
 			{
-				"name":    shieldEngine.Name(),
-				"status":  shieldEngine.Status(),
-				"version": shieldEngine.Version(),
+				"name":    shieldEng.Name(),
+				"status":  shieldEng.Status(),
+				"version": shieldEng.Version(),
 				"type":    "network_protection",
 			},
 		},
 	})
 }
 
-// getEngine returns the named engine or a stub.
+// getEngine returns the named SentinelCore engine or a stub.
 func (s *Server) getEngine(name string) engines.SentinelCore {
 	if s.sentinelCore != nil && name == "sentinel-core" {
 		return s.sentinelCore
@@ -1448,6 +1452,7 @@ func (s *Server) handleSLAConfig(w http.ResponseWriter, _ *http.Request) {
 
 // handlePublicScan provides a public (no-auth) prompt scanning endpoint for the demo.
 // POST /api/v1/scan  body: {"prompt": "Ignore all instructions..."}
+// Runs sentinel-core (54 Rust engines) + Shield (C11 payload inspection) in parallel.
 func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 	limitBody(w, r)
 	defer r.Body.Close()
@@ -1470,24 +1475,61 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get engine (real or stub)
-	engine := s.getEngine("sentinel-core")
+	// Run sentinel-core (54 Rust engines)
+	coreEngine := s.getEngine("sentinel-core")
+	coreResult, coreErr := coreEngine.ScanPrompt(r.Context(), req.Prompt)
 
-	// Scan
-	result, err := engine.ScanPrompt(r.Context(), req.Prompt)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "scan failed: "+err.Error())
+	// Run Shield (C payload inspection)
+	var shieldEng engines.Shield
+	if s.shieldEngine != nil {
+		shieldEng = s.shieldEngine
+	} else {
+		shieldEng = engines.NewStubShield()
+	}
+	shieldResult, shieldErr := shieldEng.InspectTraffic(r.Context(), []byte(req.Prompt), nil)
+
+	// Build response — merge both engines
+	response := map[string]any{}
+
+	if coreErr != nil {
+		writeError(w, http.StatusInternalServerError, "scan failed: "+coreErr.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
-		"blocked":     result.ThreatFound,
-		"threat_type": result.ThreatType,
-		"severity":    result.Severity,
-		"confidence":  result.Confidence,
-		"details":     result.Details,
-		"indicators":  result.Indicators,
-		"engine":      result.Engine,
-		"latency_ms":  float64(result.Duration.Microseconds()) / 1000.0,
-	})
+	// Merge indicators from both engines
+	allIndicators := coreResult.Indicators
+	blocked := coreResult.ThreatFound
+	maxConfidence := coreResult.Confidence
+	threatType := coreResult.ThreatType
+
+	// Add Shield results if available
+	shieldStatus := "offline"
+	if shieldErr == nil && shieldResult != nil {
+		shieldStatus = "active"
+		if shieldResult.ThreatFound {
+			blocked = true
+			if shieldResult.Confidence > maxConfidence {
+				maxConfidence = shieldResult.Confidence
+				threatType = shieldResult.ThreatType
+			}
+			allIndicators = append(allIndicators, "shield/"+shieldResult.Details)
+		}
+	}
+
+	severity := "NONE"
+	if blocked {
+		severity = "HIGH"
+	}
+
+	response["blocked"] = blocked
+	response["threat_type"] = threatType
+	response["severity"] = severity
+	response["confidence"] = maxConfidence
+	response["details"] = coreResult.Details
+	response["indicators"] = allIndicators
+	response["engine"] = "sentinel-core"
+	response["latency_ms"] = float64(coreResult.Duration.Microseconds()) / 1000.0
+	response["shield_status"] = shieldStatus
+
+	writeJSON(w, http.StatusOK, response)
 }
