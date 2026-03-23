@@ -3,36 +3,25 @@
 package engines
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../../../sentinel-core/target/release -lsentinel_core
+#cgo LDFLAGS: -L${SRCDIR}/../../../../sentinel-core/target/release -lsentinel_core -ldl -lm -lpthread
 #cgo CFLAGS: -I${SRCDIR}/../../../../sentinel-core/include
 
-// sentinel_core.h — C-compatible FFI interface for Rust sentinel-core.
-// These declarations match the Rust #[no_mangle] extern "C" functions.
-//
-// Build sentinel-core:
-//   cd sentinel-core && cargo build --release
-//
-// The library exposes:
-//   sentinel_init()     — Initialize the engine
-//   sentinel_analyze()  — Analyze text for jailbreak/injection patterns
-//   sentinel_status()   — Get engine health status
-//   sentinel_shutdown() — Graceful shutdown
-
-// Stub declarations for build without native library.
-// When building WITH sentinel-core, replace stubs with actual FFI.
+#include <sentinel_core.h>
+#include <stdlib.h>
 */
 import "C"
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 // NativeSentinelCore wraps the Rust sentinel-core via CGo FFI.
 // Build tag: sentinel_native
-//
-// When sentinel-core.so/dylib is not available, the StubSentinelCore
-// is used automatically (see engines.go).
 type NativeSentinelCore struct {
 	mu          sync.RWMutex
 	initialized bool
@@ -40,45 +29,99 @@ type NativeSentinelCore struct {
 	lastCheck   time.Time
 }
 
-// NewNativeSentinelCore creates the FFI bridge.
-// Returns error if the native library is not available.
+// NewNativeSentinelCore creates the FFI bridge and initializes the Rust engine.
 func NewNativeSentinelCore() (*NativeSentinelCore, error) {
-	n := &NativeSentinelCore{
-		version: "0.1.0-ffi",
+	result := C.sentinel_init()
+	if result != 0 {
+		return nil, fmt.Errorf("sentinel_init failed with code %d", int(result))
 	}
 
-	// TODO: Call C.sentinel_init() when native library is available
-	// result := C.sentinel_init()
-	// if result != 0 {
-	//     return nil, fmt.Errorf("sentinel_init failed: %d", result)
-	// }
+	// Get version from Rust
+	cVer := C.sentinel_version()
+	version := "unknown"
+	if cVer != nil {
+		version = C.GoString(cVer)
+		C.sentinel_free(cVer)
+	}
 
-	n.initialized = true
-	n.lastCheck = time.Now()
-	return n, nil
+	return &NativeSentinelCore{
+		initialized: true,
+		version:     version,
+		lastCheck:   time.Now(),
+	}, nil
 }
 
-// Analyze sends text through the sentinel-core analysis pipeline.
-// Returns: confidence (0-1), detected categories, is_threat flag.
-func (n *NativeSentinelCore) Analyze(text string) SentinelResult {
+// sentinelAnalyzeResult matches the JSON returned by sentinel_analyze().
+type sentinelAnalyzeResult struct {
+	Confidence   float64  `json:"confidence"`
+	Categories   []string `json:"categories"`
+	IsThreat     bool     `json:"is_threat"`
+	InputLength  int      `json:"input_length"`
+	AnalyzeCount uint64   `json:"analyze_count"`
+	Error        string   `json:"error,omitempty"`
+}
+
+// analyze sends text through the Rust sentinel-core analysis pipeline.
+func (n *NativeSentinelCore) analyze(text string) sentinelAnalyzeResult {
 	n.mu.RLock()
 	defer n.mu.RUnlock()
 
 	if !n.initialized {
-		return SentinelResult{Error: "engine not initialized"}
+		return sentinelAnalyzeResult{Error: "engine not initialized"}
 	}
 
-	// TODO: FFI call
-	// cText := C.CString(text)
-	// defer C.free(unsafe.Pointer(cText))
-	// result := C.sentinel_analyze(cText)
+	cText := C.CString(text)
+	defer C.free(unsafe.Pointer(cText))
 
-	// Stub analysis for now
-	return SentinelResult{
-		Confidence: 0.0,
-		Categories: []string{},
-		IsThreat:   false,
+	cResult := C.sentinel_analyze(cText)
+	if cResult == nil {
+		return sentinelAnalyzeResult{Error: "sentinel_analyze returned null"}
 	}
+	defer C.sentinel_free(cResult)
+
+	jsonStr := C.GoString(cResult)
+	var result sentinelAnalyzeResult
+	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+		return sentinelAnalyzeResult{Error: fmt.Sprintf("json parse error: %v", err)}
+	}
+
+	return result
+}
+
+// ScanPrompt analyzes an LLM prompt for injection/jailbreak patterns.
+func (n *NativeSentinelCore) ScanPrompt(_ context.Context, prompt string) (*ScanResult, error) {
+	start := time.Now()
+	res := n.analyze(prompt)
+
+	if res.Error != "" {
+		return nil, fmt.Errorf("sentinel-core: %s", res.Error)
+	}
+
+	severity := "NONE"
+	threatType := ""
+	if res.IsThreat {
+		severity = "HIGH"
+		if len(res.Categories) > 0 {
+			threatType = res.Categories[0]
+		}
+	}
+
+	return &ScanResult{
+		Engine:      "sentinel-core",
+		ThreatFound: res.IsThreat,
+		ThreatType:  threatType,
+		Severity:    severity,
+		Confidence:  res.Confidence,
+		Details:     fmt.Sprintf("categories=%v", res.Categories),
+		Indicators:  res.Categories,
+		Duration:    time.Since(start),
+		Timestamp:   time.Now(),
+	}, nil
+}
+
+// ScanResponse analyzes an LLM response for data exfiltration or harmful content.
+func (n *NativeSentinelCore) ScanResponse(ctx context.Context, response string) (*ScanResult, error) {
+	return n.ScanPrompt(ctx, response)
 }
 
 // Status returns the engine health via FFI.
@@ -90,8 +133,27 @@ func (n *NativeSentinelCore) Status() EngineStatus {
 		return EngineOffline
 	}
 
-	// TODO: Call C.sentinel_status()
-	return EngineHealthy
+	cStatus := C.sentinel_status()
+	if cStatus == nil {
+		return EngineDegraded
+	}
+	defer C.sentinel_free(cStatus)
+
+	var statusObj struct {
+		Status string `json:"status"`
+	}
+	if err := json.Unmarshal([]byte(C.GoString(cStatus)), &statusObj); err != nil {
+		return EngineDegraded
+	}
+
+	switch statusObj.Status {
+	case "HEALTHY":
+		return EngineHealthy
+	case "OFFLINE":
+		return EngineOffline
+	default:
+		return EngineDegraded
+	}
 }
 
 // Name returns the engine identifier.
@@ -109,15 +171,14 @@ func (n *NativeSentinelCore) Shutdown() error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	// TODO: C.sentinel_shutdown()
-	n.initialized = false
-	return nil
-}
+	if !n.initialized {
+		return nil
+	}
 
-// SentinelResult is returned by the Analyze function.
-type SentinelResult struct {
-	Confidence float64  `json:"confidence"`
-	Categories []string `json:"categories"`
-	IsThreat   bool     `json:"is_threat"`
-	Error      string   `json:"error,omitempty"`
+	result := C.sentinel_shutdown()
+	n.initialized = false
+	if result != 0 {
+		return fmt.Errorf("sentinel_shutdown failed with code %d", int(result))
+	}
+	return nil
 }
