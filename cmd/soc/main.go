@@ -112,8 +112,8 @@ func main() {
 
 	decisionLogger, err := audit.NewDecisionLogger(auditDir)
 	if err != nil {
-		logger.Error("decision logger init failed", "error", err)
-		os.Exit(1)
+		logger.Warn("decision logger unavailable (continuing without audit trail)", "error", err)
+		decisionLogger = nil
 	}
 
 	// Service + HTTP
