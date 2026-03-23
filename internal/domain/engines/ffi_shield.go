@@ -3,7 +3,7 @@
 package engines
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../../../shield/build -lsentinel-shield -lstdc++ -lm -lpthread
+#cgo LDFLAGS: -L${SRCDIR}/../../../../shield/build -lshield -lstdc++ -lm -lpthread
 #cgo CFLAGS: -I${SRCDIR}/../../../../shield/include
 
 #include <stdlib.h>
