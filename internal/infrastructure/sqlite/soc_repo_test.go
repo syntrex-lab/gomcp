@@ -39,7 +39,7 @@ func TestInsertAndListEvents(t *testing.T) {
 		t.Fatalf("insert e2: %v", err)
 	}
 
-	events, err := repo.ListEvents(10)
+	events, err := repo.ListEvents("", 10)
 	if err != nil {
 		t.Fatalf("list events: %v", err)
 	}
@@ -47,7 +47,7 @@ func TestInsertAndListEvents(t *testing.T) {
 		t.Errorf("expected 2 events, got %d", len(events))
 	}
 
-	count, err := repo.CountEvents()
+	count, err := repo.CountEvents("")
 	if err != nil {
 		t.Fatalf("count: %v", err)
 	}
@@ -68,7 +68,7 @@ func TestListEventsByCategory(t *testing.T) {
 	e3 := soc.NewSOCEvent(soc.SourceSentinelCore, soc.SeverityLow, "jailbreak", "test2")
 	repo.InsertEvent(e3)
 
-	events, err := repo.ListEventsByCategory("jailbreak", 10)
+	events, err := repo.ListEventsByCategory("", "jailbreak", 10)
 	if err != nil {
 		t.Fatalf("list by category: %v", err)
 	}
@@ -136,7 +136,7 @@ func TestListIncidentsWithFilter(t *testing.T) {
 	repo.UpdateIncidentStatus(inc2.ID, soc.StatusResolved)
 
 	// List OPEN only
-	open, err := repo.ListIncidents("OPEN", 10)
+	open, err := repo.ListIncidents("", "OPEN", 10)
 	if err != nil {
 		t.Fatalf("list open: %v", err)
 	}
@@ -145,7 +145,7 @@ func TestListIncidentsWithFilter(t *testing.T) {
 	}
 
 	// List all
-	all, err := repo.ListIncidents("", 10)
+	all, err := repo.ListIncidents("", "", 10)
 	if err != nil {
 		t.Fatalf("list all: %v", err)
 	}
@@ -166,7 +166,7 @@ func TestCountOpenIncidents(t *testing.T) {
 	repo.UpdateIncidentStatus(inc2.ID, soc.StatusInvestigating)
 	repo.UpdateIncidentStatus(inc3.ID, soc.StatusResolved)
 
-	count, err := repo.CountOpenIncidents()
+	count, err := repo.CountOpenIncidents("")
 	if err != nil {
 		t.Fatalf("count open: %v", err)
 	}
@@ -228,7 +228,7 @@ func TestListSensors(t *testing.T) {
 	repo.UpsertSensor(soc.NewSensor("core-01", soc.SensorTypeSentinelCore))
 	repo.UpsertSensor(soc.NewSensor("shield-01", soc.SensorTypeShield))
 
-	sensors, err := repo.ListSensors()
+	sensors, err := repo.ListSensors("")
 	if err != nil {
 		t.Fatalf("list: %v", err)
 	}
@@ -250,7 +250,7 @@ func TestCountSensorsByStatus(t *testing.T) {
 	repo.UpsertSensor(s1)
 	repo.UpsertSensor(s2)
 
-	counts, err := repo.CountSensorsByStatus()
+	counts, err := repo.CountSensorsByStatus("")
 	if err != nil {
 		t.Fatalf("count by status: %v", err)
 	}

@@ -130,6 +130,30 @@ func (l *DecisionLogger) RecordDecision(module, decision, reason string) {
 	l.Record(DecisionModule(module), decision, reason)
 }
 
+// RecordMigrationAnchor writes a special migration entry to preserve hash chain
+// continuity across version upgrades (§15.7 Decision Logger Continuity Invariant).
+// The anchor hash = SHA256(prev_hash + "MIGRATION:{from}→{to}" + timestamp).
+// This entry is append-only and links the old chain to the new version seamlessly.
+func (l *DecisionLogger) RecordMigrationAnchor(fromVersion, toVersion string) error {
+	return l.Record(DecisionModule("MIGRATION"),
+		fmt.Sprintf("MIGRATION:%s→%s", fromVersion, toVersion),
+		fmt.Sprintf("Zero-downtime upgrade from %s to %s. Chain continuity preserved.", fromVersion, toVersion))
+}
+
+// ExportChainProof returns a proof-of-integrity snapshot for pre-update backup.
+// Used by `syntrex doctor --export-chain` to verify chain after rollback.
+func (l *DecisionLogger) ExportChainProof() map[string]any {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return map[string]any{
+		"genesis_hash": "GENESIS",
+		"last_hash":    l.prevHash,
+		"entry_count":  l.count,
+		"file_path":    l.path,
+		"exported_at":  time.Now().Format(time.RFC3339),
+	}
+}
+
 // Close closes the decisions file.
 func (l *DecisionLogger) Close() error {
 	l.mu.Lock()

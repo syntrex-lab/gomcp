@@ -49,6 +49,7 @@ const (
 // Sensor represents a registered sensor in the SOC (§11.3).
 type Sensor struct {
 	SensorID         string       `json:"sensor_id"`
+	TenantID         string       `json:"tenant_id,omitempty"`
 	SensorType       SensorType   `json:"sensor_type"`
 	Status           SensorStatus `json:"status"`
 	FirstSeen        time.Time    `json:"first_seen"`

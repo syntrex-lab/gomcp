@@ -116,7 +116,7 @@ func TestIncidentAddEvent(t *testing.T) {
 
 func TestIncidentResolve(t *testing.T) {
 	inc := NewIncident("Test", SeverityHigh, "test_rule")
-	inc.Resolve(StatusResolved)
+	inc.Resolve(StatusResolved, "system")
 
 	if inc.IsOpen() {
 		t.Error("resolved incident should not be open")
@@ -146,7 +146,7 @@ func TestIncidentMTTR(t *testing.T) {
 		t.Error("unresolved MTTR should be 0")
 	}
 	time.Sleep(10 * time.Millisecond)
-	inc.Resolve(StatusResolved)
+	inc.Resolve(StatusResolved, "system")
 	if inc.MTTR() <= 0 {
 		t.Error("resolved MTTR should be positive")
 	}
@@ -229,78 +229,41 @@ func TestSensorHeartbeatRecovery(t *testing.T) {
 	}
 }
 
-// === Playbook Tests ===
+// === Playbook Engine Tests (§10) ===
 
-func TestPlaybookMatches(t *testing.T) {
-	pb := Playbook{
-		ID:      "pb-test",
-		Enabled: true,
-		Condition: PlaybookCondition{
-			MinSeverity: SeverityHigh,
-			Categories:  []string{"jailbreak", "prompt_injection"},
-		},
-		Actions: []PlaybookAction{ActionAutoBlock},
+func TestPlaybookEngine_Defaults(t *testing.T) {
+	pe := NewPlaybookEngine()
+	pbs := pe.ListPlaybooks()
+	if len(pbs) != 4 {
+		t.Errorf("expected 4 default playbooks, got %d", len(pbs))
 	}
-
-	// Should match
-	evt := NewSOCEvent(SourceSentinelCore, SeverityCritical, "jailbreak", "test")
-	if !pb.Matches(evt) {
-		t.Error("expected match for jailbreak + CRITICAL")
-	}
-
-	// Should not match — low severity
-	evt2 := NewSOCEvent(SourceSentinelCore, SeverityLow, "jailbreak", "test")
-	if pb.Matches(evt2) {
-		t.Error("should not match LOW severity")
-	}
-
-	// Should not match — wrong category
-	evt3 := NewSOCEvent(SourceSentinelCore, SeverityCritical, "network_block", "test")
-	if pb.Matches(evt3) {
-		t.Error("should not match wrong category")
-	}
-
-	// Disabled playbook
-	pb.Enabled = false
-	if pb.Matches(evt) {
-		t.Error("disabled playbook should not match")
-	}
-}
-
-func TestPlaybookSourceFilter(t *testing.T) {
-	pb := Playbook{
-		ID:      "pb-shield-only",
-		Enabled: true,
-		Condition: PlaybookCondition{
-			MinSeverity: SeverityMedium,
-			Categories:  []string{"network_block"},
-			Sources:     []EventSource{SourceShield},
-		},
-		Actions: []PlaybookAction{ActionNotify},
-	}
-
-	// Shield source should match
-	evt := NewSOCEvent(SourceShield, SeverityHigh, "network_block", "test")
-	if !pb.Matches(evt) {
-		t.Error("expected match for shield source")
-	}
-
-	// Non-shield source should not match
-	evt2 := NewSOCEvent(SourceSentinelCore, SeverityHigh, "network_block", "test")
-	if pb.Matches(evt2) {
-		t.Error("should not match non-shield source")
-	}
-}
-
-func TestDefaultPlaybooks(t *testing.T) {
-	pbs := DefaultPlaybooks()
-	if len(pbs) != 3 {
-		t.Errorf("expected 3 default playbooks, got %d", len(pbs))
-	}
-	// Check all are enabled
 	for _, pb := range pbs {
 		if !pb.Enabled {
-			t.Errorf("default playbook %s should be enabled", pb.ID)
+			t.Errorf("playbook %s should be enabled", pb.ID)
+		}
+	}
+}
+
+func TestPlaybookEngine_JailbreakMatch(t *testing.T) {
+	pe := NewPlaybookEngine()
+	execs := pe.Execute("inc-001", "CRITICAL", "jailbreak", "")
+	found := false
+	for _, e := range execs {
+		if e.PlaybookID == "pb-block-jailbreak" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected pb-block-jailbreak to match CRITICAL jailbreak")
+	}
+}
+
+func TestPlaybookEngine_SeverityFilter(t *testing.T) {
+	pe := NewPlaybookEngine()
+	execs := pe.Execute("inc-002", "LOW", "jailbreak", "")
+	for _, e := range execs {
+		if e.PlaybookID == "pb-block-jailbreak" {
+			t.Error("LOW severity should not match CRITICAL threshold playbook")
 		}
 	}
 }

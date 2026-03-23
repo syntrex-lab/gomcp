@@ -143,7 +143,7 @@ func TestRunPlaybook_IncidentNotFound(t *testing.T) {
 	svc := newTestService(t)
 
 	// Use a valid playbook ID from defaults.
-	_, err := svc.RunPlaybook("pb-auto-block-jailbreak", "nonexistent-inc")
+	_, err := svc.RunPlaybook("pb-block-jailbreak", "nonexistent-inc")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "incident not found")
 }

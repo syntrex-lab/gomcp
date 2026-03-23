@@ -65,6 +65,11 @@ func OpenMemory() (*DB, error) {
 		return nil, fmt.Errorf("enable foreign keys: %w", err)
 	}
 
+	// In-memory SQLite: each connection gets a SEPARATE database.
+	// Limit to 1 connection to ensure all queries see the same tables.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
 	return &DB{db: db, path: ":memory:"}, nil
 }
 

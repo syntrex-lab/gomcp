@@ -55,7 +55,7 @@ Add to `~/.config/opencode/opencode.json`:
 | `-bridge-script` | _(empty)_ | Path to Python bridge script (enables NLP tools) |
 | `-no-context` | `false` | Disable Proactive Context Engine |
 
-## Tools (40 total)
+## Tools (40+ total)
 
 ### Memory (11 tools)
 
@@ -194,10 +194,30 @@ internal/
 │   ├── tools/                  Tool service layer (fact, session, causal, crystal, system)
 │   ├── resources/              MCP resource provider
 │   ├── contextengine/          Proactive Context Engine + Interaction Processor
+│   ├── resilience/             SARL — Self-Monitoring, Self-Healing, Self-Preservation
 │   └── lifecycle/              Graceful shutdown manager
 └── transport/
     └── mcpserver/              MCP server setup, tool registration, middleware wiring
 ```
+
+### SARL (Autonomous Resilience)
+
+```
+internal/application/resilience/
+├── metrics_collector.go     # Ring buffer time-series, Z-score anomaly detection
+├── health_monitor.go        # L1: Quorum validation, alert bus, threshold checks
+├── healing_engine.go        # L2: FSM (6 states), cooldown, rollback
+├── healing_strategies.go    # 5 built-in strategies (restart, config, DB, rules, network)
+├── preservation.go          # L3: Emergency modes (SAFE→LOCKDOWN→APOPTOSIS)
+├── integrity.go             # Binary SHA-256, config HMAC-SHA256, chain verify
+├── behavioral.go            # L4: Go runtime profiling (goroutines, heap, GC)
+└── recovery_playbooks.go    # L5: 3 playbooks (resurrection, consensus, crypto)
+
+transport/http/
+└── resilience_handlers.go   # 6 REST endpoints (/api/v1/resilience/*)
+```
+
+**81 tests** across 5 test files. All PASS.
 
 **Dependency rule**: arrows point inward only. Domain has no imports from other layers.
 
@@ -320,4 +340,4 @@ GoMCP uses **stdio transport** with **line-delimited JSON** (one JSON object per
 
 ## License
 
-Part of the Syntrex project. MIT License.
+Part of the Syntrex project. Apache 2.0 License.

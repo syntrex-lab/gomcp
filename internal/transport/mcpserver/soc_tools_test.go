@@ -54,7 +54,7 @@ func TestSOC_Ingest_ReturnsEventID(t *testing.T) {
 	srv := newTestServerWithSOC(t)
 
 	result, err := srv.handleSOCIngest(nil, callToolReq("soc_ingest", map[string]interface{}{
-		"source":      "sentinel_core",
+		"source":      "sentinel-core",
 		"severity":    "HIGH",
 		"category":    "jailbreak",
 		"description": "Prompt injection detected in user input",
@@ -335,7 +335,7 @@ func TestSOC_SensorAuth_RejectsInvalidKey(t *testing.T) {
 	event.SensorKey = "sk_wrong_key_999"
 	_, _, err := srv.socSvc.IngestEvent(event)
 	require.Error(t, err, "should reject event with invalid sensor key")
-	assert.Contains(t, err.Error(), "sensor auth failed")
+	assert.Contains(t, err.Error(), "authentication failed")
 }
 
 func TestSOC_SensorAuth_AcceptsValidKey(t *testing.T) {

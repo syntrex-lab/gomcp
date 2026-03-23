@@ -4,6 +4,7 @@
 package soc
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"time"
 )
@@ -56,6 +57,7 @@ const (
 	SourceImmune       EventSource = "immune"
 	SourceMicroSwarm   EventSource = "micro-swarm"
 	SourceGoMCP        EventSource = "gomcp"
+	SourceShadowAI     EventSource = "shadow-ai"
 	SourceExternal     EventSource = "external"
 )
 
@@ -64,6 +66,7 @@ const (
 // Sensor → Secret Scanner (Step 0) → DIP → Decision Logger → Queue → Correlation.
 type SOCEvent struct {
 	ID           string            `json:"id"`
+	TenantID     string            `json:"tenant_id,omitempty"`
 	Source       EventSource       `json:"source"`
 	SensorID     string            `json:"sensor_id"`
 	SensorKey    string            `json:"-"` // §17.3 T-01: pre-shared key (never serialized)
@@ -74,6 +77,7 @@ type SOCEvent struct {
 	Description  string            `json:"description"`
 	Payload      string            `json:"payload,omitempty"` // Raw input for Secret Scanner Step 0
 	SessionID    string            `json:"session_id,omitempty"`
+	ContentHash  string            `json:"content_hash,omitempty"` // SHA-256 dedup key (§5.2)
 	DecisionHash string            `json:"decision_hash,omitempty"` // SHA-256 chain link
 	Verdict      Verdict           `json:"verdict"`
 	ZeroGMode    bool              `json:"zero_g_mode,omitempty"` // §13.4: Strike Force operation tag
@@ -81,10 +85,101 @@ type SOCEvent struct {
 	Metadata     map[string]string `json:"metadata,omitempty"` // Extensible key-value pairs
 }
 
+// ComputeContentHash generates a SHA-256 hash from source+category+description+payload
+// for content-based deduplication (§5.2 step 2).
+func (e *SOCEvent) ComputeContentHash() string {
+	h := sha256.New()
+	fmt.Fprintf(h, "%s|%s|%s|%s", e.Source, e.Category, e.Description, e.Payload)
+	e.ContentHash = fmt.Sprintf("%x", h.Sum(nil))
+	return e.ContentHash
+}
+
+// KnownCategories is the set of recognized event categories.
+// Events with unknown categories are still accepted but logged as warnings.
+var KnownCategories = map[string]bool{
+	"jailbreak":        true,
+	"prompt_injection":  true,
+	"tool_abuse":       true,
+	"exfiltration":     true,
+	"pii_leak":         true,
+	"auth_bypass":      true,
+	"encoding":         true,
+	"persistence":      true,
+	"sensor_anomaly":   true,
+	"dos":              true,
+	"model_theft":      true,
+	"supply_chain":     true,
+	"data_poisoning":   true,
+	"evasion":          true,
+	"shadow_ai_usage":  true,
+	"integration_health": true,
+	"other":            true,
+	// GenAI EDR categories (SDD-001)
+	"genai_child_process":       true,
+	"genai_sensitive_file_access": true,
+	"genai_unusual_domain":      true,
+	"genai_credential_access":   true,
+	"genai_persistence":         true,
+	"genai_config_modification": true,
+}
+
+// ValidSeverity returns true if the severity is a known value.
+func ValidSeverity(s EventSeverity) bool {
+	switch s {
+	case SeverityInfo, SeverityLow, SeverityMedium, SeverityHigh, SeverityCritical:
+		return true
+	}
+	return false
+}
+
+// ValidSource returns true if the source is a known value.
+func ValidSource(s EventSource) bool {
+	switch s {
+	case SourceSentinelCore, SourceShield, SourceImmune, SourceMicroSwarm, SourceGoMCP, SourceShadowAI, SourceExternal:
+		return true
+	}
+	return false
+}
+
+// Validate checks all required fields and enum values.
+// Returns nil if valid, or a *ValidationErrors with field-level details.
+func (e SOCEvent) Validate() error {
+	ve := &ValidationErrors{}
+
+	if e.Source == "" {
+		ve.Add("source", "source is required")
+	} else if !ValidSource(e.Source) {
+		ve.Add("source", fmt.Sprintf("unknown source: %q (valid: sentinel-core, shield, immune, micro-swarm, gomcp, external)", e.Source))
+	}
+
+	if e.Severity == "" {
+		ve.Add("severity", "severity is required")
+	} else if !ValidSeverity(e.Severity) {
+		ve.Add("severity", fmt.Sprintf("unknown severity: %q (valid: INFO, LOW, MEDIUM, HIGH, CRITICAL)", e.Severity))
+	}
+
+	if e.Category == "" {
+		ve.Add("category", "category is required")
+	}
+
+	if e.Description == "" {
+		ve.Add("description", "description is required")
+	}
+
+	if e.Confidence < 0 || e.Confidence > 1 {
+		ve.Add("confidence", "confidence must be between 0.0 and 1.0")
+	}
+
+	if ve.HasErrors() {
+		return ve
+	}
+	return nil
+}
+
 // NewSOCEvent creates a new SOC event with auto-generated ID.
 func NewSOCEvent(source EventSource, severity EventSeverity, category, description string) SOCEvent {
 	return SOCEvent{
-		ID:          fmt.Sprintf("evt-%d-%s", time.Now().UnixMicro(), source),
+		ID:          genID("evt"),
 		Source:      source,
 		Severity:    severity,
 		Category:    category,
@@ -122,3 +217,4 @@ func (e SOCEvent) WithVerdict(v Verdict) SOCEvent {
 func (e SOCEvent) IsCritical() bool {
 	return e.Severity == SeverityHigh || e.Severity == SeverityCritical
 }
+

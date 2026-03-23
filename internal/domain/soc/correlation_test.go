@@ -139,7 +139,7 @@ func TestCorrelateEmptyInput(t *testing.T) {
 
 func TestDefaultRuleCount(t *testing.T) {
 	rules := DefaultSOCCorrelationRules()
-	if len(rules) != 7 {
-		t.Errorf("expected 7 default rules, got %d", len(rules))
+	if len(rules) != 15 {
+		t.Errorf("expected 15 default rules, got %d", len(rules))
 	}
 }

@@ -6,18 +6,23 @@ import (
 )
 
 // SOCCorrelationRule defines a time-windowed correlation rule for SOC events.
-// Unlike oracle.CorrelationRule (pattern-based), SOC rules operate on event
-// categories within a sliding time window.
+// Supports two modes:
+//   - Co-occurrence: RequiredCategories must all appear within TimeWindow (unordered)
+//   - Temporal sequence: SequenceCategories must appear in ORDER within TimeWindow
 type SOCCorrelationRule struct {
 	ID                 string        `json:"id"`
 	Name               string        `json:"name"`
-	RequiredCategories []string      `json:"required_categories"` // Event categories that must co-occur
-	MinEvents          int           `json:"min_events"`          // Minimum distinct events to trigger
-	TimeWindow         time.Duration `json:"time_window"`         // Sliding window for temporal correlation
-	Severity           EventSeverity `json:"severity"`            // Resulting incident severity
+	RequiredCategories []string      `json:"required_categories"`  // Co-occurrence (unordered)
+	SequenceCategories []string      `json:"sequence_categories"` // Temporal sequence (ordered A→B→C)
+	SeverityTrend      string        `json:"severity_trend,omitempty"` // "ascending" — detect escalation pattern
+	TrendCategory      string        `json:"trend_category,omitempty"` // Category to track for severity trend
+	MinEvents          int           `json:"min_events"`
+	TimeWindow         time.Duration `json:"time_window"`
+	Severity           EventSeverity `json:"severity"`
 	KillChainPhase     string        `json:"kill_chain_phase"`
 	MITREMapping       []string      `json:"mitre_mapping"`
 	Description        string        `json:"description"`
+	CrossSensor        bool          `json:"cross_sensor"`
 }
 
 // DefaultSOCCorrelationRules returns built-in SOC correlation rules (§7 from spec).
@@ -100,6 +105,98 @@ func DefaultSOCCorrelationRules() []SOCCorrelationRule {
 			MITREMapping:       []string{"T1546", "T1053"},
 			Description:        "Jailbreak followed by persistence mechanism indicates attacker establishing long-term foothold.",
 		},
+		{
+			ID:                 "SOC-CR-008",
+			Name:               "Slow Data Exfiltration",
+			RequiredCategories: []string{"pii_leak", "exfiltration"},
+			MinEvents:          5,
+			TimeWindow:         1 * time.Hour,
+			Severity:           SeverityHigh,
+			KillChainPhase:     "Exfiltration",
+			MITREMapping:       []string{"T1041", "T1048"},
+			Description:        "Multiple small PII leaks over extended period from same session. Low-and-slow exfiltration evades threshold-based detection.",
+		},
+		// --- Temporal sequence rules (ordered A→B→C) ---
+		{
+			ID:                 "SOC-CR-009",
+			Name:               "Recon→Exploit→Exfil Chain",
+			SequenceCategories: []string{"reconnaissance", "prompt_injection", "exfiltration"},
+			MinEvents:          3,
+			TimeWindow:         30 * time.Minute,
+			Severity:           SeverityCritical,
+			KillChainPhase:     "Full Kill Chain",
+			MITREMapping:       []string{"T1595", "T1059", "T1041"},
+			Description:        "Ordered sequence: reconnaissance followed by prompt injection followed by data exfiltration. Full kill chain attack in progress.",
+		},
+		{
+			ID:                 "SOC-CR-010",
+			Name:               "Auth Spray→Bypass Sequence",
+			SequenceCategories: []string{"auth_bypass", "tool_abuse"},
+			MinEvents:          2,
+			TimeWindow:         10 * time.Minute,
+			Severity:           SeverityHigh,
+			KillChainPhase:     "Exploitation",
+			MITREMapping:       []string{"T1110", "T1078"},
+			Description:        "Authentication bypass attempt followed by tool abuse within 10 minutes. Credential compromise leading to privilege escalation.",
+		},
+		{
+			ID:             "SOC-CR-011",
+			Name:           "Cross-Sensor Session Attack",
+			MinEvents:      3,
+			TimeWindow:     15 * time.Minute,
+			Severity:       SeverityCritical,
+			KillChainPhase: "Lateral Movement",
+			MITREMapping:   []string{"T1021", "T1550"},
+			CrossSensor:    true,
+			Description:    "Same session_id seen across 3+ distinct sensors within 15 minutes. Indicates a compromised session exploited from multiple attack vectors.",
+		},
+		// ── Lattice Integration Rules ──────────────────────────────────
+		{
+			ID:                 "SOC-CR-012",
+			Name:               "TSA Chain Violation",
+			SequenceCategories: []string{"auth_bypass", "tool_abuse", "exfiltration"},
+			MinEvents:          3,
+			TimeWindow:         15 * time.Minute,
+			Severity:           SeverityCritical,
+			KillChainPhase:     "Actions on Objectives",
+			MITREMapping:       []string{"T1078", "T1059", "T1048"},
+			Description:        "Trust-Safety-Alignment chain violation: auth bypass followed by tool abuse and data exfiltration within 15 minutes. Full kill chain detected.",
+		},
+		{
+			ID:                 "SOC-CR-013",
+			Name:               "GPS Early Warning",
+			RequiredCategories: []string{"anomaly", "exfiltration"},
+			MinEvents:          2,
+			TimeWindow:         10 * time.Minute,
+			Severity:           SeverityHigh,
+			KillChainPhase:     "Reconnaissance",
+			MITREMapping:       []string{"T1595", "T1041"},
+			Description:        "Guardrail-Perimeter-Surveillance early warning: anomaly detection followed by exfiltration attempt. Potential reconnaissance-to-extraction pipeline.",
+		},
+		{
+			ID:                 "SOC-CR-014",
+			Name:               "MIRE Containment Activated",
+			SequenceCategories: []string{"prompt_injection", "jailbreak"},
+			MinEvents:          2,
+			TimeWindow:         5 * time.Minute,
+			Severity:           SeverityCritical,
+			KillChainPhase:     "Weaponization",
+			MITREMapping:       []string{"T1059.007", "T1203"},
+			Description:        "Monitor-Isolate-Respond-Evaluate containment: prompt injection escalated to jailbreak within 5 minutes. Immune system response required.",
+		},
+		// ── Severity Trend Rules ──────────────────────────────────────
+		{
+			ID:             "SOC-CR-015",
+			Name:           "Crescendo Escalation",
+			SeverityTrend:  "ascending",
+			TrendCategory:  "jailbreak",
+			MinEvents:      3,
+			TimeWindow:     15 * time.Minute,
+			Severity:       SeverityCritical,
+			KillChainPhase: "Exploitation",
+			MITREMapping:   []string{"T1059", "T1548"},
+			Description:    "Crescendo attack: 3+ jailbreak attempts with ascending severity within 15 minutes. Gradual guardrail erosion detected.",
+		},
 	}
 }
 
@@ -150,6 +247,21 @@ func evaluateRule(rule SOCCorrelationRule, events []SOCEvent, now time.Time) *Co
 
 	if len(inWindow) < rule.MinEvents {
 		return nil
+	}
+
+	// Severity trend: detect ascending severity in same-category events.
+	if rule.SeverityTrend == "ascending" && rule.TrendCategory != "" {
+		return evaluateSeverityTrendRule(rule, inWindow)
+	}
+
+	// Temporal sequence: check ordered occurrence (A→B→C within window).
+	if len(rule.SequenceCategories) > 0 {
+		return evaluateSequenceRule(rule, inWindow)
+	}
+
+	// Cross-sensor session attack: same session_id across 3+ distinct sources.
+	if rule.CrossSensor {
+		return evaluateCrossSensorRule(rule, inWindow)
 	}
 
 	// Special case: SOC-CR-002 (Coordinated Attack) — check distinct category count.
@@ -210,6 +322,140 @@ func evaluateCoordinatedAttack(rule SOCCorrelationRule, events []SOCEvent) *Corr
 				Events:    sourceEvents[source],
 				MatchedAt: time.Now(),
 			}
+		}
+	}
+	return nil
+}
+
+// evaluateCrossSensorRule detects the same session_id seen across N+ distinct sources/sensors.
+// Triggers SOC-CR-011: indicates lateral movement or compromised session.
+func evaluateCrossSensorRule(rule SOCCorrelationRule, events []SOCEvent) *CorrelationMatch {
+	// Group events by session_id, track distinct sources per session.
+	type sessionInfo struct {
+		sources map[EventSource]bool
+		events  []SOCEvent
+	}
+	sessions := make(map[string]*sessionInfo)
+
+	for _, e := range events {
+		if e.SessionID == "" {
+			continue
+		}
+		si, ok := sessions[e.SessionID]
+		if !ok {
+			si = &sessionInfo{sources: make(map[EventSource]bool)}
+			sessions[e.SessionID] = si
+		}
+		si.sources[e.Source] = true
+		si.events = append(si.events, e)
+	}
+
+	for _, si := range sessions {
+		if len(si.sources) >= rule.MinEvents {
+			return &CorrelationMatch{
+				Rule:      rule,
+				Events:    si.events,
+				MatchedAt: time.Now(),
+			}
+		}
+	}
+	return nil
+}
+
+// evaluateSequenceRule checks for ordered temporal sequences (A→B→C).
+// Events must appear in the specified order within the time window.
+func evaluateSequenceRule(rule SOCCorrelationRule, events []SOCEvent) *CorrelationMatch {
+	// Sort events by timestamp (oldest first).
+	sorted := make([]SOCEvent, len(events))
+	copy(sorted, events)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Timestamp.Before(sorted[j].Timestamp)
+	})
+
+	// Walk through events, matching each sequence step in order.
+	seqIdx := 0
+	var matchedEvents []SOCEvent
+	var firstTime time.Time
+
+	for _, e := range sorted {
+		if seqIdx >= len(rule.SequenceCategories) {
+			break
+		}
+		if e.Category == rule.SequenceCategories[seqIdx] {
+			if seqIdx == 0 {
+				firstTime = e.Timestamp
+			}
+			// Ensure all events are within the time window of the first event.
+			if seqIdx > 0 && e.Timestamp.Sub(firstTime) > rule.TimeWindow {
+				// Window exceeded — reset and try from this event.
+				seqIdx = 0
+				matchedEvents = nil
+				if e.Category == rule.SequenceCategories[0] {
+					firstTime = e.Timestamp
+					matchedEvents = append(matchedEvents, e)
+					seqIdx = 1
+				}
+				continue
+			}
+			matchedEvents = append(matchedEvents, e)
+			seqIdx++
+		}
+	}
+
+	// All sequence steps matched?
+	if seqIdx >= len(rule.SequenceCategories) {
+		return &CorrelationMatch{
+			Rule:      rule,
+			Events:    matchedEvents,
+			MatchedAt: time.Now(),
+		}
+	}
+	return nil
+}
+
+// evaluateSeverityTrendRule detects ascending severity pattern in same-category events.
+// Example: jailbreak(LOW) → jailbreak(MEDIUM) → jailbreak(HIGH) within 15 min = CRESCENDO.
+func evaluateSeverityTrendRule(rule SOCCorrelationRule, events []SOCEvent) *CorrelationMatch {
+	// Filter to target category only.
+	var categoryEvents []SOCEvent
+	for _, e := range events {
+		if e.Category == rule.TrendCategory {
+			categoryEvents = append(categoryEvents, e)
+		}
+	}
+
+	if len(categoryEvents) < rule.MinEvents {
+		return nil
+	}
+
+	// Sort by timestamp.
+	sort.Slice(categoryEvents, func(i, j int) bool {
+		return categoryEvents[i].Timestamp.Before(categoryEvents[j].Timestamp)
+	})
+
+	// Find longest ascending severity subsequence.
+	var bestRun []SOCEvent
+	var currentRun []SOCEvent
+
+	for _, e := range categoryEvents {
+		if len(currentRun) == 0 || e.Severity.Rank() > currentRun[len(currentRun)-1].Severity.Rank() {
+			currentRun = append(currentRun, e)
+		} else {
+			if len(currentRun) > len(bestRun) {
+				bestRun = currentRun
+			}
+			currentRun = []SOCEvent{e}
+		}
+	}
+	if len(currentRun) > len(bestRun) {
+		bestRun = currentRun
+	}
+
+	if len(bestRun) >= rule.MinEvents {
+		return &CorrelationMatch{
+			Rule:      rule,
+			Events:    bestRun,
+			MatchedAt: time.Now(),
 		}
 	}
 	return nil

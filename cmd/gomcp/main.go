@@ -397,8 +397,30 @@ func run(rlmDir, cachePath, sessionID string, noContext, uiMode, unfiltered bool
 	}
 
 	socSvc := appsoc.NewService(socRepo, socDecisionLogger)
+
+	// Load custom correlation rules from YAML (§7.5).
+	customRulesPath := filepath.Join(rlmDir, "soc_rules.yaml")
+	customRules, rulesErr := domsoc.LoadRulesFromYAML(customRulesPath)
+	if rulesErr != nil {
+		log.Printf("WARNING: failed to load custom SOC rules: %v", rulesErr)
+	} else if len(customRules) > 0 {
+		socSvc.AddCustomRules(customRules)
+		log.Printf("Loaded %d custom SOC correlation rules from %s", len(customRules), customRulesPath)
+	}
+
 	serverOpts = append(serverOpts, mcpserver.WithSOCService(socSvc))
-	log.Printf("SOC Service initialized (rules=7, playbooks=3, decision_logger=%v)", socDecisionLogger != nil)
+
+	// Initialize Threat Intelligence with default IOC feeds (§6).
+	threatIntelStore := appsoc.NewThreatIntelStore()
+	threatIntelStore.AddDefaultFeeds()
+	socSvc.SetThreatIntel(threatIntelStore)
+	stopThreatIntel := make(chan struct{})
+	threatIntelStore.StartBackgroundRefresh(30*time.Minute, stopThreatIntel)
+	// Cleanup: stop refresh goroutine on shutdown.
+	// (stopThreatIntel channel closed when main returns)
+
+	log.Printf("SOC Service initialized (rules=%d, playbooks=3, clustering=enabled, threat_intel=enabled, decision_logger=%v)",
+		7+len(customRules), socDecisionLogger != nil)
 
 	// --- Create MCP server ---
 

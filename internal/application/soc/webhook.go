@@ -6,8 +6,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
-	"math/rand"
+	"log/slog"
+	"math/rand/v2"
 	"net/http"
 	"sync"
 	"time"
@@ -58,9 +58,9 @@ type WebhookNotifier struct {
 	client  *http.Client
 	enabled bool
 
-	// Stats
-	Sent   int64 `json:"sent"`
-	Failed int64 `json:"failed"`
+	// Stats (unexported — access via Stats() method)
+	sent   int64
+	failed int64
 }
 
 // NewWebhookNotifier creates a notifier with the given config.
@@ -80,23 +80,7 @@ func NewWebhookNotifier(config WebhookConfig) *WebhookNotifier {
 	}
 }
 
-// severityRank returns numeric rank for severity comparison.
-func severityRank(s domsoc.EventSeverity) int {
-	switch s {
-	case domsoc.SeverityCritical:
-		return 5
-	case domsoc.SeverityHigh:
-		return 4
-	case domsoc.SeverityMedium:
-		return 3
-	case domsoc.SeverityLow:
-		return 2
-	case domsoc.SeverityInfo:
-		return 1
-	default:
-		return 0
-	}
-}
+
 
 // NotifyIncident sends an incident webhook to all configured endpoints.
 // Non-blocking: fires goroutines for each endpoint.
@@ -105,9 +89,9 @@ func (w *WebhookNotifier) NotifyIncident(eventType string, incident *domsoc.Inci
 		return nil
 	}
 
-	// Severity filter
+	// Severity filter — use domain Rank() method (Q-1 FIX: removed duplicate severityRank).
 	if w.config.MinSeverity != "" {
-		if severityRank(incident.Severity) < severityRank(w.config.MinSeverity) {
+		if incident.Severity.Rank() < w.config.MinSeverity.Rank() {
 			return nil
 		}
 	}
@@ -146,9 +130,9 @@ func (w *WebhookNotifier) NotifyIncident(eventType string, incident *domsoc.Inci
 	w.mu.Lock()
 	for _, r := range results {
 		if r.Success {
-			w.Sent++
+			w.sent++
 		} else {
-			w.Failed++
+			w.failed++
 		}
 	}
 	w.mu.Unlock()
@@ -213,7 +197,7 @@ func (w *WebhookNotifier) sendWithRetry(url string, body []byte) WebhookResult {
 			result.Error = err.Error()
 			if attempt < w.config.MaxRetries {
 				backoff := time.Duration(1<<uint(attempt)) * 500 * time.Millisecond
-				jitter := time.Duration(rand.Intn(500)) * time.Millisecond
+				jitter := time.Duration(rand.IntN(500)) * time.Millisecond
 				time.Sleep(backoff + jitter)
 				continue
 			}
@@ -230,12 +214,12 @@ func (w *WebhookNotifier) sendWithRetry(url string, body []byte) WebhookResult {
 		result.Error = fmt.Sprintf("HTTP %d", resp.StatusCode)
 		if attempt < w.config.MaxRetries {
 			backoff := time.Duration(1<<uint(attempt)) * 500 * time.Millisecond
-			jitter := time.Duration(rand.Intn(500)) * time.Millisecond
+			jitter := time.Duration(rand.IntN(500)) * time.Millisecond
 			time.Sleep(backoff + jitter)
 		}
 	}
 
-	log.Printf("[SOC] webhook failed after %d retries: %s → %s", w.config.MaxRetries, url, result.Error)
+	slog.Error("webhook failed", "retries", w.config.MaxRetries, "url", url, "error", result.Error)
 	return result
 }
 
@@ -243,5 +227,5 @@ func (w *WebhookNotifier) sendWithRetry(url string, body []byte) WebhookResult {
 func (w *WebhookNotifier) Stats() (sent, failed int64) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.Sent, w.Failed
+	return w.sent, w.failed
 }
