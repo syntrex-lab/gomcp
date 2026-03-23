@@ -23,6 +23,7 @@ import (
 
 	"github.com/syntrex/gomcp/internal/application/soc"
 	socdomain "github.com/syntrex/gomcp/internal/domain/soc"
+	"github.com/syntrex/gomcp/internal/domain/engines"
 	"github.com/syntrex/gomcp/internal/infrastructure/audit"
 	"github.com/syntrex/gomcp/internal/infrastructure/email"
 	"github.com/syntrex/gomcp/internal/infrastructure/logging"
@@ -145,6 +146,16 @@ func main() {
 		logger.Info("email service configured", "provider", "Resend", "from", fromAddr)
 	} else {
 		logger.Warn("email service: RESEND_API_KEY not set — verification codes shown in API response (dev mode)")
+	}
+
+	// Sentinel Core — Rust-native detection engine (§3)
+	sentinelCore, coreErr := engines.NewNativeSentinelCore()
+	if coreErr != nil {
+		logger.Warn("sentinel-core: Rust engine not available, using stub", "error", coreErr)
+		srv.SetSentinelCore(engines.NewStubSentinelCore())
+	} else {
+		srv.SetSentinelCore(sentinelCore)
+		logger.Info("sentinel-core: Rust engine initialized", "version", sentinelCore.Version())
 	}
 
 	// OpenTelemetry tracing (§P4B) — enabled when OTEL_EXPORTER_OTLP_ENDPOINT is set

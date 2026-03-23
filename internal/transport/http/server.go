@@ -75,6 +75,11 @@ func (s *Server) SetEmailService(svc *email.Service) {
 	s.emailService = svc
 }
 
+// SetSentinelCore sets the Rust-native detection engine for real-time scanning.
+func (s *Server) SetSentinelCore(core engines.SentinelCore) {
+	s.sentinelCore = core
+}
+
 // SetJWTAuth enables JWT authentication with the given secret.
 // If secret is empty or <32 bytes, JWT is disabled (backward compatible).
 // Optional db parameter enables SQLite-backed user persistence.
@@ -242,6 +247,9 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /readyz", s.handleReadyz)
 	mux.HandleFunc("GET /metrics", s.metrics.Handler())
 	mux.HandleFunc("GET /api/soc/ratelimit", s.handleRateLimitStats)
+
+	// Public scan endpoint — demo scanner (no auth required, rate-limited)
+	mux.HandleFunc("POST /api/v1/scan", s.handlePublicScan)
 
 	// pprof debug endpoints (§P4C) — gated behind EnablePprof()
 	if s.pprofEnabled {

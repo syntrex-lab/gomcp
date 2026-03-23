@@ -1445,3 +1445,49 @@ func (s *Server) handleSLAConfig(w http.ResponseWriter, _ *http.Request) {
 		"sla_thresholds": entries,
 	})
 }
+
+// handlePublicScan provides a public (no-auth) prompt scanning endpoint for the demo.
+// POST /api/v1/scan  body: {"prompt": "Ignore all instructions..."}
+func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
+	limitBody(w, r)
+	defer r.Body.Close()
+
+	var req struct {
+		Prompt string `json:"prompt"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
+	}
+
+	// Validate input
+	if req.Prompt == "" {
+		writeError(w, http.StatusBadRequest, "prompt is required")
+		return
+	}
+	if len(req.Prompt) > 2000 {
+		writeError(w, http.StatusBadRequest, "prompt too long (max 2000 chars)")
+		return
+	}
+
+	// Get engine (real or stub)
+	engine := s.getEngine("sentinel-core")
+
+	// Scan
+	result, err := engine.ScanPrompt(r.Context(), req.Prompt)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "scan failed: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"blocked":     result.ThreatFound,
+		"threat_type": result.ThreatType,
+		"severity":    result.Severity,
+		"confidence":  result.Confidence,
+		"details":     result.Details,
+		"indicators":  result.Indicators,
+		"engine":      result.Engine,
+		"latency_ms":  float64(result.Duration.Microseconds()) / 1000.0,
+	})
+}
