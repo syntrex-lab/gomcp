@@ -24,6 +24,7 @@ import (
 	"github.com/syntrex/gomcp/internal/application/soc"
 	socdomain "github.com/syntrex/gomcp/internal/domain/soc"
 	"github.com/syntrex/gomcp/internal/domain/engines"
+	"github.com/syntrex/gomcp/internal/infrastructure/auth"
 	"github.com/syntrex/gomcp/internal/infrastructure/audit"
 	"github.com/syntrex/gomcp/internal/infrastructure/email"
 	"github.com/syntrex/gomcp/internal/infrastructure/logging"
@@ -135,6 +136,12 @@ func main() {
 			srv.SetJWTAuth([]byte(jwtSecret))
 		}
 		logger.Info("JWT authentication configured")
+	}
+
+	// Usage/quota tracking — metered free tier (1000 scans/month)
+	if db, ok := sqlDB.(*sql.DB); ok {
+		srv.SetUsageTracker(auth.NewUsageTracker(db))
+		logger.Info("usage tracker initialized (free tier: 1000 scans/month)")
 	}
 
 	// Email service — Resend (set RESEND_API_KEY to enable real email delivery)

@@ -39,6 +39,7 @@ type Server struct {
 	emailService     *email.Service
 	jwtSecret        []byte
 	wsHub            *WSHub
+	usageTracker     *auth.UsageTracker
 	sovereignEnabled bool
 	sovereignMode    string
 	pprofEnabled     bool
@@ -103,6 +104,11 @@ func (s *Server) SetJWTAuth(secret []byte, db ...*sql.DB) {
 		s.userStore = auth.NewUserStore()
 	}
 	slog.Info("JWT authentication enabled")
+}
+
+// SetUsageTracker sets the usage/quota tracker for scan metering.
+func (s *Server) SetUsageTracker(tracker *auth.UsageTracker) {
+	s.usageTracker = tracker
 }
 
 // SetRBAC configures RBAC middleware with API key authentication (§17).
@@ -256,6 +262,8 @@ func (s *Server) Start(ctx context.Context) error {
 
 	// Public scan endpoint — demo scanner (no auth required, rate-limited)
 	mux.HandleFunc("POST /api/v1/scan", s.handlePublicScan)
+	// Usage endpoint — returns scan quota for caller
+	mux.HandleFunc("GET /api/v1/usage", s.handleUsage)
 
 	// pprof debug endpoints (§P4C) — gated behind EnablePprof()
 	if s.pprofEnabled {

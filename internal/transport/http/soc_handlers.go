@@ -1475,6 +1475,27 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check usage quota (free tier: 1000 scans/month)
+	if s.usageTracker != nil {
+		userID := ""
+		if claims := auth.GetClaims(r.Context()); claims != nil {
+			userID = claims.Sub
+		}
+		ip := r.RemoteAddr
+		if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+			ip = fwd
+		}
+		remaining, err := s.usageTracker.RecordScan(userID, ip)
+		if err != nil {
+			w.Header().Set("X-RateLimit-Remaining", "0")
+			writeError(w, http.StatusTooManyRequests, "monthly scan quota exceeded — upgrade your plan at syntrex.pro/pricing")
+			return
+		}
+		if remaining >= 0 {
+			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(remaining))
+		}
+	}
+
 	// Run sentinel-core (54 Rust engines)
 	coreEngine := s.getEngine("sentinel-core")
 	coreResult, coreErr := coreEngine.ScanPrompt(r.Context(), req.Prompt)
@@ -1532,4 +1553,31 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 	response["shield_status"] = shieldStatus
 
 	writeJSON(w, http.StatusOK, response)
+}
+
+// handleUsage returns current scan usage and quota for the caller.
+// GET /api/v1/usage
+func (s *Server) handleUsage(w http.ResponseWriter, r *http.Request) {
+	if s.usageTracker == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"plan":       "free",
+			"scans_used": 0,
+			"scans_limit": 1000,
+			"remaining":  1000,
+			"unlimited":  false,
+		})
+		return
+	}
+
+	userID := ""
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		userID = claims.Sub
+	}
+	ip := r.RemoteAddr
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		ip = fwd
+	}
+
+	info := s.usageTracker.GetUsage(userID, ip)
+	writeJSON(w, http.StatusOK, info)
 }
