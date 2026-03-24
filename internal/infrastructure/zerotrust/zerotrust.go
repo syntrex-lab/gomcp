@@ -36,7 +36,7 @@ const (
 	DefaultCertLifetime = 24 * time.Hour
 
 	// TrustDomain is the SPIFFE trust domain.
-	TrustDomain = "sentinel.xn--80akacl3adqr.xn--p1acf"
+	TrustDomain = "sentinel.syntrex.pro"
 )
 
 // SPIFFEID is a SPIFFE workload identity.
@@ -44,13 +44,13 @@ type SPIFFEID string
 
 // Well-known SPIFFE IDs for SOC components.
 const (
-	SPIFFEIngest    SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/soc/ingest"
-	SPIFFECorrelate SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/soc/correlate"
-	SPIFFERespond   SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/soc/respond"
-	SPIFFEImmune    SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/sensor/immune"
-	SPIFFESidecar   SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/sensor/sidecar"
-	SPIFFEShield    SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/sensor/shield"
-	SPIFFEDashboard SPIFFEID = "spiffe://sentinel.xn--80akacl3adqr.xn--p1acf/dashboard"
+	SPIFFEIngest    SPIFFEID = "spiffe://sentinel.syntrex.pro/soc/ingest"
+	SPIFFECorrelate SPIFFEID = "spiffe://sentinel.syntrex.pro/soc/correlate"
+	SPIFFERespond   SPIFFEID = "spiffe://sentinel.syntrex.pro/soc/respond"
+	SPIFFEImmune    SPIFFEID = "spiffe://sentinel.syntrex.pro/sensor/immune"
+	SPIFFESidecar   SPIFFEID = "spiffe://sentinel.syntrex.pro/sensor/sidecar"
+	SPIFFEShield    SPIFFEID = "spiffe://sentinel.syntrex.pro/sensor/shield"
+	SPIFFEDashboard SPIFFEID = "spiffe://sentinel.syntrex.pro/dashboard"
 )
 
 // AuthzPolicy defines which SPIFFE IDs can connect to a service.
