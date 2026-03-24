@@ -88,8 +88,10 @@ func HandleRegister(userStore *UserStore, tenantStore *TenantStore, jwtSecret []
 				// Still return success — code is in DB, user can retry
 			}
 		} else {
-			// Dev mode — include code in response
-			resp["verification_code_dev"] = code
+			// SEC: Never expose verification code in API response.
+			// Log server-side only for development debugging.
+			slog.Warn("email service not configured — verification code logged (dev only)",
+				"email", req.Email, "code", code)
 		}
 
 		w.Header().Set("Content-Type", "application/json")

@@ -30,6 +30,7 @@ type User struct {
 	Email         string     `json:"email"`
 	DisplayName   string     `json:"display_name"`
 	Role          string     `json:"role"` // admin, analyst, viewer
+	TenantID      string     `json:"tenant_id,omitempty"`
 	Active        bool       `json:"active"`
 	EmailVerified bool       `json:"email_verified"`
 	PasswordHash  string     `json:"-"` // never serialized
@@ -121,12 +122,13 @@ func (s *UserStore) migrate() error {
 	s.db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false`)
 	s.db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token TEXT DEFAULT ''`)
 	s.db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_expiry TIMESTAMPTZ`)
+	s.db.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS tenant_id TEXT DEFAULT ''`)
 	return nil
 }
 
 // loadFromDB loads all users from DB into memory cache.
 func (s *UserStore) loadFromDB() {
-	rows, err := s.db.Query(`SELECT id, email, display_name, role, active, password_hash, created_at, last_login_at FROM users`)
+	rows, err := s.db.Query(`SELECT id, email, display_name, role, active, password_hash, created_at, last_login_at, COALESCE(tenant_id, '') FROM users`)
 	if err != nil {
 		slog.Error("load users from DB", "error", err)
 		return
@@ -138,7 +140,7 @@ func (s *UserStore) loadFromDB() {
 	for rows.Next() {
 		var u User
 		var lastLogin sql.NullTime
-		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.Role, &u.Active, &u.PasswordHash, &u.CreatedAt, &lastLogin); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.Role, &u.Active, &u.PasswordHash, &u.CreatedAt, &lastLogin, &u.TenantID); err != nil {
 			slog.Warn("load user row scan", "error", err)
 			continue
 		}
@@ -156,8 +158,8 @@ func (s *UserStore) persistUser(u *User) {
 		return
 	}
 	_, err := s.db.Exec(`
-		INSERT INTO users (id, email, display_name, role, active, email_verified, password_hash, verify_token, verify_expiry, created_at, last_login_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO users (id, email, display_name, role, active, email_verified, password_hash, verify_token, verify_expiry, created_at, last_login_at, tenant_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		ON CONFLICT (id) DO UPDATE SET
 			email = EXCLUDED.email,
 			display_name = EXCLUDED.display_name,
@@ -167,8 +169,9 @@ func (s *UserStore) persistUser(u *User) {
 			password_hash = EXCLUDED.password_hash,
 			verify_token = EXCLUDED.verify_token,
 			verify_expiry = EXCLUDED.verify_expiry,
-			last_login_at = EXCLUDED.last_login_at`,
-		u.ID, u.Email, u.DisplayName, u.Role, u.Active, u.EmailVerified, u.PasswordHash, u.VerifyToken, u.VerifyExpiry, u.CreatedAt, u.LastLoginAt,
+			last_login_at = EXCLUDED.last_login_at,
+			tenant_id = EXCLUDED.tenant_id`,
+		u.ID, u.Email, u.DisplayName, u.Role, u.Active, u.EmailVerified, u.PasswordHash, u.VerifyToken, u.VerifyExpiry, u.CreatedAt, u.LastLoginAt, u.TenantID,
 	)
 	if err != nil {
 		slog.Error("persist user", "email", u.Email, "error", err)

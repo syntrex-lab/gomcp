@@ -3,29 +3,40 @@ package httpserver
 import (
 	"net/http"
 	"os"
+	"strings"
 )
 
-// corsAllowedOrigin returns the configured CORS origin.
-// Set SOC_CORS_ORIGIN in production (e.g. "https://soc.отражение.рус").
+// corsAllowedOrigins returns the configured CORS origins.
+// Set SOC_CORS_ORIGIN in production (e.g. "https://syntrex.pro,https://xn--80akacl3adqr.xn--p1acf").
 // Defaults to "*" for local development.
-func corsAllowedOrigin() string {
+func corsAllowedOrigins() []string {
 	if v := os.Getenv("SOC_CORS_ORIGIN"); v != "" {
-		return v
+		parts := strings.Split(v, ",")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		return parts
 	}
-	return "*"
+	return []string{"*"}
 }
 
 // corsMiddleware adds CORS headers with configurable origin.
-// Production: set SOC_CORS_ORIGIN=https://your-domain.com
+// Production: set SOC_CORS_ORIGIN=https://syntrex.pro,https://xn--80akacl3adqr.xn--p1acf
 func corsMiddleware(next http.Handler) http.Handler {
-	origin := corsAllowedOrigin()
+	origins := corsAllowedOrigins()
+	allowAll := len(origins) == 1 && origins[0] == "*"
+	allowedSet := make(map[string]bool, len(origins))
+	for _, o := range origins {
+		allowedSet[o] = true
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if origin == "*" {
+		if allowAll {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		} else {
 			reqOrigin := r.Header.Get("Origin")
-			if reqOrigin == origin {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
+			if allowedSet[reqOrigin] {
+				w.Header().Set("Access-Control-Allow-Origin", reqOrigin)
 				w.Header().Set("Vary", "Origin")
 			}
 		}

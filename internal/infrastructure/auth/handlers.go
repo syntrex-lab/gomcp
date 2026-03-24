@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // LoginRequest is the POST /api/auth/login body.
@@ -48,13 +49,23 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 			return
 		}
 
-		accessToken, err := NewAccessToken(user.Email, user.Role, secret, 0)
+		accessToken, err := Sign(Claims{
+			Sub:      user.Email,
+			Role:     user.Role,
+			TenantID: user.TenantID,
+			Exp:      time.Now().Add(15 * time.Minute).Unix(),
+		}, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
 			return
 		}
 
-		refreshToken, err := NewRefreshToken(user.Email, user.Role, secret, 0)
+		refreshToken, err := Sign(Claims{
+			Sub:      user.Email,
+			Role:     user.Role,
+			TenantID: user.TenantID,
+			Exp:      time.Now().Add(7 * 24 * time.Hour).Unix(),
+		}, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
 			return
@@ -129,15 +140,29 @@ func HandleMe(store *UserStore) http.HandlerFunc {
 	}
 }
 
-// HandleListUsers returns all users (admin only).
+// HandleListUsers returns users scoped to the caller's tenant (admin only).
 // GET /api/auth/users
 func HandleListUsers(store *UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		users := store.ListUsers()
+		claims := GetClaims(r.Context())
+		if claims == nil || claims.Role != "admin" {
+			writeAuthError(w, http.StatusForbidden, "admin role required")
+			return
+		}
+
+		// SEC: Filter users by tenant_id to prevent cross-tenant data leak
+		allUsers := store.ListUsers()
+		var filtered []*User
+		for _, u := range allUsers {
+			if u.TenantID == claims.TenantID {
+				filtered = append(filtered, u)
+			}
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
-			"users": users,
-			"total": len(users),
+			"users": filtered,
+			"total": len(filtered),
 		})
 	}
 }
