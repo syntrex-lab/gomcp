@@ -128,7 +128,7 @@ func (s *UserStore) migrate() error {
 
 // loadFromDB loads all users from DB into memory cache.
 func (s *UserStore) loadFromDB() {
-	rows, err := s.db.Query(`SELECT id, email, display_name, role, active, password_hash, created_at, last_login_at, COALESCE(tenant_id, '') FROM users`)
+	rows, err := s.db.Query(`SELECT id, email, display_name, role, active, email_verified, password_hash, created_at, last_login_at, COALESCE(tenant_id, '') FROM users`)
 	if err != nil {
 		slog.Error("load users from DB", "error", err)
 		return
@@ -140,7 +140,7 @@ func (s *UserStore) loadFromDB() {
 	for rows.Next() {
 		var u User
 		var lastLogin sql.NullTime
-		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.Role, &u.Active, &u.PasswordHash, &u.CreatedAt, &lastLogin, &u.TenantID); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.Role, &u.Active, &u.EmailVerified, &u.PasswordHash, &u.CreatedAt, &lastLogin, &u.TenantID); err != nil {
 			slog.Warn("load user row scan", "error", err)
 			continue
 		}
