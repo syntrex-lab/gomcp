@@ -170,7 +170,8 @@ func (s *UserStore) persistUser(u *User) {
 			verify_token = EXCLUDED.verify_token,
 			verify_expiry = EXCLUDED.verify_expiry,
 			last_login_at = EXCLUDED.last_login_at,
-			tenant_id = EXCLUDED.tenant_id`,
+			tenant_id = CASE WHEN EXCLUDED.tenant_id = '' OR EXCLUDED.tenant_id IS NULL
+			                 THEN users.tenant_id ELSE EXCLUDED.tenant_id END`,
 		u.ID, u.Email, u.DisplayName, u.Role, u.Active, u.EmailVerified, u.PasswordHash, u.VerifyToken, u.VerifyExpiry, u.CreatedAt, u.LastLoginAt, u.TenantID,
 	)
 	if err != nil {
