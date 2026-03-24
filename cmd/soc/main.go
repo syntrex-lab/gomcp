@@ -146,7 +146,7 @@ func main() {
 
 	// Email service — Resend (set RESEND_API_KEY to enable real email delivery)
 	if resendKey := env("RESEND_API_KEY", ""); resendKey != "" {
-		fromAddr := env("EMAIL_FROM", "SYNTREX <noreply@xn--80akacl3adqr.xn--p1acf>")
+		fromAddr := env("EMAIL_FROM", "SYNTREX <noreply@syntrex.pro>")
 		resendSender := email.NewResendSender(resendKey, fromAddr)
 		emailSvc := email.NewService(resendSender, "SYNTREX", fromAddr)
 		srv.SetEmailService(emailSvc)

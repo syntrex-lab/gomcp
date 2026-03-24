@@ -37,7 +37,7 @@ type ResendSender struct {
 
 // NewResendSender creates a Resend email sender.
 // apiKey format: "re_xxxxxxxxx"
-// fromAddr example: "SYNTREX <noreply@xn--80akacl3adqr.xn--p1acf>"
+// fromAddr example: "SYNTREX <noreply@syntrex.pro>"
 func NewResendSender(apiKey, fromAddr string) *ResendSender {
 	return &ResendSender{
 		apiKey:   apiKey,
@@ -118,7 +118,7 @@ func NewService(sender Sender, fromName, fromAddr string) *Service {
 		fromName = "SYNTREX"
 	}
 	if fromAddr == "" {
-		fromAddr = "noreply@xn--80akacl3adqr.xn--p1acf"
+		fromAddr = "noreply@syntrex.pro"
 	}
 	return &Service{
 		sender:   sender,
@@ -211,7 +211,7 @@ func (s *Service) SendPasswordReset(toEmail, resetToken string) error {
   <h1 style="color: #60a5fa; margin: 0 0 20px;">🔐 Сброс пароля</h1>
   <p>Вы запросили сброс пароля. Нажмите кнопку ниже:</p>
   <p style="margin: 20px 0;">
-    <a href="https://xn--80akacl3adqr.xn--p1acf/reset-password?token=%s" 
+    <a href="https://syntrex.pro/reset-password?token=%s" 
        style="background: #2563eb; color: white; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold;">
       Сбросить пароль
     </a>
