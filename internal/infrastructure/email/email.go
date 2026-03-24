@@ -109,7 +109,7 @@ type Service struct {
 
 // NewService creates an email service.
 // Pass nil sender for stub mode (logs only).
-// For Resend: NewService(NewResendSender(apiKey, from), "SYNTREX", "noreply@отражение.рус")
+// For Resend: NewService(NewResendSender(apiKey, from), "SYNTREX", "noreply@syntrex.pro")
 func NewService(sender Sender, fromName, fromAddr string) *Service {
 	if sender == nil {
 		sender = &StubSender{}
@@ -128,53 +128,73 @@ func NewService(sender Sender, fromName, fromAddr string) *Service {
 }
 
 // SendVerificationCode sends a 6-digit verification code after registration.
+// locale: "ru" for Russian, anything else for English.
 func (s *Service) SendVerificationCode(toEmail, userName, code string) error {
-	subject := "SYNTREX — Код подтверждения"
+	return s.SendVerificationCodeLocalized(toEmail, userName, code, "ru")
+}
+
+// SendVerificationCodeLocalized sends a localized verification code email.
+func (s *Service) SendVerificationCodeLocalized(toEmail, userName, code, locale string) error {
+	ru := locale == "ru"
+	var subject, greeting, instruction, validity, disclaimer string
+	if ru {
+		subject = "SYNTREX — Код подтверждения"
+		greeting = fmt.Sprintf("Здравствуйте, <strong>%s</strong>!", userName)
+		instruction = "Ваш код подтверждения email:"
+		validity = "Код действителен <strong>24 часа</strong>."
+		disclaimer = "Если вы не регистрировались на SYNTREX — проигнорируйте это письмо."
+	} else {
+		subject = "SYNTREX — Verification Code"
+		greeting = fmt.Sprintf("Hello, <strong>%s</strong>!", userName)
+		instruction = "Your email verification code:"
+		validity = "This code is valid for <strong>24 hours</strong>."
+		disclaimer = "If you did not sign up for SYNTREX, please ignore this email."
+	}
 	body := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
 <body style="font-family: 'Inter', Arial, sans-serif; background: #0a0f1e; color: #e1e5ee; padding: 40px; margin: 0;">
 <div style="max-width: 600px; margin: 0 auto; background: #111827; border-radius: 12px; padding: 32px; border: 1px solid #1e293b;">
   <h1 style="color: #34d399; margin: 0 0 20px; font-size: 24px;">🛡️ SYNTREX</h1>
-  <p style="margin: 0 0 8px;">Здравствуйте, <strong>%s</strong>!</p>
-  <p style="margin: 0 0 24px; color: #9ca3af;">Ваш код подтверждения email:</p>
+  <p style="margin: 0 0 8px;">%s</p>
+  <p style="margin: 0 0 24px; color: #9ca3af;">%s</p>
   <div style="background: #0a0f1e; border: 2px solid #34d399; border-radius: 8px; padding: 20px; text-align: center; margin: 0 0 24px;">
     <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #34d399; font-family: monospace;">%s</span>
   </div>
-  <p style="color: #9ca3af; font-size: 13px; margin: 0 0 8px;">Код действителен <strong>24 часа</strong>.</p>
+  <p style="color: #9ca3af; font-size: 13px; margin: 0 0 8px;">%s</p>
   <p style="color: #6b7280; font-size: 12px; margin: 24px 0 0; padding-top: 16px; border-top: 1px solid #1e293b;">
-    Если вы не регистрировались на SYNTREX — проигнорируйте это письмо.
+    %s
   </p>
 </div>
 </body>
-</html>`, userName, code)
+</html>`, greeting, instruction, code, validity, disclaimer)
 
 	return s.sender.Send(toEmail, subject, body)
 }
 
 // SendWelcome sends a welcome email after registration.
 func (s *Service) SendWelcome(toEmail, userName, orgName string) error {
-	subject := "Добро пожаловать в SYNTREX"
+	subject := "Welcome to SYNTREX / Добро пожаловать в SYNTREX"
 	body := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
 <body style="font-family: 'Inter', Arial, sans-serif; background: #0a0f1e; color: #e1e5ee; padding: 40px; margin: 0;">
 <div style="max-width: 600px; margin: 0 auto; background: #111827; border-radius: 12px; padding: 32px; border: 1px solid #1e293b;">
   <h1 style="color: #34d399; margin: 0 0 20px;">🛡️ SYNTREX</h1>
-  <p>Здравствуйте, <strong>%s</strong>!</p>
-  <p>Ваша организация <strong>%s</strong> успешно зарегистрирована.</p>
-  <h3 style="color: #818cf8;">Как начать:</h3>
+  <p>Hello / Здравствуйте, <strong>%s</strong>!</p>
+  <p>Your organization <strong>%s</strong> has been registered. / Ваша организация <strong>%s</strong> успешно зарегистрирована.</p>
+  <h3 style="color: #818cf8;">Getting Started / Как начать:</h3>
   <ol>
-    <li>Откройте <strong>Quick Start</strong> в боковом меню</li>
-    <li>Создайте API-ключ в <strong>Настройки → API Keys</strong></li>
-    <li>Отправьте первое событие безопасности</li>
+    <li>Open <strong>Quick Start</strong> in the sidebar / Откройте <strong>Quick Start</strong> в боковом меню</li>
+    <li>Create an API key in <strong>Settings → API Keys</strong> / Создайте API-ключ</li>
+    <li>Send your first security event / Отправьте первое событие</li>
   </ol>
   <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
-    Это автоматическое письмо от SYNTREX. Если вы не регистрировались — проигнорируйте.
+    This is an automated email from SYNTREX. If you did not register, please ignore it.
   </p>
 </div>
 </body>
-</html>`, userName, orgName)
+</html>`, userName, orgName, orgName)
 
 	return s.sender.Send(toEmail, subject, body)
 }
