@@ -4,8 +4,13 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"os"
+	"regexp"
 	"time"
 )
+
+// htmlTagRegex strips HTML/script tags from user input (M5 XSS prevention).
+var htmlTagRegex = regexp.MustCompile(`<[^>]*>`)
 
 // EmailSendFunc is a callback for sending verification emails.
 // Signature: func(toEmail, userName, code string) error
@@ -17,6 +22,12 @@ type EmailSendFunc func(toEmail, userName, code string) error
 // If emailFn is nil, verification code is returned in response (dev mode).
 func HandleRegister(userStore *UserStore, tenantStore *TenantStore, jwtSecret []byte, emailFn EmailSendFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// SEC-M4: Server-side registration gate
+		if os.Getenv("SOC_REGISTRATION_OPEN") != "true" {
+			http.Error(w, `{"error":"registration is closed — contact admin for an invitation"}`, http.StatusForbidden)
+			return
+		}
+
 		var req struct {
 			Email    string `json:"email"`
 			Password string `json:"password"`
@@ -39,6 +50,10 @@ func HandleRegister(userStore *UserStore, tenantStore *TenantStore, jwtSecret []
 		if req.Name == "" {
 			req.Name = req.Email
 		}
+
+		// SEC-M5: Strip HTML tags from user input to prevent stored XSS
+		req.Name = htmlTagRegex.ReplaceAllString(req.Name, "")
+		req.OrgName = htmlTagRegex.ReplaceAllString(req.OrgName, "")
 
 		// Create user first (admin of new tenant)
 		user, err := userStore.CreateUser(req.Email, req.Name, req.Password, "admin")
@@ -141,10 +156,11 @@ func HandleVerifyEmail(userStore *UserStore, tenantStore *TenantStore, jwtSecret
 
 		// Issue JWT with tenant context
 		accessToken, err := Sign(Claims{
-			Sub:      user.Email,
-			Role:     user.Role,
-			TenantID: tenantID,
-			Exp:      time.Now().Add(15 * time.Minute).Unix(),
+			Sub:       user.Email,
+			Role:      user.Role,
+			TenantID:  tenantID,
+			TokenType: "access",
+			Exp:       time.Now().Add(15 * time.Minute).Unix(),
 		}, jwtSecret)
 		if err != nil {
 			http.Error(w, `{"error":"failed to issue token"}`, http.StatusInternalServerError)
@@ -152,10 +168,11 @@ func HandleVerifyEmail(userStore *UserStore, tenantStore *TenantStore, jwtSecret
 		}
 
 		refreshToken, _ := Sign(Claims{
-			Sub:      user.Email,
-			Role:     user.Role,
-			TenantID: tenantID,
-			Exp:      time.Now().Add(7 * 24 * time.Hour).Unix(),
+			Sub:       user.Email,
+			Role:      user.Role,
+			TenantID:  tenantID,
+			TokenType: "refresh",
+			Exp:       time.Now().Add(7 * 24 * time.Hour).Unix(),
 		}, jwtSecret)
 
 		var tenant *Tenant

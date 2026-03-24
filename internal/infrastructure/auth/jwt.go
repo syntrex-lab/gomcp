@@ -16,19 +16,21 @@ import (
 
 // Standard JWT errors.
 var (
-	ErrInvalidToken  = errors.New("auth: invalid token")
-	ErrExpiredToken  = errors.New("auth: token expired")
-	ErrInvalidSecret = errors.New("auth: secret too short (min 32 bytes)")
+	ErrInvalidToken    = errors.New("auth: invalid token")
+	ErrExpiredToken    = errors.New("auth: token expired")
+	ErrInvalidSecret   = errors.New("auth: secret too short (min 32 bytes)")
+	ErrWrongTokenType  = errors.New("auth: wrong token type")
 )
 
 // Claims represents JWT payload.
 type Claims struct {
-	Sub      string `json:"sub"`                   // Subject (username or user ID)
-	Role     string `json:"role"`                  // RBAC role: admin, operator, analyst, viewer
-	TenantID string `json:"tenant_id,omitempty"`   // Multi-tenant isolation
-	Exp      int64  `json:"exp"`                   // Expiration (Unix timestamp)
-	Iat      int64  `json:"iat"`                   // Issued at
-	Iss      string `json:"iss,omitempty"`         // Issuer
+	Sub       string `json:"sub"`                   // Subject (username or user ID)
+	Role      string `json:"role"`                  // RBAC role: admin, operator, analyst, viewer
+	TenantID  string `json:"tenant_id,omitempty"`   // Multi-tenant isolation
+	TokenType string `json:"token_type,omitempty"` // "access" or "refresh"
+	Exp       int64  `json:"exp"`                   // Expiration (Unix timestamp)
+	Iat       int64  `json:"iat"`                   // Issued at
+	Iss       string `json:"iss,omitempty"`         // Issuer
 }
 
 // IsExpired returns true if the token has expired.
@@ -101,9 +103,10 @@ func NewAccessToken(subject, role string, secret []byte, ttl time.Duration) (str
 		ttl = 15 * time.Minute
 	}
 	return Sign(Claims{
-		Sub: subject,
-		Role: role,
-		Exp: time.Now().Add(ttl).Unix(),
+		Sub:       subject,
+		Role:      role,
+		TokenType: "access",
+		Exp:       time.Now().Add(ttl).Unix(),
 	}, secret)
 }
 
@@ -113,9 +116,10 @@ func NewRefreshToken(subject, role string, secret []byte, ttl time.Duration) (st
 		ttl = 7 * 24 * time.Hour
 	}
 	return Sign(Claims{
-		Sub: subject,
-		Role: role,
-		Exp: time.Now().Add(ttl).Unix(),
+		Sub:       subject,
+		Role:      role,
+		TokenType: "refresh",
+		Exp:       time.Now().Add(ttl).Unix(),
 	}, secret)
 }
 

@@ -78,6 +78,18 @@ func (m *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// SEC-C5: Reject refresh tokens used as access tokens.
+		// Only "access" tokens (or legacy tokens without type) can access protected routes.
+		if claims.TokenType == "refresh" {
+			slog.Warn("refresh token used as access token",
+				"sub", claims.Sub,
+				"path", r.URL.Path,
+				"remote", r.RemoteAddr,
+			)
+			writeAuthError(w, http.StatusUnauthorized, "access token required — refresh tokens cannot be used for API access")
+			return
+		}
+
 		// Inject claims into context for downstream handlers.
 		ctx := context.WithValue(r.Context(), claimsKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))

@@ -50,10 +50,11 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 		}
 
 		accessToken, err := Sign(Claims{
-			Sub:      user.Email,
-			Role:     user.Role,
-			TenantID: user.TenantID,
-			Exp:      time.Now().Add(15 * time.Minute).Unix(),
+			Sub:       user.Email,
+			Role:      user.Role,
+			TenantID:  user.TenantID,
+			TokenType: "access",
+			Exp:       time.Now().Add(15 * time.Minute).Unix(),
 		}, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
@@ -61,10 +62,11 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 		}
 
 		refreshToken, err := Sign(Claims{
-			Sub:      user.Email,
-			Role:     user.Role,
-			TenantID: user.TenantID,
-			Exp:      time.Now().Add(7 * 24 * time.Hour).Unix(),
+			Sub:       user.Email,
+			Role:      user.Role,
+			TenantID:  user.TenantID,
+			TokenType: "refresh",
+			Exp:       time.Now().Add(7 * 24 * time.Hour).Unix(),
 		}, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
@@ -98,6 +100,12 @@ func HandleRefresh(secret []byte) http.HandlerFunc {
 		claims, err := Verify(req.RefreshToken, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusUnauthorized, "invalid or expired refresh token")
+			return
+		}
+
+		// SEC-C5: Only accept refresh tokens for token renewal
+		if claims.TokenType != "refresh" {
+			writeAuthError(w, http.StatusUnauthorized, "invalid token type — refresh token required")
 			return
 		}
 

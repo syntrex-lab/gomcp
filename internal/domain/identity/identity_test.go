@@ -119,7 +119,7 @@ func TestStoreRegisterAndGet(t *testing.T) {
 	agent := &AgentIdentity{
 		AgentID:   "agent-01",
 		AgentName: "Task Manager",
-		CreatedBy: "admin@xn--80akacl3adqr.xn--p1acf",
+		CreatedBy: "admin@syntrex.pro",
 		AgentType: AgentSupervised,
 	}
 	if err := s.Register(agent); err != nil {

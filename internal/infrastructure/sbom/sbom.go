@@ -101,7 +101,7 @@ func (g *Generator) GenerateSPDX() (*SPDXDocument, error) {
 		DataLicense: "CC0-1.0",
 		SPDXID:      "SPDXRef-DOCUMENT",
 		DocumentName: fmt.Sprintf("%s-%s", g.productName, g.version),
-		Namespace:    fmt.Sprintf("https://sentinel.xn--80akacl3adqr.xn--p1acf/spdx/%s/%s", g.productName, g.version),
+		Namespace:    fmt.Sprintf("https://sentinel.syntrex.pro/spdx/%s/%s", g.productName, g.version),
 		CreationInfo: CreationInfo{
 			Created:  time.Now().UTC().Format(time.RFC3339),
 			Creators: []string{"Tool: sentinel-sbom-gen", "Organization: Syntrex"},

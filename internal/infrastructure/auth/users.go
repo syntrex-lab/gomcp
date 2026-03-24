@@ -64,11 +64,11 @@ func NewUserStore(db ...*sql.DB) *UserStore {
 	}
 
 	// Ensure default admin exists
-	if _, err := s.GetByEmail("admin@xn--80akacl3adqr.xn--p1acf"); err != nil {
+	if _, err := s.GetByEmail("admin@syntrex.pro"); err != nil {
 		hash, _ := bcrypt.GenerateFromPassword([]byte("syntrex-admin-2026"), bcrypt.DefaultCost)
 		admin := &User{
 			ID:            generateID("usr"),
-			Email:         "admin@xn--80akacl3adqr.xn--p1acf",
+			Email:         "admin@syntrex.pro",
 			DisplayName:   "Administrator",
 			Role:          "admin",
 			Active:        true,
