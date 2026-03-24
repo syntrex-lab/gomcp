@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -1580,4 +1581,66 @@ func (s *Server) handleUsage(w http.ResponseWriter, r *http.Request) {
 
 	info := s.usageTracker.GetUsage(userID, ip)
 	writeJSON(w, http.StatusOK, info)
+}
+
+// handleWaitlist captures registration interest when signups are closed.
+// POST /api/waitlist  body: {"email": "user@corp.com", "company": "CorpX", "use_case": "LLM protection"}
+// Public endpoint, no auth required. Rate-limited globally.
+func (s *Server) handleWaitlist(w http.ResponseWriter, r *http.Request) {
+	limitBody(w, r)
+	defer r.Body.Close()
+
+	var req struct {
+		Email   string `json:"email"`
+		Company string `json:"company"`
+		UseCase string `json:"use_case"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+
+	// Validate email
+	if req.Email == "" || len(req.Email) < 5 || len(req.Email) > 254 {
+		writeError(w, http.StatusBadRequest, "valid email is required")
+		return
+	}
+	// Basic email format check
+	hasAt := false
+	for _, c := range req.Email {
+		if c == '@' {
+			hasAt = true
+			break
+		}
+	}
+	if !hasAt {
+		writeError(w, http.StatusBadRequest, "valid email is required")
+		return
+	}
+
+	// Sanitize
+	if len(req.Company) > 200 {
+		req.Company = req.Company[:200]
+	}
+	if len(req.UseCase) > 1000 {
+		req.UseCase = req.UseCase[:1000]
+	}
+
+	// Log the waitlist entry (always — even if DB fails)
+	slog.Info("waitlist submission",
+		"email", req.Email,
+		"company", req.Company,
+		"use_case", req.UseCase,
+		"ip", r.RemoteAddr,
+	)
+
+	// Persist via SOC repo if available
+	if s.socSvc != nil {
+		s.socSvc.AddWaitlistEntry(req.Email, req.Company, req.UseCase)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":  "ok",
+		"message": "You've been added to the waitlist. We'll notify you when registration opens.",
+	})
 }

@@ -1436,3 +1436,17 @@ func (s *Service) ImportIncidents(incidents []peer.SyncIncident) (int, error) {
 	}
 	return imported, nil
 }
+
+// AddWaitlistEntry records a waitlist registration interest.
+// Currently logs to the audit trail — DB persistence added when registration opens.
+func (s *Service) AddWaitlistEntry(email, company, useCase string) {
+	if s.logger != nil {
+		s.logger.Record(audit.ModuleSOC, "WAITLIST:NEW",
+			fmt.Sprintf("email=%s company=%s use_case=%s", email, company, useCase))
+	}
+	slog.Info("waitlist entry recorded",
+		"email", email,
+		"company", company,
+		"use_case", useCase,
+	)
+}

@@ -264,6 +264,8 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("POST /api/v1/scan", s.handlePublicScan)
 	// Usage endpoint — returns scan quota for caller
 	mux.HandleFunc("GET /api/v1/usage", s.handleUsage)
+	// Waitlist endpoint — registration interest capture (no auth, rate-limited)
+	mux.HandleFunc("POST /api/waitlist", s.handleWaitlist)
 
 	// pprof debug endpoints (§P4C) — gated behind EnablePprof()
 	if s.pprofEnabled {
