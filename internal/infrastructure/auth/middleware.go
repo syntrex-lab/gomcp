@@ -34,6 +34,7 @@ func NewJWTMiddleware(secret []byte) *JWTMiddleware {
 			"/api/auth/plans":    true,
 			"/api/v1/scan":       true, // public demo scanner
 			"/api/v1/usage":      true, // public usage/quota check
+			"/api/v1/soc/events": true, // sensor ingest (auth via RBAC API key when enabled)
 			"/api/soc/events/stream": true, // SSE uses query param auth
 			"/api/soc/stream":         true, // SSE live feed (EventSource can't send headers)
 			"/api/soc/ws":             true, // WebSocket-style SSE push
