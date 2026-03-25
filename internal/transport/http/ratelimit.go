@@ -62,9 +62,23 @@ func (rl *RateLimiter) Allow(ip string) bool {
 }
 
 // Middleware wraps an HTTP handler with rate limiting.
+// Certain paths are excluded to prevent battle/scan traffic from blocking
+// dashboard access (auth, SSE stream, event ingestion).
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !rl.enabled {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Exclude critical dashboard paths from global rate limiter
+		p := r.URL.Path
+		switch {
+		case p == "/api/auth/login",
+			p == "/api/auth/refresh",
+			p == "/api/soc/stream",
+			p == "/api/v1/soc/events",
+			p == "/api/soc/events":
 			next.ServeHTTP(w, r)
 			return
 		}
