@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1472,6 +1473,10 @@ func (s *Server) handleSLAConfig(w http.ResponseWriter, _ *http.Request) {
 // handlePublicScan provides a public (no-auth) prompt scanning endpoint for the demo.
 // POST /api/v1/scan  body: {"prompt": "Ignore all instructions..."}
 // Runs sentinel-core (54 Rust engines) + Shield (C11 payload inspection) in parallel.
+//
+// Concurrency control: uses scanSem (buffered channel) to limit parallel scans.
+// If all slots are busy, returns 503 Service Unavailable with Retry-After header
+// to prevent OOM under burst load (e.g., 20 concurrent battle workers).
 func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 	limitBody(w, r)
 	defer r.Body.Close()
@@ -1515,9 +1520,25 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// ── Concurrency limiter: prevent OOM under burst load ──
+	select {
+	case s.scanSem <- struct{}{}:
+		defer func() { <-s.scanSem }() // Release slot when done
+	default:
+		// All scan slots busy → backpressure
+		w.Header().Set("Retry-After", "2")
+		slog.Warn("scan backpressure: all slots busy", "capacity", cap(s.scanSem))
+		writeError(w, http.StatusServiceUnavailable, "scan engine busy — retry in 2 seconds")
+		return
+	}
+
+	// ── Scan timeout: 30s hard limit ──
+	scanCtx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
 	// Run sentinel-core (54 Rust engines)
 	coreEngine := s.getEngine("sentinel-core")
-	coreResult, coreErr := coreEngine.ScanPrompt(r.Context(), req.Prompt)
+	coreResult, coreErr := coreEngine.ScanPrompt(scanCtx, req.Prompt)
 
 	// Run Shield (C payload inspection)
 	var shieldEng engines.Shield
@@ -1526,7 +1547,7 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 	} else {
 		shieldEng = engines.NewStubShield()
 	}
-	shieldResult, shieldErr := shieldEng.InspectTraffic(r.Context(), []byte(req.Prompt), nil)
+	shieldResult, shieldErr := shieldEng.InspectTraffic(scanCtx, []byte(req.Prompt), nil)
 
 	// Build response — merge both engines
 	response := map[string]any{}

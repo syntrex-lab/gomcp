@@ -40,6 +40,7 @@ type Server struct {
 	jwtSecret        []byte
 	wsHub            *WSHub
 	usageTracker     *auth.UsageTracker
+	scanSem          chan struct{} // Limits concurrent CPU-heavy scans
 	sovereignEnabled bool
 	sovereignMode    string
 	pprofEnabled     bool
@@ -59,6 +60,7 @@ func New(socSvc *appsoc.Service, port int) *Server {
 		metrics:     NewMetrics(),
 		logger:      NewRequestLogger(true),
 		wsHub:       NewWSHub(),
+		scanSem:     make(chan struct{}, 4), // Max 4 concurrent scans (1 per CPU)
 	}
 }
 
