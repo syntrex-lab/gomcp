@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -268,6 +269,23 @@ func (s *Server) handleIngestEvent(w http.ResponseWriter, r *http.Request) {
 	event.SessionID = req.SessionID
 	event.ZeroGMode = req.ZeroGMode
 	event.Metadata = req.Metadata
+	if event.Metadata == nil {
+		event.Metadata = make(map[string]string)
+	}
+
+	// Auto-enrich: inject source IP from HTTP request if not provided by client.
+	if event.Metadata["src_ip"] == "" {
+		ip := r.RemoteAddr
+		if host, _, err := net.SplitHostPort(ip); err == nil {
+			ip = host
+		}
+		event.Metadata["src_ip"] = ip
+	}
+
+	// Auto-enrich: set confidence from top-level field if not in metadata.
+	if event.Metadata["confidence"] == "" && event.Confidence > 0 {
+		event.Metadata["confidence"] = fmt.Sprintf("%.2f", event.Confidence)
+	}
 
 	// Run full pipeline.
 	eventID, incident, err := s.socSvc.IngestEvent(event)
