@@ -6,12 +6,15 @@ package httpserver
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	shadowai "github.com/syntrex/gomcp/internal/application/shadow_ai"
@@ -41,6 +44,8 @@ type Server struct {
 	wsHub            *WSHub
 	usageTracker     *auth.UsageTracker
 	scanSem          chan struct{} // Limits concurrent CPU-heavy scans
+	scanCache        map[string]*cachedScan
+	scanCacheMu      sync.RWMutex
 	sovereignEnabled bool
 	sovereignMode    string
 	pprofEnabled     bool
@@ -48,6 +53,18 @@ type Server struct {
 	srv              *http.Server
 	tlsCert          string
 	tlsKey           string
+}
+
+// cachedScan stores a cached scan result with expiry.
+type cachedScan struct {
+	response map[string]any
+	expiry   time.Time
+}
+
+// promptHash returns a fast SHA-256 hash of the prompt for cache keying.
+func promptHash(prompt string) string {
+	h := sha256.Sum256([]byte(prompt))
+	return hex.EncodeToString(h[:16]) // 128-bit is enough for cache key
 }
 
 // New creates an HTTP server bound to the given port.
@@ -60,7 +77,8 @@ func New(socSvc *appsoc.Service, port int) *Server {
 		metrics:     NewMetrics(),
 		logger:      NewRequestLogger(true),
 		wsHub:       NewWSHub(),
-		scanSem:     make(chan struct{}, 4), // Max 4 concurrent scans (1 per CPU)
+		scanSem:     make(chan struct{}, 6), // Max 6 concurrent scans (~2 per CPU)
+		scanCache:   make(map[string]*cachedScan, 500),
 	}
 }
 
