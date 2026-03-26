@@ -7,6 +7,7 @@
 // Features:
 //   - In-memory store with capacity management (LRU eviction)
 //   - Cosine similarity search for nearest-neighbor matching
+//   - QJL 1-bit quantized approximate search (TurboQuant §20)
 //   - Route labels for categorized intent patterns
 //   - Thread-safe for concurrent access
 package vectorstore
@@ -40,42 +41,103 @@ type SearchResult struct {
 
 // Stats holds store statistics.
 type Stats struct {
-	TotalRecords int            `json:"total_records"`
-	Capacity     int            `json:"capacity"`
-	RouteCount   map[string]int `json:"route_counts"`
-	VerdictCount map[string]int `json:"verdict_counts"`
-	AvgEntropy   float64        `json:"avg_entropy"`
+	TotalRecords      int            `json:"total_records"`
+	Capacity          int            `json:"capacity"`
+	RouteCount        map[string]int `json:"route_counts"`
+	VerdictCount      map[string]int `json:"verdict_counts"`
+	AvgEntropy        float64        `json:"avg_entropy"`
+	QJLEnabled        bool           `json:"qjl_enabled"`
+	QJLProjections    int            `json:"qjl_projections"`
+	QJLBitsPerVec     int            `json:"qjl_bits_per_vector"`
+	QJLBytesPerVec    int            `json:"qjl_bytes_per_vector"`
+	PQEnabled         bool           `json:"pq_enabled"`
+	PQBitsPerDim      int            `json:"pq_bits_per_dim"`
+	PQBytesPerVec     int            `json:"pq_bytes_per_vector"`
+	PQCompressionRate float64        `json:"pq_compression_ratio"`
+	PQDropFloat64     bool           `json:"pq_drop_float64"`
 }
 
 // Config configures the vector store.
 type Config struct {
-	Capacity int // Max records before LRU eviction. Default: 1000.
+	Capacity       int   // Max records before LRU eviction. Default: 1000.
+	QJLProjections int   // Number of QJL random projections (bits). -1 = disabled. Default: 256.
+	QJLSeed        int64 // PRNG seed for reproducible QJL projections. Default: 42.
+	QJLVectorDim   int   // Expected vector dimensionality for QJL. Default: 128.
+	PQBitsPerDim   int   // PolarQuant bits per dimension (0 = disabled, 4 or 8). Default: 0.
+	PQSeed         int64 // PRNG seed for PolarQuant rotation matrix. Default: 7.
+	PQDropFloat64  bool  // If true, discard the original float64 vectors to save memory. Default: false.
 }
 
 // DefaultConfig returns sensible defaults.
 func DefaultConfig() Config {
-	return Config{Capacity: 1000}
+	return Config{
+		Capacity:       1000,
+		QJLProjections: 256,
+		QJLSeed:        42,
+		QJLVectorDim:   128,
+		PQBitsPerDim:   0,  // Disabled by default.
+		PQSeed:         7,
+	}
 }
 
 // Store is an in-memory intent vector store with similarity search.
 type Store struct {
-	mu       sync.RWMutex
-	records  []*IntentRecord
-	index    map[string]int // id → position in records
-	capacity int
-	nextID   int
+	mu         sync.RWMutex
+	records    []*IntentRecord
+	signatures []QJLSignature      // Parallel QJL signatures (same index as records)
+	compressed []CompressedVector  // Parallel PolarQuant codes (same index as records)
+	index      map[string]int      // id → position in records
+	capacity   int
+	nextID     int
+	qjl        *QJLProjection      // nil if QJL disabled
+	pq         *PolarQuantCodec    // nil if PolarQuant disabled
+	dropFloat  bool                // If true, clear rec.Vector after encoding
 }
 
 // New creates a new vector store.
 func New(cfg *Config) *Store {
 	c := DefaultConfig()
-	if cfg != nil && cfg.Capacity > 0 {
-		c.Capacity = cfg.Capacity
+	if cfg != nil {
+		if cfg.Capacity > 0 {
+			c.Capacity = cfg.Capacity
+		}
+		if cfg.QJLProjections > 0 {
+			c.QJLProjections = cfg.QJLProjections
+		}
+		if cfg.QJLSeed != 0 {
+			c.QJLSeed = cfg.QJLSeed
+		}
+		if cfg.QJLVectorDim > 0 {
+			c.QJLVectorDim = cfg.QJLVectorDim
+		}
+		if cfg.QJLProjections == -1 {
+			c.QJLProjections = 0
+		}
+		if cfg.PQBitsPerDim > 0 {
+			c.PQBitsPerDim = cfg.PQBitsPerDim
+		}
+		if cfg.PQSeed != 0 {
+			c.PQSeed = cfg.PQSeed
+		}
 	}
-	return &Store{
-		index:    make(map[string]int),
-		capacity: c.Capacity,
+
+	s := &Store{
+		index:     make(map[string]int),
+		capacity:  c.Capacity,
+		dropFloat: cfg != nil && cfg.PQDropFloat64,
 	}
+
+	// Initialize QJL projection if enabled.
+	if c.QJLProjections > 0 {
+		s.qjl = NewQJLProjection(c.QJLProjections, c.QJLVectorDim, c.QJLSeed)
+	}
+
+	// Initialize PolarQuant codec if enabled.
+	if c.PQBitsPerDim > 0 {
+		s.pq = NewPolarQuantCodec(c.QJLVectorDim, c.PQBitsPerDim, c.PQSeed)
+	}
+
+	return s
 }
 
 // Add stores an intent record. Returns the assigned ID.
@@ -97,6 +159,12 @@ func (s *Store) Add(rec *IntentRecord) string {
 		oldest := s.records[0]
 		delete(s.index, oldest.ID)
 		s.records = s.records[1:]
+		if len(s.signatures) > 0 {
+			s.signatures = s.signatures[1:]
+		}
+		if len(s.compressed) > 0 {
+			s.compressed = s.compressed[1:]
+		}
 		// Rebuild index after shift.
 		for i, r := range s.records {
 			s.index[r.ID] = i
@@ -105,6 +173,27 @@ func (s *Store) Add(rec *IntentRecord) string {
 
 	s.index[rec.ID] = len(s.records)
 	s.records = append(s.records, rec)
+
+	// Auto-compute QJL signature if enabled and vector is present.
+	if s.qjl != nil && len(rec.Vector) > 0 {
+		sig := s.qjl.Quantize(rec.Vector)
+		s.signatures = append(s.signatures, sig)
+	} else {
+		s.signatures = append(s.signatures, nil)
+	}
+
+	// Auto-compute PolarQuant compressed vector if enabled.
+	if s.pq != nil && len(rec.Vector) > 0 {
+		cv := s.pq.Encode(rec.Vector)
+		s.compressed = append(s.compressed, cv)
+		// Reclaim memory if configured.
+		if s.dropFloat {
+			rec.Vector = nil
+		}
+	} else {
+		s.compressed = append(s.compressed, CompressedVector{})
+	}
+
 	return rec.ID
 }
 
@@ -112,7 +201,11 @@ func (s *Store) Add(rec *IntentRecord) string {
 func (s *Store) Search(vector []float64, k int) []SearchResult {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	return s.searchLocked(vector, k)
+}
 
+// searchLocked is the inner brute-force search. Caller must hold s.mu.RLock.
+func (s *Store) searchLocked(vector []float64, k int) []SearchResult {
 	if len(s.records) == 0 || len(vector) == 0 {
 		return nil
 	}
@@ -123,11 +216,25 @@ func (s *Store) Search(vector []float64, k int) []SearchResult {
 	}
 
 	scores := make([]scored, 0, len(s.records))
+
+	// Pre-encode query once if PolarQuant is active.
+	var queryCv CompressedVector
+	pqActive := s.pq != nil
+	if pqActive {
+		queryCv = s.pq.Encode(vector)
+	}
+
 	for i, rec := range s.records {
-		if len(rec.Vector) == 0 {
+		var sim float64
+		if len(rec.Vector) > 0 {
+			// Exact cosine if vector is present.
+			sim = CosineSimilarity(vector, rec.Vector)
+		} else if pqActive && i < len(s.compressed) && len(s.compressed[i].Data) > 0 {
+			// Fallback to compressed similarity if vector was dropped.
+			sim = s.pq.CompressedSimilarity(queryCv, s.compressed[i])
+		} else {
 			continue
 		}
-		sim := CosineSimilarity(vector, rec.Vector)
 		scores = append(scores, scored{idx: i, sim: sim})
 	}
 
@@ -176,6 +283,111 @@ func (s *Store) Get(id string) *IntentRecord {
 	return s.records[idx]
 }
 
+// SearchQJL performs two-phase approximate nearest-neighbor search using QJL.
+//
+// Phase 1: Score all records via POPCNT Hamming similarity on QJL signatures (O(bits/64) per record).
+// Phase 2: Take top-2k candidates and rerank with exact CosineSimilarity.
+// Returns top-k results with exact cosine similarity scores.
+//
+// Falls back to brute-force searchLocked() if QJL is not enabled.
+func (s *Store) SearchQJL(vector []float64, k int) []SearchResult {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Fallback to brute-force if QJL not enabled.
+	if s.qjl == nil {
+		return s.searchLocked(vector, k)
+	}
+
+	if len(s.records) == 0 || len(vector) == 0 {
+		return nil
+	}
+
+	// Phase 1: QJL approximate filter.
+	querySig := s.qjl.Quantize(vector)
+	numBits := s.qjl.NumProjections()
+
+	type scored struct {
+		idx int
+		sim float64
+	}
+
+	candidates := make([]scored, 0, len(s.records))
+	for i := range s.records {
+		if i >= len(s.signatures) || s.signatures[i] == nil {
+			continue
+		}
+		sim := HammingSimilarity(querySig, s.signatures[i], numBits)
+		candidates = append(candidates, scored{idx: i, sim: sim})
+	}
+
+	// Sort by approximate similarity descending.
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].sim > candidates[j].sim
+	})
+
+	// Phase 2: Rerank top-2k candidates with higher-fidelity similarity.
+	rankPool := 2 * k
+	if rankPool > len(candidates) {
+		rankPool = len(candidates)
+	}
+
+	exact := make([]scored, 0, rankPool)
+
+	// Pre-encode query once for PolarQuant rerank (avoid re-encoding per candidate).
+	var queryCv CompressedVector
+	pqActive := s.pq != nil
+	if pqActive {
+		queryCv = s.pq.Encode(vector)
+	}
+
+	for i := 0; i < rankPool; i++ {
+		idx := candidates[i].idx
+		var sim float64
+
+		if pqActive && idx < len(s.compressed) && len(s.compressed[idx].Data) > 0 {
+			// PolarQuant compressed similarity (no full float64 decode).
+			sim = s.pq.CompressedSimilarity(queryCv, s.compressed[idx])
+		} else {
+			// Full float64 cosine similarity.
+			rec := s.records[idx]
+			if len(rec.Vector) == 0 {
+				continue
+			}
+			sim = CosineSimilarity(vector, rec.Vector)
+		}
+		exact = append(exact, scored{idx: idx, sim: sim})
+	}
+
+	// Sort by exact/compressed similarity descending.
+	sort.Slice(exact, func(i, j int) bool {
+		return exact[i].sim > exact[j].sim
+	})
+
+	if k > len(exact) {
+		k = len(exact)
+	}
+
+	results := make([]SearchResult, k)
+	for i := 0; i < k; i++ {
+		results[i] = SearchResult{
+			Record:     s.records[exact[i].idx],
+			Similarity: exact[i].sim,
+		}
+	}
+	return results
+}
+
+// QJLEnabled returns whether QJL quantization is active.
+func (s *Store) QJLEnabled() bool {
+	return s.qjl != nil
+}
+
+// PQEnabled returns whether PolarQuant compressed storage is active.
+func (s *Store) PQEnabled() bool {
+	return s.pq != nil
+}
+
 // GetStats returns store statistics.
 func (s *Store) GetStats() Stats {
 	s.mu.RLock()
@@ -201,6 +413,24 @@ func (s *Store) GetStats() Stats {
 	if len(s.records) > 0 {
 		stats.AvgEntropy = totalEntropy / float64(len(s.records))
 	}
+
+	// QJL statistics.
+	if s.qjl != nil {
+		stats.QJLEnabled = true
+		stats.QJLProjections = s.qjl.NumProjections()
+		stats.QJLBitsPerVec = s.qjl.NumProjections()
+		stats.QJLBytesPerVec = (s.qjl.NumProjections() + 63) / 64 * 8
+	}
+
+	// PolarQuant statistics.
+	if s.pq != nil {
+		stats.PQEnabled = true
+		stats.PQBitsPerDim = s.pq.BitsPerDim()
+		stats.PQBytesPerVec = s.pq.CompressedBytes() + 4 // +4 for float32 radius
+		stats.PQCompressionRate = s.pq.CompressionRatio()
+		stats.PQDropFloat64 = s.dropFloat
+	}
+
 	return stats
 }
 
