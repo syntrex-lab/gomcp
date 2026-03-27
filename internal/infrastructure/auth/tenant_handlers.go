@@ -78,8 +78,17 @@ func HandleRegister(userStore *UserStore, tenantStore *TenantStore, jwtSecret []
 		}
 
 		// Update user with tenant_id
+		// CRITICAL: pgx/v5 requires $1/$2 placeholders, NOT ? (silently fails with ?)
 		if userStore.db != nil {
-			userStore.db.Exec(`UPDATE users SET tenant_id = ? WHERE id = ?`, tenant.ID, user.ID)
+			if _, err := userStore.db.Exec(`UPDATE users SET tenant_id = $1 WHERE id = $2`, tenant.ID, user.ID); err != nil {
+				slog.Error("register: failed to set tenant_id on user", "user", user.ID, "tenant", tenant.ID, "error", err)
+			}
+			// Also update in-memory cache
+			userStore.mu.Lock()
+			if u, ok := userStore.users[user.Email]; ok {
+				u.TenantID = tenant.ID
+			}
+			userStore.mu.Unlock()
 		}
 
 		// Generate verification code
@@ -149,9 +158,16 @@ func HandleVerifyEmail(userStore *UserStore, tenantStore *TenantStore, jwtSecret
 		}
 
 		// Find tenant for this user
+		// CRITICAL: pgx/v5 requires $1 placeholder, NOT ?
 		var tenantID string
 		if userStore.db != nil {
-			userStore.db.QueryRow(`SELECT tenant_id FROM users WHERE id = ?`, user.ID).Scan(&tenantID)
+			if err := userStore.db.QueryRow(`SELECT tenant_id FROM users WHERE id = $1`, user.ID).Scan(&tenantID); err != nil {
+				slog.Warn("verify: could not read tenant_id from DB", "user", user.ID, "error", err)
+			}
+		}
+		// Fallback: check in-memory user object
+		if tenantID == "" && user.TenantID != "" {
+			tenantID = user.TenantID
 		}
 
 		// Issue JWT with tenant context
@@ -243,11 +259,18 @@ func HandleGetTenant(tenantStore *TenantStore) http.HandlerFunc {
 
 // HandleUpdateTenantPlan upgrades/downgrades the tenant plan.
 // POST /api/auth/tenant/plan { plan_id }
+// SEC: Only allows downgrade to 'free' without payment. Paid upgrades require
+// Stripe webhook confirmation (HandleStripeWebhook). This prevents users from
+// clicking "Перейти" on paid plans and getting access without payment.
 func HandleUpdateTenantPlan(tenantStore *TenantStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := GetClaims(r.Context())
 		if claims == nil || claims.Role != "admin" {
 			http.Error(w, `{"error":"admin role required"}`, http.StatusForbidden)
+			return
+		}
+		if claims.TenantID == "" {
+			http.Error(w, `{"error":"no tenant context"}`, http.StatusForbidden)
 			return
 		}
 
@@ -256,6 +279,12 @@ func HandleUpdateTenantPlan(tenantStore *TenantStore) http.HandlerFunc {
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, `{"error":"invalid request"}`, http.StatusBadRequest)
+			return
+		}
+
+		// SEC: Block direct upgrades to paid plans — only Stripe webhook can do that
+		if req.PlanID != "free" {
+			http.Error(w, `{"error":"paid plan upgrades require payment — visit syntrex.pro/pricing"}`, http.StatusPaymentRequired)
 			return
 		}
 

@@ -186,6 +186,8 @@ func (s *Server) StartEventBridge(ctx context.Context) {
 
 // requireSOC wraps a handler to enforce SOC Dashboard plan access.
 // Returns 403 for tenants on the Free plan (SOCEnabled=false).
+// SEC: Also denies access when TenantID is empty — prevents data leak
+// when tenant_id was not properly set during registration.
 // No-op when tenantStore is nil (backward compatible with tests).
 func (s *Server) requireSOC(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -194,9 +196,15 @@ func (s *Server) requireSOC(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		claims := auth.GetClaims(r.Context())
-		if claims == nil || claims.TenantID == "" {
-			// Unauthenticated or no tenant context — let RBAC/JWT handle it
-			next(w, r)
+		if claims == nil {
+			writeError(w, http.StatusUnauthorized, "authentication required for SOC access")
+			return
+		}
+		if claims.TenantID == "" {
+			// SEC: Empty TenantID = either tenant_id wasn't saved (pgx bug)
+			// or user has no tenant. Block access to prevent cross-tenant leak.
+			writeError(w, http.StatusForbidden,
+				"no tenant context — re-login required. If this persists, contact support.")
 			return
 		}
 		tenant, err := s.tenantStore.GetTenant(claims.TenantID)
