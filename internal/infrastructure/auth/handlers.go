@@ -13,13 +13,9 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-// TokenResponse is returned on successful login/refresh.
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"` // seconds
-	TokenType    string `json:"token_type"`
-	User         *User  `json:"user"`
+	CSRFToken string `json:"csrf_token"`
+	User      *User  `json:"user"`
 }
 
 // HandleLogin creates an HTTP handler for POST /api/auth/login.
@@ -73,12 +69,30 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 			return
 		}
 
+		// SEC: H1 - Use httpOnly Cookies instead of localStorage
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_token",
+			Value:    accessToken,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   900,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_refresh",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   7 * 24 * 3600,
+		})
+
+		// SEC: M2 - Generate stateless CSRF token
+		csrfToken := hmacSign([]byte(accessToken), secret)[:32]
+
 		resp := TokenResponse{
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-			ExpiresIn:    900, // 15 minutes
-			TokenType:    "Bearer",
-			User:         user,
+			CSRFToken: csrfToken,
+			User:      user,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -89,15 +103,14 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 // HandleRefresh creates an HTTP handler for POST /api/auth/refresh.
 func HandleRefresh(secret []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req struct {
-			RefreshToken string `json:"refresh_token"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeAuthError(w, http.StatusBadRequest, "invalid JSON body")
+		// Extract refresh token from cookie
+		cookie, err := r.Cookie("syntrex_refresh")
+		if err != nil {
+			writeAuthError(w, http.StatusUnauthorized, "missing refresh token cookie")
 			return
 		}
 
-		claims, err := Verify(req.RefreshToken, secret)
+		claims, err := Verify(cookie.Value, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusUnauthorized, "invalid or expired refresh token")
 			return
@@ -115,15 +128,50 @@ func HandleRefresh(secret []byte) http.HandlerFunc {
 			return
 		}
 
+		// SEC: H1 - Set new httpOnly token
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_token",
+			Value:    accessToken,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   900,
+		})
+
+		csrfToken := hmacSign([]byte(accessToken), secret)[:32]
+
 		resp := TokenResponse{
-			AccessToken:  accessToken,
-			RefreshToken: req.RefreshToken,
-			ExpiresIn:    900,
-			TokenType:    "Bearer",
+			CSRFToken: csrfToken,
+			User:      &User{Email: claims.Sub, Role: claims.Role}, // Mock user to provide payload
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
+	}
+}
+
+// HandleLogout clears the auth cookies.
+// POST /api/auth/logout
+func HandleLogout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_token",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_refresh",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1,
+		})
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
 }
 

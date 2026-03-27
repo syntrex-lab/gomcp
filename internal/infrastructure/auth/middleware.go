@@ -28,6 +28,7 @@ func NewJWTMiddleware(secret []byte) *JWTMiddleware {
 			"/readyz":          true,
 			"/metrics":         true,
 			"/api/auth/login":  true,
+			"/api/auth/logout": true,
 			"/api/auth/refresh": true,
 			"/api/auth/register": true,
 			"/api/auth/verify":   true,
@@ -51,20 +52,43 @@ func (m *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Extract Bearer token.
+		var tokenStr string
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			writeAuthError(w, http.StatusUnauthorized, "missing Authorization header")
-			return
+		if strings.HasPrefix(authHeader, "Bearer stx_") {
+			// Allow API keys via header
+			parts := strings.SplitN(authHeader, " ", 2)
+			tokenStr = parts[1]
+		} else {
+			// SEC: H1 - Read token from httpOnly cookie
+			cookie, err := r.Cookie("syntrex_token")
+			if err != nil || cookie.Value == "" {
+				// Fallback to legacy bearer token (for clients that haven't migrated yet or testing)
+				if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+					tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+				} else {
+					writeAuthError(w, http.StatusUnauthorized, "missing authentication cookie")
+					return
+				}
+			} else {
+				tokenStr = cookie.Value
+			}
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
-			writeAuthError(w, http.StatusUnauthorized, "invalid Authorization format (expected: Bearer <token>)")
-			return
+		// SEC: M2 - Validate CSRF Token on mutating requests
+		if r.Method == "POST" || r.Method == "PUT" || r.Method == "DELETE" || r.Method == "PATCH" {
+			// Exempt API keys from CSRF if they used the header
+			if !strings.HasPrefix(authHeader, "Bearer stx_") {
+				csrfHeader := r.Header.Get("X-CSRF-Token")
+				expectedCSRF := hmacSign([]byte(tokenStr), m.secret)[:32]
+				if csrfHeader == "" || csrfHeader != expectedCSRF {
+					slog.Warn("CSRF token missing or invalid", "path", r.URL.Path, "remote", r.RemoteAddr)
+					writeAuthError(w, http.StatusForbidden, "invalid CSRF token")
+					return
+				}
+			}
 		}
 
-		claims, err := Verify(parts[1], m.secret)
+		claims, err := Verify(tokenStr, m.secret)
 		if err != nil {
 			slog.Warn("JWT auth failed",
 				"error", err,

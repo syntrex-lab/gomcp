@@ -153,7 +153,7 @@ func (s *Server) handleSOCEvents(_ context.Context, req mcp.CallToolRequest) (*m
 	}
 
 	limit := req.GetInt("limit", 20)
-	events, err := s.socSvc.ListEvents(limit)
+	events, err := s.socSvc.ListEvents("", limit) // MCP: global view
 	if err != nil {
 		return errorResult(err), nil
 	}
@@ -167,7 +167,7 @@ func (s *Server) handleSOCIncidents(_ context.Context, req mcp.CallToolRequest) 
 
 	status := req.GetString("status", "")
 	limit := req.GetInt("limit", 20)
-	incidents, err := s.socSvc.ListIncidents(status, limit)
+	incidents, err := s.socSvc.ListIncidents("", status, limit) // MCP: global view
 	if err != nil {
 		return errorResult(err), nil
 	}
@@ -207,7 +207,7 @@ func (s *Server) handleSOCSensors(_ context.Context, _ mcp.CallToolRequest) (*mc
 		return errorResult(fmt.Errorf("soc service not configured")), nil
 	}
 
-	sensors, err := s.socSvc.ListSensors()
+	sensors, err := s.socSvc.ListSensors("") // MCP: global view
 	if err != nil {
 		return errorResult(err), nil
 	}
@@ -219,7 +219,7 @@ func (s *Server) handleSOCDashboard(_ context.Context, _ mcp.CallToolRequest) (*
 		return errorResult(fmt.Errorf("soc service not configured")), nil
 	}
 
-	dashboard, err := s.socSvc.Dashboard()
+	dashboard, err := s.socSvc.Dashboard("") // MCP: global view
 	if err != nil {
 		return errorResult(err), nil
 	}

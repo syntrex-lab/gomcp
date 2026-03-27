@@ -67,7 +67,7 @@ func HandleRegister(userStore *UserStore, tenantStore *TenantStore, jwtSecret []
 		}
 
 		// Create tenant
-		tenant, err := tenantStore.CreateTenant(req.OrgName, req.OrgSlug, user.ID, "starter")
+		tenant, err := tenantStore.CreateTenant(req.OrgName, req.OrgSlug, user.ID, "free")
 		if err != nil {
 			if err == ErrTenantExists {
 				http.Error(w, `{"error":"organization slug already taken"}`, http.StatusConflict)
@@ -260,7 +260,7 @@ func HandleUpdateTenantPlan(tenantStore *TenantStore) http.HandlerFunc {
 func HandleListPlans() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		plans := make([]Plan, 0, len(DefaultPlans))
-		order := []string{"starter", "professional", "enterprise"}
+		order := []string{"free", "starter", "professional", "enterprise"}
 		for _, id := range order {
 			if p, ok := DefaultPlans[id]; ok {
 				plans = append(plans, p)

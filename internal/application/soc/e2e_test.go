@@ -72,7 +72,7 @@ func TestE2E_FullPipeline_IngestToIncident(t *testing.T) {
 	assert.Equal(t, inc2.ID, gotInc.ID)
 
 	// Step 4: Verify decision chain integrity.
-	dash, err := svc.Dashboard()
+	dash, err := svc.Dashboard("")
 	require.NoError(t, err)
 	assert.True(t, dash.ChainValid, "decision chain should be valid")
 	assert.Greater(t, dash.TotalEvents, 0)
@@ -310,7 +310,7 @@ func TestE2E_ConcurrentIngest(t *testing.T) {
 
 	// Some events may be rate-limited (100 events/sec per sensor),
 	// but there should be no panics or data corruption.
-	dash, err := svc.Dashboard()
+	dash, err := svc.Dashboard("")
 	require.NoError(t, err)
 	assert.Greater(t, dash.TotalEvents, 0, "at least some events should have been ingested")
 }

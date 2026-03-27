@@ -22,10 +22,12 @@ type Plan struct {
 	Name              string `json:"name"`
 	Description       string `json:"description,omitempty"`
 	MaxUsers          int    `json:"max_users"`
-	MaxEventsMonth    int    `json:"max_events_month"`
+	MaxEventsMonth    int    `json:"max_events_month"`    // SOC event ingestion quota (-1=unlimited)
 	MaxIncidents      int    `json:"max_incidents"`
 	MaxSensors        int    `json:"max_sensors"`
+	MaxScansMonth     int    `json:"max_scans_month"`     // /api/v1/scan quota (-1=unlimited, 0=none)
 	RetentionDays     int    `json:"retention_days"`
+	SOCEnabled        bool   `json:"soc_enabled"`         // SOC Dashboard access
 	SLAEnabled        bool   `json:"sla_enabled"`
 	SOAREnabled       bool   `json:"soar_enabled"`
 	ComplianceEnabled bool   `json:"compliance_enabled"`
@@ -35,25 +37,40 @@ type Plan struct {
 
 // DefaultPlans defines the standard pricing tiers (prices in RUB kopecks).
 var DefaultPlans = map[string]Plan{
+	"free": {
+		ID: "free", Name: "Free",
+		Description: "Scanner API — 1 000 сканов/мес, все 66 движков, без SOC Dashboard",
+		MaxUsers: 1, MaxEventsMonth: 0, MaxIncidents: 0, MaxSensors: 0,
+		MaxScansMonth: 1000,
+		RetentionDays: 0,
+		SOCEnabled: false, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
+		PriceMonthCents: 0,
+	},
 	"starter": {
 		ID: "starter", Name: "Starter",
 		Description: "AI-мониторинг: до 5 сенсоров, базовая корреляция и алерты",
 		MaxUsers: 10, MaxEventsMonth: 100000, MaxIncidents: 200, MaxSensors: 5,
-		RetentionDays: 30, SLAEnabled: true, SOAREnabled: false, ComplianceEnabled: false,
+		MaxScansMonth: 100000,
+		RetentionDays: 30,
+		SOCEnabled: true, SLAEnabled: true, SOAREnabled: false, ComplianceEnabled: false,
 		PriceMonthCents: 8990000, // 89 900 ₽/мес
 	},
 	"professional": {
 		ID: "professional", Name: "Professional",
 		Description: "Полный AI SOC: SOAR, compliance, расширенная аналитика",
 		MaxUsers: 50, MaxEventsMonth: 500000, MaxIncidents: 1000, MaxSensors: 25,
-		RetentionDays: 90, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
+		MaxScansMonth: 500000,
+		RetentionDays: 90,
+		SOCEnabled: true, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
 		PriceMonthCents: 14990000, // 149 900 ₽/мес
 	},
 	"enterprise": {
 		ID: "enterprise", Name: "Enterprise",
 		Description: "On-premise / выделенный инстанс. Сертификация — на стороне заказчика",
 		MaxUsers: -1, MaxEventsMonth: -1, MaxIncidents: -1, MaxSensors: -1,
-		RetentionDays: 365, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
+		MaxScansMonth: -1, // unlimited
+		RetentionDays: 365,
+		SOCEnabled: true, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
 		OnPremise: true,
 		PriceMonthCents: -1, // по запросу
 	},
@@ -79,7 +96,17 @@ func (t *Tenant) GetPlan() Plan {
 	if p, ok := DefaultPlans[t.PlanID]; ok {
 		return p
 	}
-	return DefaultPlans["starter"]
+	return DefaultPlans["free"] // secure default: unknown plan → free tier
+}
+
+// CanAccessSOC returns true if the tenant's plan includes SOC Dashboard access.
+func (t *Tenant) CanAccessSOC() bool {
+	return t.GetPlan().SOCEnabled
+}
+
+// ScanLimit returns the monthly scan quota for this tenant (-1=unlimited).
+func (t *Tenant) ScanLimit() int {
+	return t.GetPlan().MaxScansMonth
 }
 
 // CanIngestEvent checks if the tenant can still ingest events this month.

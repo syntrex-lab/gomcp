@@ -169,6 +169,7 @@ func main() {
 	shieldEngine, shieldErr := engines.NewNativeShield()
 	if shieldErr != nil {
 		logger.Warn("shield: C engine not available, using stub", "error", shieldErr)
+		srv.SetShieldEngine(engines.NewStubShield())
 	} else {
 		srv.SetShieldEngine(shieldEngine)
 		logger.Info("shield: C engine initialized", "version", shieldEngine.Version())

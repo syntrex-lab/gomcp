@@ -184,100 +184,129 @@ func (s *Server) StartEventBridge(ctx context.Context) {
 	slog.Info("event bridge started: EventBus → WSHub")
 }
 
+// requireSOC wraps a handler to enforce SOC Dashboard plan access.
+// Returns 403 for tenants on the Free plan (SOCEnabled=false).
+// No-op when tenantStore is nil (backward compatible with tests).
+func (s *Server) requireSOC(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.tenantStore == nil {
+			next(w, r) // no tenant store = no enforcement (tests, legacy)
+			return
+		}
+		claims := auth.GetClaims(r.Context())
+		if claims == nil || claims.TenantID == "" {
+			// Unauthenticated or no tenant context — let RBAC/JWT handle it
+			next(w, r)
+			return
+		}
+		tenant, err := s.tenantStore.GetTenant(claims.TenantID)
+		if err != nil {
+			writeError(w, http.StatusForbidden, "tenant not found")
+			return
+		}
+		if !tenant.CanAccessSOC() {
+			writeError(w, http.StatusForbidden,
+				"SOC Dashboard requires Starter plan or above — upgrade at syntrex.pro/pricing")
+			return
+		}
+		next(w, r)
+	}
+}
+
 // Start begins listening on the configured port. Blocks until ctx is cancelled.
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 
-	// SOC API routes — read (requires Viewer role when RBAC enabled)
-	mux.HandleFunc("GET /api/soc/dashboard", s.rbac.Require(RoleViewer, s.handleDashboard))
-	mux.HandleFunc("GET /api/soc/events", s.rbac.Require(RoleViewer, s.handleEvents))
-	mux.HandleFunc("GET /api/soc/incidents", s.rbac.Require(RoleViewer, s.handleIncidents))
+	// SOC API routes — read (requires Viewer role + SOC plan when RBAC/JWT enabled)
+	mux.HandleFunc("GET /api/soc/dashboard", s.rbac.Require(RoleViewer, s.requireSOC(s.handleDashboard)))
+	mux.HandleFunc("GET /api/soc/events", s.rbac.Require(RoleViewer, s.requireSOC(s.handleEvents)))
+	mux.HandleFunc("GET /api/soc/incidents", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidents)))
 	// Sprint 2: Advanced incident management (must be before generic {id})
-	mux.HandleFunc("GET /api/soc/incidents/advanced", s.rbac.Require(RoleViewer, s.handleIncidentsAdvanced))
-	mux.HandleFunc("POST /api/soc/incidents/bulk", s.rbac.Require(RoleAnalyst, s.handleIncidentsBulk))
-	mux.HandleFunc("GET /api/soc/incidents/export", s.rbac.Require(RoleViewer, s.handleIncidentsExport))
-	mux.HandleFunc("GET /api/soc/sla-config", s.rbac.Require(RoleViewer, s.handleSLAConfig))
-	mux.HandleFunc("GET /api/soc/incidents/{id}", s.rbac.Require(RoleViewer, s.handleIncidentDetail))
-	mux.HandleFunc("GET /api/soc/incidents/{id}/sla", s.rbac.Require(RoleViewer, s.handleIncidentSLA))
-	mux.HandleFunc("GET /api/soc/sensors", s.rbac.Require(RoleViewer, s.handleSensors))
-	mux.HandleFunc("GET /api/soc/clusters", s.rbac.Require(RoleViewer, s.handleClusters))
-	mux.HandleFunc("GET /api/soc/rules", s.rbac.Require(RoleViewer, s.handleRules))
-	mux.HandleFunc("GET /api/soc/killchain/{id}", s.rbac.Require(RoleViewer, s.handleKillChain))
-	mux.HandleFunc("GET /api/soc/stream", s.rbac.Require(RoleViewer, s.handleSSEStream))
-	mux.HandleFunc("GET /api/soc/threat-intel", s.rbac.Require(RoleAnalyst, s.handleThreatIntel))
-	mux.HandleFunc("GET /api/soc/webhook-stats", s.rbac.Require(RoleAnalyst, s.handleWebhookStats))
-	mux.HandleFunc("GET /api/soc/analytics", s.rbac.Require(RoleViewer, s.handleAnalytics))
+	mux.HandleFunc("GET /api/soc/incidents/advanced", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentsAdvanced)))
+	mux.HandleFunc("POST /api/soc/incidents/bulk", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleIncidentsBulk)))
+	mux.HandleFunc("GET /api/soc/incidents/export", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentsExport)))
+	mux.HandleFunc("GET /api/soc/sla-config", s.rbac.Require(RoleViewer, s.requireSOC(s.handleSLAConfig)))
+	mux.HandleFunc("GET /api/soc/incidents/{id}", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentDetail)))
+	mux.HandleFunc("GET /api/soc/incidents/{id}/sla", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentSLA)))
+	mux.HandleFunc("GET /api/soc/sensors", s.rbac.Require(RoleViewer, s.requireSOC(s.handleSensors)))
+	mux.HandleFunc("GET /api/soc/clusters", s.rbac.Require(RoleViewer, s.requireSOC(s.handleClusters)))
+	mux.HandleFunc("GET /api/soc/rules", s.rbac.Require(RoleViewer, s.requireSOC(s.handleRules)))
+	mux.HandleFunc("GET /api/soc/killchain/{id}", s.rbac.Require(RoleViewer, s.requireSOC(s.handleKillChain)))
+	mux.HandleFunc("GET /api/soc/stream", s.rbac.Require(RoleViewer, s.requireSOC(s.handleSSEStream)))
+	mux.HandleFunc("GET /api/soc/threat-intel", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleThreatIntel)))
+	mux.HandleFunc("GET /api/soc/webhook-stats", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleWebhookStats)))
+	mux.HandleFunc("GET /api/soc/analytics", s.rbac.Require(RoleViewer, s.requireSOC(s.handleAnalytics)))
 
-	// SOC API routes — write (requires Analyst/Sensor role when RBAC enabled)
-	mux.HandleFunc("POST /api/v1/soc/events", s.rbac.Require(RoleSensor, s.handleIngestEvent))
-	mux.HandleFunc("POST /api/v1/soc/events/batch", s.rbac.Require(RoleSensor, s.handleBatchIngest))
-	mux.HandleFunc("POST /api/soc/sensors/heartbeat", s.rbac.Require(RoleSensor, s.handleSensorHeartbeat))
-	mux.HandleFunc("POST /api/soc/incidents/{id}/verdict", s.rbac.Require(RoleAnalyst, s.handleVerdict))
+	// SOC API routes — write (requires Analyst/Sensor role + SOC plan when RBAC enabled)
+	mux.HandleFunc("POST /api/v1/soc/events", s.rbac.Require(RoleSensor, s.requireSOC(s.handleIngestEvent)))
+	mux.HandleFunc("POST /api/v1/soc/events/batch", s.rbac.Require(RoleSensor, s.requireSOC(s.handleBatchIngest)))
+	mux.HandleFunc("POST /api/soc/sensors/heartbeat", s.rbac.Require(RoleSensor, s.requireSOC(s.handleSensorHeartbeat)))
+	mux.HandleFunc("POST /api/soc/incidents/{id}/verdict", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleVerdict)))
 	// Case Management (SOAR §P3)
-	mux.HandleFunc("POST /api/soc/incidents/{id}/assign", s.rbac.Require(RoleAnalyst, s.handleIncidentAssign))
-	mux.HandleFunc("POST /api/soc/incidents/{id}/status", s.rbac.Require(RoleAnalyst, s.handleIncidentStatus))
-	mux.HandleFunc("GET /api/soc/incidents/{id}/notes", s.rbac.Require(RoleViewer, s.handleIncidentNotes))
-	mux.HandleFunc("POST /api/soc/incidents/{id}/notes", s.rbac.Require(RoleAnalyst, s.handleIncidentNotes))
-	mux.HandleFunc("GET /api/soc/incidents/{id}/timeline", s.rbac.Require(RoleViewer, s.handleIncidentTimeline))
-	mux.HandleFunc("GET /api/soc/incidents/{id}/detail", s.rbac.Require(RoleViewer, s.handleIncidentFullDetail))
+	mux.HandleFunc("POST /api/soc/incidents/{id}/assign", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleIncidentAssign)))
+	mux.HandleFunc("POST /api/soc/incidents/{id}/status", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleIncidentStatus)))
+	mux.HandleFunc("GET /api/soc/incidents/{id}/notes", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentNotes)))
+	mux.HandleFunc("POST /api/soc/incidents/{id}/notes", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleIncidentNotes)))
+	mux.HandleFunc("GET /api/soc/incidents/{id}/timeline", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentTimeline)))
+	mux.HandleFunc("GET /api/soc/incidents/{id}/detail", s.rbac.Require(RoleViewer, s.requireSOC(s.handleIncidentFullDetail)))
 	// Webhook Management (SOAR §15)
-	mux.HandleFunc("GET /api/soc/webhooks", s.rbac.Require(RoleAnalyst, s.handleWebhooksGet))
-	mux.HandleFunc("POST /api/soc/webhooks", s.rbac.Require(RoleAdmin, s.handleWebhooksSet))
-	mux.HandleFunc("POST /api/soc/webhooks/test", s.rbac.Require(RoleAdmin, s.handleWebhooksTest))
-	mux.HandleFunc("POST /api/soc/sensors/register", s.rbac.Require(RoleAdmin, s.handleSensorRegister))
-	mux.HandleFunc("DELETE /api/soc/sensors/{id}", s.rbac.Require(RoleAdmin, s.handleSensorDelete))
+	mux.HandleFunc("GET /api/soc/webhooks", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleWebhooksGet)))
+	mux.HandleFunc("POST /api/soc/webhooks", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleWebhooksSet)))
+	mux.HandleFunc("POST /api/soc/webhooks/test", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleWebhooksTest)))
+	mux.HandleFunc("POST /api/soc/sensors/register", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleSensorRegister)))
+	mux.HandleFunc("DELETE /api/soc/sensors/{id}", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleSensorDelete)))
 
-	// Admin routes (§9, §17)
-	mux.HandleFunc("GET /api/soc/audit", s.rbac.Require(RoleAdmin, s.handleAuditTrail))
-	mux.HandleFunc("GET /api/soc/keys", s.rbac.Require(RoleAdmin, s.handleListKeys))
+	// Admin routes (§9, §17) — require SOC plan
+	mux.HandleFunc("GET /api/soc/audit", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleAuditTrail)))
+	mux.HandleFunc("GET /api/soc/keys", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleListKeys)))
 
-	// Zero-G Mode routes (§13.4)
-	mux.HandleFunc("GET /api/soc/zerog", s.rbac.Require(RoleAnalyst, s.handleZeroGStatus))
-	mux.HandleFunc("POST /api/soc/zerog/toggle", s.rbac.Require(RoleAdmin, s.handleZeroGToggle))
-	mux.HandleFunc("POST /api/soc/zerog/resolve", s.rbac.Require(RoleAnalyst, s.handleZeroGResolve))
+	// Zero-G Mode routes (§13.4) — require SOC plan
+	mux.HandleFunc("GET /api/soc/zerog", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleZeroGStatus)))
+	mux.HandleFunc("POST /api/soc/zerog/toggle", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleZeroGToggle)))
+	mux.HandleFunc("POST /api/soc/zerog/resolve", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleZeroGResolve)))
 
-	// P2P SOC Sync routes (§14)
-	mux.HandleFunc("GET /api/soc/p2p/peers", s.rbac.Require(RoleAnalyst, s.handleP2PPeers))
-	mux.HandleFunc("POST /api/soc/p2p/peers", s.rbac.Require(RoleAdmin, s.handleP2PAddPeer))
-	mux.HandleFunc("DELETE /api/soc/p2p/peers/{id}", s.rbac.Require(RoleAdmin, s.handleP2PRemovePeer))
+	// P2P SOC Sync routes (§14) — require SOC plan
+	mux.HandleFunc("GET /api/soc/p2p/peers", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleP2PPeers)))
+	mux.HandleFunc("POST /api/soc/p2p/peers", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleP2PAddPeer)))
+	mux.HandleFunc("DELETE /api/soc/p2p/peers/{id}", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleP2PRemovePeer)))
 
-	// Engine & Sovereign routes (§3, §4, §21)
-	mux.HandleFunc("GET /api/soc/engines", s.rbac.Require(RoleViewer, s.handleEngineStatus))
-	mux.HandleFunc("GET /api/soc/sovereign", s.rbac.Require(RoleAdmin, s.handleSovereignConfig))
+	// Engine & Sovereign routes (§3, §4, §21) — require SOC plan
+	mux.HandleFunc("GET /api/soc/engines", s.rbac.Require(RoleViewer, s.requireSOC(s.handleEngineStatus)))
+	mux.HandleFunc("GET /api/soc/sovereign", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleSovereignConfig)))
 
-	// Anomaly detection (§5) + Playbook engine (§10)
-	mux.HandleFunc("GET /api/soc/anomaly/alerts", s.rbac.Require(RoleAnalyst, s.handleAnomalyAlerts))
-	mux.HandleFunc("GET /api/soc/anomaly/baselines", s.rbac.Require(RoleAnalyst, s.handleAnomalyBaselines))
-	mux.HandleFunc("GET /api/soc/playbooks", s.rbac.Require(RoleViewer, s.handlePlaybooks))
+	// Anomaly detection (§5) + Playbook engine (§10) — require SOC plan
+	mux.HandleFunc("GET /api/soc/anomaly/alerts", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleAnomalyAlerts)))
+	mux.HandleFunc("GET /api/soc/anomaly/baselines", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleAnomalyBaselines)))
+	mux.HandleFunc("GET /api/soc/playbooks", s.rbac.Require(RoleViewer, s.requireSOC(s.handlePlaybooks)))
 
-	// Live updates — WebSocket-style SSE push (§20)
-	mux.HandleFunc("GET /api/soc/ws", s.rbac.Require(RoleViewer, s.wsHub.HandleSSEStream))
+	// Live updates — WebSocket-style SSE push (§20) — require SOC plan
+	mux.HandleFunc("GET /api/soc/ws", s.rbac.Require(RoleViewer, s.requireSOC(s.wsHub.HandleSSEStream)))
 
-	// Deep health, compliance, audit, explainability (§12, §15)
-	mux.HandleFunc("GET /api/soc/health/deep", s.rbac.Require(RoleViewer, s.handleDeepHealth))
-	mux.HandleFunc("GET /api/soc/compliance", s.rbac.Require(RoleAdmin, s.handleComplianceReport))
-	mux.HandleFunc("GET /api/soc/audit/trail", s.rbac.Require(RoleAnalyst, s.handleAuditTrailPage))
-	mux.HandleFunc("GET /api/soc/incidents/{id}/explain", s.rbac.Require(RoleAnalyst, s.handleIncidentExplain))
+	// Deep health, compliance, audit, explainability (§12, §15) — require SOC plan
+	mux.HandleFunc("GET /api/soc/health/deep", s.rbac.Require(RoleViewer, s.requireSOC(s.handleDeepHealth)))
+	mux.HandleFunc("GET /api/soc/compliance", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleComplianceReport)))
+	mux.HandleFunc("GET /api/soc/audit/trail", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleAuditTrailPage)))
+	mux.HandleFunc("GET /api/soc/incidents/{id}/explain", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleIncidentExplain)))
 
-	// Threat intel matching (§6) + Data retention (§19)
-	mux.HandleFunc("POST /api/soc/threat-intel/match", s.rbac.Require(RoleAnalyst, s.handleThreatIntelMatch))
-	mux.HandleFunc("GET /api/soc/retention", s.rbac.Require(RoleAdmin, s.handleRetentionPolicies))
+	// Threat intel matching (§6) + Data retention (§19) — require SOC plan
+	mux.HandleFunc("POST /api/soc/threat-intel/match", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleThreatIntelMatch)))
+	mux.HandleFunc("GET /api/soc/retention", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleRetentionPolicies)))
 
-	// Shadow AI Control Module routes (§Shadow AI ТЗ)
-	mux.HandleFunc("GET /api/v1/shadow-ai/stats", s.rbac.Require(RoleViewer, s.handleShadowAIStats))
-	mux.HandleFunc("GET /api/v1/shadow-ai/events", s.rbac.Require(RoleViewer, s.handleShadowAIEvents))
-	mux.HandleFunc("GET /api/v1/shadow-ai/events/{id}", s.rbac.Require(RoleViewer, s.handleShadowAIEventDetail))
-	mux.HandleFunc("POST /api/v1/shadow-ai/block", s.rbac.Require(RoleAnalyst, s.handleShadowAIBlock))
-	mux.HandleFunc("POST /api/v1/shadow-ai/unblock", s.rbac.Require(RoleAnalyst, s.handleShadowAIUnblock))
-	mux.HandleFunc("POST /api/v1/shadow-ai/scan", s.rbac.Require(RoleAnalyst, s.handleShadowAIScan))
-	mux.HandleFunc("GET /api/v1/shadow-ai/integrations", s.rbac.Require(RoleViewer, s.handleShadowAIIntegrations))
-	mux.HandleFunc("GET /api/v1/shadow-ai/integrations/{vendor}/health", s.rbac.Require(RoleViewer, s.handleShadowAIVendorHealth))
-	mux.HandleFunc("GET /api/v1/shadow-ai/compliance", s.rbac.Require(RoleAdmin, s.handleShadowAICompliance))
-	mux.HandleFunc("POST /api/v1/shadow-ai/doc-review", s.rbac.Require(RoleAnalyst, s.handleShadowAIDocReview))
-	mux.HandleFunc("GET /api/v1/shadow-ai/doc-review/{id}", s.rbac.Require(RoleViewer, s.handleShadowAIDocReviewStatus))
-	mux.HandleFunc("GET /api/v1/shadow-ai/approvals", s.rbac.Require(RoleAnalyst, s.handleShadowAIPendingApprovals))
-	mux.HandleFunc("GET /api/v1/shadow-ai/approvals/tiers", s.rbac.Require(RoleViewer, s.handleShadowAIApprovalTiers))
-	mux.HandleFunc("POST /api/v1/shadow-ai/approvals/{id}/verdict", s.rbac.Require(RoleAnalyst, s.handleShadowAIApprovalVerdict))
+	// Shadow AI Control Module routes (§Shadow AI ТЗ) — require SOC plan
+	mux.HandleFunc("GET /api/v1/shadow-ai/stats", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIStats)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/events", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIEvents)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/events/{id}", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIEventDetail)))
+	mux.HandleFunc("POST /api/v1/shadow-ai/block", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleShadowAIBlock)))
+	mux.HandleFunc("POST /api/v1/shadow-ai/unblock", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleShadowAIUnblock)))
+	mux.HandleFunc("POST /api/v1/shadow-ai/scan", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleShadowAIScan)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/integrations", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIIntegrations)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/integrations/{vendor}/health", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIVendorHealth)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/compliance", s.rbac.Require(RoleAdmin, s.requireSOC(s.handleShadowAICompliance)))
+	mux.HandleFunc("POST /api/v1/shadow-ai/doc-review", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleShadowAIDocReview)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/doc-review/{id}", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIDocReviewStatus)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/approvals", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleShadowAIPendingApprovals)))
+	mux.HandleFunc("GET /api/v1/shadow-ai/approvals/tiers", s.rbac.Require(RoleViewer, s.requireSOC(s.handleShadowAIApprovalTiers)))
+	mux.HandleFunc("POST /api/v1/shadow-ai/approvals/{id}/verdict", s.rbac.Require(RoleAnalyst, s.requireSOC(s.handleShadowAIApprovalVerdict)))
 
 	// Observability — always public (unauthenticated, K8s probes)
 	mux.HandleFunc("GET /health", s.handleHealth)
@@ -286,7 +315,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("GET /metrics", s.metrics.Handler())
 	mux.HandleFunc("GET /api/soc/ratelimit", s.handleRateLimitStats)
 
-	// Public scan endpoint — demo scanner (no auth required, rate-limited)
+	// Public scan endpoint — demo scanner (no auth, rate-limited, plan-aware quota)
 	mux.HandleFunc("POST /api/v1/scan", s.handlePublicScan)
 	// Usage endpoint — returns scan quota for caller
 	mux.HandleFunc("GET /api/v1/usage", s.handleUsage)
@@ -306,6 +335,7 @@ func (s *Server) Start(ctx context.Context) error {
 	if s.jwtAuth != nil {
 		loginLimiter := auth.NewRateLimiter(5, time.Minute)
 		mux.HandleFunc("POST /api/auth/login", auth.RateLimitMiddleware(loginLimiter, auth.HandleLogin(s.userStore, s.jwtSecret)))
+		mux.HandleFunc("POST /api/auth/logout", auth.HandleLogout())
 		mux.HandleFunc("POST /api/auth/refresh", auth.HandleRefresh(s.jwtSecret))
 		// Auth routes — require authentication
 		mux.HandleFunc("GET /api/auth/me", auth.HandleMe(s.userStore))

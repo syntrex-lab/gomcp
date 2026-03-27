@@ -631,7 +631,7 @@ type socDoctorAdapter struct {
 }
 
 func (a *socDoctorAdapter) Dashboard() (tools.SOCDashboardData, error) {
-	dash, err := a.soc.Dashboard()
+	dash, err := a.soc.Dashboard("")
 	if err != nil {
 		return tools.SOCDashboardData{}, err
 	}

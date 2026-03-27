@@ -669,14 +669,14 @@ func (s *Service) CheckSensors() []domsoc.Sensor {
 	return offlineSensors
 }
 
-// ListEvents returns recent events with optional limit.
-func (s *Service) ListEvents(limit int) ([]domsoc.SOCEvent, error) {
-	return s.repo.ListEvents("", limit)
+// ListEvents returns recent events with optional limit, scoped to tenant.
+func (s *Service) ListEvents(tenantID string, limit int) ([]domsoc.SOCEvent, error) {
+	return s.repo.ListEvents(tenantID, limit)
 }
 
-// ListIncidents returns incidents, optionally filtered by status.
-func (s *Service) ListIncidents(status string, limit int) ([]domsoc.Incident, error) {
-	return s.repo.ListIncidents("", status, limit)
+// ListIncidents returns incidents, optionally filtered by status, scoped to tenant.
+func (s *Service) ListIncidents(tenantID string, status string, limit int) ([]domsoc.Incident, error) {
+	return s.repo.ListIncidents(tenantID, status, limit)
 }
 
 // ListRules returns all active correlation rules (built-in + custom).
@@ -1133,9 +1133,9 @@ func (s *Service) ExportIncidentsCSV(f IncidentFilter) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// ListSensors returns all registered sensors.
-func (s *Service) ListSensors() ([]domsoc.Sensor, error) {
-	return s.repo.ListSensors("")
+// ListSensors returns registered sensors, scoped to tenant.
+func (s *Service) ListSensors(tenantID string) ([]domsoc.Sensor, error) {
+	return s.repo.ListSensors(tenantID)
 }
 
 // RegisterSensor adds or updates a sensor in the SOC.
@@ -1154,24 +1154,24 @@ func (s *Service) DeregisterSensor(id string) {
 	delete(s.sensors, id)
 }
 
-// Dashboard returns SOC KPI metrics.
-func (s *Service) Dashboard() (*DashboardData, error) {
-	totalEvents, err := s.repo.CountEvents("")
+// Dashboard returns SOC KPI metrics, scoped to tenant.
+func (s *Service) Dashboard(tenantID string) (*DashboardData, error) {
+	totalEvents, err := s.repo.CountEvents(tenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	lastHourEvents, err := s.repo.CountEventsSince("", time.Now().Add(-1 * time.Hour))
+	lastHourEvents, err := s.repo.CountEventsSince(tenantID, time.Now().Add(-1 * time.Hour))
 	if err != nil {
 		return nil, err
 	}
 
-	openIncidents, err := s.repo.CountOpenIncidents("")
+	openIncidents, err := s.repo.CountOpenIncidents(tenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	sensorCounts, err := s.repo.CountSensorsByStatus("")
+	sensorCounts, err := s.repo.CountSensorsByStatus(tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -1300,7 +1300,7 @@ type PlaybookResult struct {
 
 // ComplianceReport generates an EU AI Act Article 15 compliance report (§12.3).
 func (s *Service) ComplianceReport() (*ComplianceData, error) {
-	dashboard, err := s.Dashboard()
+	dashboard, err := s.Dashboard("") // global view for compliance
 	if err != nil {
 		return nil, err
 	}

@@ -27,10 +27,19 @@ func limitBody(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, MaxRequestBodySize)
 }
 
+// tenantFromRequest extracts TenantID from JWT claims in request context.
+// Returns empty string for unauthenticated/public requests (backward compatible).
+func tenantFromRequest(r *http.Request) string {
+	if claims := auth.GetClaims(r.Context()); claims != nil {
+		return claims.TenantID
+	}
+	return ""
+}
+
 // handleDashboard returns SOC KPI metrics.
 // GET /api/soc/dashboard
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	dash, err := s.socSvc.Dashboard()
+	dash, err := s.socSvc.Dashboard(tenantFromRequest(r))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -52,7 +61,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		limit = 10000
 	}
 
-	events, err := s.socSvc.ListEvents(limit)
+	events, err := s.socSvc.ListEvents(tenantFromRequest(r), limit)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -76,7 +85,7 @@ func (s *Server) handleIncidents(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	incidents, err := s.socSvc.ListIncidents(status, limit)
+	incidents, err := s.socSvc.ListIncidents(tenantFromRequest(r), status, limit)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -122,8 +131,8 @@ func (s *Server) handleReadyz(w http.ResponseWriter, _ *http.Request) {
 }
 // handleSensors returns registered sensors with health status.
 // GET /api/soc/sensors
-func (s *Server) handleSensors(w http.ResponseWriter, _ *http.Request) {
-	sensors, err := s.socSvc.ListSensors()
+func (s *Server) handleSensors(w http.ResponseWriter, r *http.Request) {
+	sensors, err := s.socSvc.ListSensors(tenantFromRequest(r))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1132,7 +1141,7 @@ func (s *Server) handleDeepHealth(w http.ResponseWriter, r *http.Request) {
 // handleComplianceReport returns EU AI Act Article 15 compliance summary (§12.3).
 // GET /api/soc/compliance
 func (s *Server) handleComplianceReport(w http.ResponseWriter, r *http.Request) {
-	dash, err := s.socSvc.Dashboard()
+	dash, err := s.socSvc.Dashboard(tenantFromRequest(r))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "compliance: dashboard unavailable: "+err.Error())
 		return
@@ -1216,8 +1225,9 @@ func (s *Server) handleAuditTrailPage(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	events, _ := s.socSvc.ListEvents(limit)
-	incidents, _ := s.socSvc.ListIncidents("", 50)
+	tenantID := tenantFromRequest(r)
+	events, _ := s.socSvc.ListEvents(tenantID, limit)
+	incidents, _ := s.socSvc.ListIncidents(tenantID, "", 50)
 
 	// Build audit entries from events
 	entries := make([]map[string]any, 0, len(events))
