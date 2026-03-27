@@ -1532,17 +1532,24 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check usage quota (free tier: 1000 scans/month)
+	// Check usage quota — plan-aware (free=1000, starter=100k, pro=500k, enterprise=unlimited)
 	if s.usageTracker != nil {
 		userID := ""
+		planLimit := 1000 // default: anonymous/free
 		if claims := auth.GetClaims(r.Context()); claims != nil {
 			userID = claims.Sub
+			// Resolve tenant plan limit for authenticated users
+			if claims.TenantID != "" && s.tenantStore != nil {
+				if tenant, err := s.tenantStore.GetTenant(claims.TenantID); err == nil {
+					planLimit = tenant.ScanLimit()
+				}
+			}
 		}
 		ip := r.RemoteAddr
 		// T4-3 FIX: Do NOT trust X-Forwarded-For here.
 		// Trusting XFF allows attackers to rotate IPs and bypass quota entirely.
 		// When behind a trusted proxy, configure it to set X-Real-IP.
-		remaining, err := s.usageTracker.RecordScan(userID, ip)
+		remaining, err := s.usageTracker.RecordScanWithLimit(userID, ip, planLimit)
 		if err != nil {
 			w.Header().Set("X-RateLimit-Remaining", "0")
 			writeError(w, http.StatusTooManyRequests, "monthly scan quota exceeded — upgrade your plan at syntrex.pro/pricing")
