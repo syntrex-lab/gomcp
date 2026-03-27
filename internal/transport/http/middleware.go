@@ -2,57 +2,48 @@ package httpserver
 
 import (
 	"net/http"
-	"os"
-	"strings"
 )
 
-// corsAllowedOrigins returns the configured CORS origins.
-// Set SOC_CORS_ORIGIN in production (e.g. "https://syntrex.pro,https://xn--80akacl3adqr.xn--p1acf").
-// Defaults to "*" for local development.
-func corsAllowedOrigins() []string {
-	if v := os.Getenv("SOC_CORS_ORIGIN"); v != "" {
-		parts := strings.Split(v, ",")
-		for i := range parts {
-			parts[i] = strings.TrimSpace(parts[i])
-		}
-		return parts
-	}
-	return []string{"*"}
-}
-
-// corsMiddleware adds CORS headers with configurable origin.
-// Production: set SOC_CORS_ORIGIN=https://syntrex.pro,https://xn--80akacl3adqr.xn--p1acf
-func corsMiddleware(next http.Handler) http.Handler {
-	origins := corsAllowedOrigins()
-	allowAll := len(origins) == 1 && origins[0] == "*"
+// corsMiddleware adds CORS headers with strict origin validation.
+// Production: SetCORSOrigins should be called with ["https://syntrex.pro"]
+func corsMiddleware(origins []string) func(http.Handler) http.Handler {
+	allowAll := false
 	allowedSet := make(map[string]bool, len(origins))
 	for _, o := range origins {
+		if o == "*" {
+			allowAll = true
+		}
 		allowedSet[o] = true
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if allowAll {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-		} else {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			reqOrigin := r.Header.Get("Origin")
-			if allowedSet[reqOrigin] {
+			if reqOrigin != "" {
+				if !allowAll && !allowedSet[reqOrigin] {
+					http.Error(w, "CORS origin not allowed", http.StatusForbidden)
+					return
+				}
 				w.Header().Set("Access-Control-Allow-Origin", reqOrigin)
 				w.Header().Set("Vary", "Origin")
+			} else if allowAll {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
 			}
-		}
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Max-Age", "86400")
+			
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Max-Age", "86400")
 
-		// Handle preflight
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
+			// Handle preflight
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // securityHeadersMiddleware adds defense-in-depth headers to all responses.

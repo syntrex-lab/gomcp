@@ -53,6 +53,7 @@ type Server struct {
 	srv              *http.Server
 	tlsCert          string
 	tlsKey           string
+	corsOrigins      []string
 }
 
 // cachedScan stores a cached scan result with expiry.
@@ -80,6 +81,14 @@ func New(socSvc *appsoc.Service, port int) *Server {
 		wsHub:       NewWSHub(),
 		scanSem:     make(chan struct{}, 6), // Max 6 concurrent scans (~2 per CPU)
 		scanCache:   make(map[string]*cachedScan, 500),
+		corsOrigins: []string{"http://localhost:3000", "https://syntrex.pro"}, // Default secure fallback
+	}
+}
+
+// SetCORSOrigins configures the allowed origins for CORS strictly.
+func (s *Server) SetCORSOrigins(origins []string) {
+	if len(origins) > 0 {
+		s.corsOrigins = origins
 	}
 }
 
@@ -378,7 +387,7 @@ func (s *Server) Start(ctx context.Context) error {
 	if s.jwtAuth != nil {
 		handler = s.jwtAuth.Middleware(handler)
 	}
-	handler = corsMiddleware(handler)
+	handler = corsMiddleware(s.corsOrigins)(handler)
 	handler = securityHeadersMiddleware(handler)
 	handler = s.rateLimiter.Middleware(handler)
 	handler = s.metrics.Middleware(handler)

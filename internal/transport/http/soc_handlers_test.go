@@ -63,7 +63,7 @@ func newTestServer(t *testing.T) (*httptest.Server, *appsoc.Service) {
 	mux.HandleFunc("GET /api/soc/incident-explain/{id}", srv.handleIncidentExplain)
 	mux.HandleFunc("GET /health", srv.handleHealth)
 
-	ts := httptest.NewServer(corsMiddleware(mux))
+	ts := httptest.NewServer(corsMiddleware([]string{"*"})(mux))
 	t.Cleanup(ts.Close)
 
 	return ts, socSvc

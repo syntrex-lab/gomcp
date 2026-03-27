@@ -19,6 +19,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/syntrex/gomcp/internal/application/soc"
@@ -121,6 +122,16 @@ func main() {
 	// Service + HTTP
 	socSvc := soc.NewService(socRepo, decisionLogger)
 	srv := sochttp.New(socSvc, port)
+
+	// Configure CORS
+	if corsEnv := env("SOC_CORS_ORIGIN", ""); corsEnv != "" {
+		parts := strings.Split(corsEnv, ",")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		srv.SetCORSOrigins(parts)
+		slog.Info("CORS strict origins configured", "origins", len(parts))
+	}
 
 	// Threat Intelligence Store — always initialized for IOC enrichment (§6)
 	threatIntelStore := soc.NewThreatIntelStore()
