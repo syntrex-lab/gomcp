@@ -180,14 +180,32 @@ func HandleVerifyEmail(userStore *UserStore, tenantStore *TenantStore, jwtSecret
 			tenant, _ = tenantStore.GetTenant(tenantID)
 		}
 
+		// SEC: H1 - Use httpOnly Cookies instead of returning JSON tokens
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_token",
+			Value:    accessToken,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   900,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_refresh",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   7 * 24 * 3600,
+		})
+
+		// SEC: M2 - Generate stateless CSRF token
+		csrfToken := hmacSign([]byte(accessToken), jwtSecret)[:32]
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"access_token":  accessToken,
-			"refresh_token": refreshToken,
-			"expires_in":    900,
-			"token_type":    "Bearer",
-			"user":          user,
-			"tenant":        tenant,
+			"csrf_token": csrfToken,
+			"user":       user,
+			"tenant":     tenant,
 		})
 	}
 }
