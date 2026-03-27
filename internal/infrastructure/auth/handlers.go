@@ -75,7 +75,8 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 			Value:    accessToken,
 			Path:     "/",
 			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
 			MaxAge:   900,
 		})
 		http.SetCookie(w, &http.Cookie{
@@ -83,7 +84,8 @@ func HandleLogin(store *UserStore, secret []byte) http.HandlerFunc {
 			Value:    refreshToken,
 			Path:     "/",
 			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
 			MaxAge:   7 * 24 * 3600,
 		})
 
@@ -122,19 +124,27 @@ func HandleRefresh(secret []byte) http.HandlerFunc {
 			return
 		}
 
-		accessToken, err := NewAccessToken(claims.Sub, claims.Role, secret, 0)
+		// SEC-CRIT2: Preserve TenantID from refresh token in new access token
+		accessToken, err := Sign(Claims{
+			Sub:       claims.Sub,
+			Role:      claims.Role,
+			TenantID:  claims.TenantID,
+			TokenType: "access",
+			Exp:       time.Now().Add(15 * time.Minute).Unix(),
+		}, secret)
 		if err != nil {
 			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
 			return
 		}
 
-		// SEC: H1 - Set new httpOnly token
+		// SEC: H1 - Set new httpOnly token with Secure flag
 		http.SetCookie(w, &http.Cookie{
 			Name:     "syntrex_token",
 			Value:    accessToken,
 			Path:     "/",
 			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
 			MaxAge:   900,
 		})
 
@@ -142,7 +152,7 @@ func HandleRefresh(secret []byte) http.HandlerFunc {
 
 		resp := TokenResponse{
 			CSRFToken: csrfToken,
-			User:      &User{Email: claims.Sub, Role: claims.Role}, // Mock user to provide payload
+			User:      &User{Email: claims.Sub, Role: claims.Role, TenantID: claims.TenantID},
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -198,11 +208,23 @@ func HandleMe(store *UserStore) http.HandlerFunc {
 
 // HandleListUsers returns users scoped to the caller's tenant (admin only).
 // GET /api/auth/users
+// SEC-HIGH1: Returns empty list when TenantID is empty to prevent cross-tenant leak.
 func HandleListUsers(store *UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := GetClaims(r.Context())
 		if claims == nil || claims.Role != "admin" {
 			writeAuthError(w, http.StatusForbidden, "admin role required")
+			return
+		}
+
+		// SEC-HIGH1: Block listing when TenantID is empty — prevents
+		// empty-string match showing all users without a tenant.
+		if claims.TenantID == "" {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"users": []*User{},
+				"total": 0,
+			})
 			return
 		}
 
@@ -254,6 +276,12 @@ func HandleCreateUser(store *UserStore) http.HandlerFunc {
 			return
 		}
 
+		// SEC-HIGH2: Scope new user to caller's tenant
+		claims := GetClaims(r.Context())
+		if claims == nil || claims.TenantID == "" {
+			writeAuthError(w, http.StatusForbidden, "tenant context required to create users")
+			return
+		}
 		user, err := store.CreateUser(req.Email, req.DisplayName, req.Password, req.Role)
 		if err != nil {
 			if err == ErrUserExists {
@@ -427,18 +455,23 @@ func HandleDeleteAPIKey(store *UserStore) http.HandlerFunc {
 
 // APIKeyMiddleware checks for API key authentication alongside JWT.
 // If Authorization header starts with "stx_", validate as API key.
+// SEC-CRIT3: Now resolves user from DB to inject correct TenantID.
 func APIKeyMiddleware(store *UserStore, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if strings.HasPrefix(authHeader, "Bearer stx_") {
 			key := strings.TrimPrefix(authHeader, "Bearer ")
-			_, role, err := store.ValidateAPIKey(key)
+			userID, role, err := store.ValidateAPIKey(key)
 			if err != nil {
 				writeAuthError(w, http.StatusUnauthorized, "invalid API key")
 				return
 			}
-			// Inject synthetic claims for RBAC compatibility
-			claims := &Claims{Sub: "api-key", Role: role}
+			// SEC-CRIT3: Look up user to get TenantID for tenant isolation
+			var tenantID string
+			if user, err := store.GetByID(userID); err == nil && user != nil {
+				tenantID = user.TenantID
+			}
+			claims := &Claims{Sub: userID, Role: role, TenantID: tenantID}
 			ctx := SetClaimsContext(r.Context(), claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
