@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -307,6 +308,10 @@ func (s *Server) handleIngestEvent(w http.ResponseWriter, r *http.Request) {
 			}
 		case errors.Is(err, domsoc.ErrDraining):
 			writeError(w, http.StatusServiceUnavailable, err.Error())
+		case errors.Is(err, domsoc.ErrCapacityFull):
+			// §20.1: Scan semaphore at capacity — backpressure with Retry-After.
+			w.Header().Set("Retry-After", "1")
+			writeError(w, http.StatusServiceUnavailable, err.Error())
 		case errors.Is(err, domsoc.ErrAuthFailed), errors.Is(err, domsoc.ErrSecretDetected):
 			writeError(w, http.StatusForbidden, err.Error())
 		case errors.Is(err, domsoc.ErrRateLimited):
@@ -395,7 +400,11 @@ func (s *Server) handleBatchIngest(w http.ResponseWriter, r *http.Request) {
 
 		eventID, incident, err := s.socSvc.IngestEvent(event)
 		if err != nil {
-			results[i] = batchResult{Index: i, Status: "rejected", Error: err.Error()}
+			status := "rejected"
+			if errors.Is(err, domsoc.ErrCapacityFull) {
+				status = "backpressure"
+			}
+			results[i] = batchResult{Index: i, Status: status, Error: err.Error()}
 			continue
 		}
 
@@ -408,7 +417,14 @@ func (s *Server) handleBatchIngest(w http.ResponseWriter, r *http.Request) {
 		ingested++
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{
+	// §20.1: If the entire batch was rejected by backpressure, signal 503.
+	httpStatus := http.StatusCreated
+	if ingested == 0 && len(events) > 0 {
+		w.Header().Set("Retry-After", "1")
+		httpStatus = http.StatusServiceUnavailable
+	}
+
+	writeJSON(w, httpStatus, map[string]any{
 		"total":    len(events),
 		"ingested": ingested,
 		"rejected": len(events) - ingested,
@@ -1034,6 +1050,9 @@ func (s *Server) handleAnomalyAlerts(w http.ResponseWriter, r *http.Request) {
 	if l := r.URL.Query().Get("limit"); l != "" {
 		if n, err := strconv.Atoi(l); err == nil && n > 0 {
 			limit = n
+			if limit > 1000 {
+				limit = 1000 // T4-5 FIX: hard cap prevents memory exhaustion DoS
+			}
 		}
 	}
 	detector := s.socSvc.AnomalyDetector()
@@ -1192,6 +1211,9 @@ func (s *Server) handleAuditTrailPage(w http.ResponseWriter, r *http.Request) {
 	if l := r.URL.Query().Get("limit"); l != "" {
 		if n, err := strconv.Atoi(l); err == nil && n > 0 {
 			limit = n
+			if limit > 5000 {
+				limit = 5000 // T4-5 FIX: hard cap on audit entries
+			}
 		}
 	}
 	events, _ := s.socSvc.ListEvents(limit)
@@ -1507,9 +1529,9 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 			userID = claims.Sub
 		}
 		ip := r.RemoteAddr
-		if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-			ip = fwd
-		}
+		// T4-3 FIX: Do NOT trust X-Forwarded-For here.
+		// Trusting XFF allows attackers to rotate IPs and bypass quota entirely.
+		// When behind a trusted proxy, configure it to set X-Real-IP.
 		remaining, err := s.usageTracker.RecordScan(userID, ip)
 		if err != nil {
 			w.Header().Set("X-RateLimit-Remaining", "0")
@@ -1682,9 +1704,7 @@ func (s *Server) handleUsage(w http.ResponseWriter, r *http.Request) {
 		userID = claims.Sub
 	}
 	ip := r.RemoteAddr
-	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-		ip = fwd
-	}
+	// T4-3 FIX: Do NOT trust X-Forwarded-For for quota tracking.
 
 	info := s.usageTracker.GetUsage(userID, ip)
 	writeJSON(w, http.StatusOK, info)
@@ -1733,12 +1753,16 @@ func (s *Server) handleWaitlist(w http.ResponseWriter, r *http.Request) {
 		req.UseCase = req.UseCase[:1000]
 	}
 
-	// Log the waitlist entry (always — even if DB fails)
+	// T4-6 FIX: Redact PII — hash email, mask IP to /24 for GDPR compliance
+	redactedEmail := "***@" + req.Email[strings.LastIndex(req.Email, "@")+1:]
+	maskedIP := r.RemoteAddr
+	if idx := strings.LastIndex(maskedIP, "."); idx > 0 {
+		maskedIP = maskedIP[:idx] + ".0"
+	}
 	slog.Info("waitlist submission",
-		"email", req.Email,
+		"email_domain", redactedEmail,
 		"company", req.Company,
-		"use_case", req.UseCase,
-		"ip", r.RemoteAddr,
+		"ip_masked", maskedIP,
 	)
 
 	// Persist via SOC repo if available

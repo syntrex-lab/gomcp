@@ -50,6 +50,11 @@ var threatPatterns = []struct {
 	{regexp.MustCompile(`(?i)(unsafe|nosec|nolint:\s*security)`), "LOGIC_HOLE", "MEDIUM", "Security lint suppressed"},
 	{regexp.MustCompile(`(?i)cors.*(\*|AllowAll|allow_all)`), "WEAK_CONFIG", "HIGH", "CORS wildcard enabled"},
 	{regexp.MustCompile(`(?i)debug\s*[:=]\s*(true|1|on|yes)`), "WEAK_CONFIG", "MEDIUM", "Debug mode enabled in config"},
+	// Shadow AI — unauthorized external AI usage (§C³ Shadow Guard)
+	{regexp.MustCompile(`(?i)(api\.openai\.com|api\.anthropic\.com|api\.deepseek\.com|api\.mistral\.ai|api\.groq\.com|api\.cohere\.com)`), "SHADOW_AI", "HIGH", "External AI API endpoint detected"},
+	{regexp.MustCompile(`(?i)(sk-[a-zA-Z0-9]{20,}|ANTHROPIC_API_KEY|DEEPSEEK_API_KEY|OPENAI_API_KEY|GROQ_API_KEY)`), "SHADOW_AI", "CRITICAL", "AI provider API key detected"},
+	{regexp.MustCompile(`(?i)(ollama|localhost:11434|127\.0\.0\.1:11434|0\.0\.0\.0:11434)`), "SHADOW_AI", "HIGH", "Local Ollama runtime detected"},
+	{regexp.MustCompile(`(?i)(moltbot|langchain|autogen|crewai)\b.*\.(run|execute|invoke|call)`), "SHADOW_AI", "MEDIUM", "AI agent framework invocation detected"},
 }
 
 // SynthesizeThreatModel scans Code Crystals for architectural vulnerabilities.

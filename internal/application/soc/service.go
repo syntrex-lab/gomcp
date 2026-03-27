@@ -74,6 +74,10 @@ type Service struct {
 
 	// P-1 FIX: In-memory sliding window for correlation (avoids DB query per ingest).
 	recentEvents []domsoc.SOCEvent
+
+	// Scan semaphore (§20.1): limits concurrent ingest processing to prevent OOM.
+	// Non-blocking acquire → returns ErrCapacityFull if all slots in use.
+	scanSemaphore chan struct{}
 }
 
 // NewService creates a SOC service with persistence and decision logging.
@@ -110,7 +114,13 @@ func NewService(repo domsoc.SOCRepository, logger *audit.DecisionLogger) *Servic
 		anomaly:          domsoc.NewAnomalyDetector(),
 		threatIntelEngine: domsoc.NewThreatIntelEngine(),
 		retention:        domsoc.NewDataRetentionPolicy(),
+		scanSemaphore:    make(chan struct{}, 8), // §20.1: max 8 concurrent scans
 	}
+}
+
+// Repo returns the underlying SOC repository (used for demo seed injection).
+func (s *Service) Repo() domsoc.SOCRepository {
+	return s.repo
 }
 
 // AddCustomRules appends YAML-loaded custom correlation rules (§7.5).
@@ -375,6 +385,19 @@ func (s *Service) IngestEvent(event domsoc.SOCEvent) (string, *domsoc.Incident, 
 		return "", nil, fmt.Errorf("%w: sensor %s (max %d events/sec)", domsoc.ErrRateLimited, sensorID, MaxEventsPerSecondPerSensor)
 	}
 
+	// Step 0.6: Scan semaphore — backpressure guard (§20.1)
+	select {
+	case s.scanSemaphore <- struct{}{}:
+		defer func() { <-s.scanSemaphore }()
+	default:
+		if s.logger != nil {
+			s.logger.Record(audit.ModuleSOC,
+				"CAPACITY_FULL:REJECT",
+				fmt.Sprintf("concurrent_scans=%d", cap(s.scanSemaphore)))
+		}
+		return "", nil, fmt.Errorf("%w: max %d concurrent scans", domsoc.ErrCapacityFull, cap(s.scanSemaphore))
+	}
+
 	// Step 1: Log decision with Zero-G tagging (§13.4)
 	if s.logger != nil {
 		zeroGTag := ""
@@ -500,10 +523,14 @@ func (s *Service) isRateLimited(sensorID string) bool {
 			pruned = append(pruned, ts)
 		}
 	}
-	pruned = append(pruned, now)
+	
+	rateLimited := len(pruned) >= MaxEventsPerSecondPerSensor
+	if !rateLimited {
+		pruned = append(pruned, now)
+	}
 	s.sensorRates[sensorID] = pruned
 
-	return len(pruned) > MaxEventsPerSecondPerSensor
+	return rateLimited
 }
 
 // updateSensor registers/updates sentinel sensor on event ingest (§11.3 auto-discovery).

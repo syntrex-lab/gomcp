@@ -482,8 +482,8 @@ func TestHTTP_Rules_Returns7(t *testing.T) {
 		t.Fatalf("decode JSON: %v", err)
 	}
 
-	if result.Count != 15 {
-		t.Errorf("expected 15 built-in rules, got %d", result.Count)
+	if result.Count != 17 {
+		t.Errorf("expected 17 built-in rules (15 default + 2 Shadow AI), got %d", result.Count)
 	}
 }
 

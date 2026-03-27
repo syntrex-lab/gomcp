@@ -135,9 +135,9 @@ func TestGenAICorrelationRulesCount(t *testing.T) {
 
 func TestAllSOCCorrelationRulesCount(t *testing.T) {
 	rules := AllSOCCorrelationRules()
-	// 15 default + 6 GenAI = 21
-	if len(rules) != 21 {
-		t.Errorf("AllSOCCorrelationRules() returned %d rules, want 21", len(rules))
+	// 15 default + 2 Shadow AI + 6 GenAI = 23
+	if len(rules) != 23 {
+		t.Errorf("AllSOCCorrelationRules() returned %d rules, want 23", len(rules))
 	}
 }
 

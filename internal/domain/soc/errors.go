@@ -24,6 +24,10 @@ var (
 	// ErrDraining is returned when the service is in drain mode (§15.7).
 	// HTTP handlers should return 503 Service Unavailable.
 	ErrDraining = errors.New("soc: service draining for update")
+
+	// ErrCapacityFull is returned when maximum concurrent scans are in progress (§20.1).
+	// HTTP handlers should return 503 with Retry-After header.
+	ErrCapacityFull = errors.New("soc: scan capacity full")
 )
 
 // ValidationError provides detailed field-level validation errors.

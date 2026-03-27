@@ -1,6 +1,7 @@
 package soc
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -53,10 +54,11 @@ func TestLoadTest_SustainedThroughput(t *testing.T) {
 	sources := []domsoc.EventSource{domsoc.SourceSentinelCore, domsoc.SourceShield, domsoc.SourceGoMCP}
 
 	var (
-		wg        sync.WaitGroup
-		latencies = make([]time.Duration, totalEvents)
-		errors    int64
-		incidents int64
+		wg           sync.WaitGroup
+		latencies    = make([]time.Duration, totalEvents)
+		realErrors   int64
+		backpressure int64
+		incidents    int64
 	)
 
 	start := time.Now()
@@ -80,7 +82,11 @@ func TestLoadTest_SustainedThroughput(t *testing.T) {
 				latencies[idx] = time.Since(t0)
 
 				if err != nil {
-					atomic.AddInt64(&errors, 1)
+					if errors.Is(err, domsoc.ErrCapacityFull) {
+						atomic.AddInt64(&backpressure, 1)
+					} else {
+						atomic.AddInt64(&realErrors, 1)
+					}
 				}
 				if inc != nil {
 					atomic.AddInt64(&incidents, 1)
@@ -118,12 +124,13 @@ func TestLoadTest_SustainedThroughput(t *testing.T) {
 	t.Logf("  Min:          %s", latencies[0].Round(time.Microsecond))
 	t.Logf("  Max:          %s", latencies[len(latencies)-1].Round(time.Microsecond))
 	t.Logf("───────────────────────────────────────────────")
-	t.Logf("  Errors:       %d (%.1f%%)", errors, float64(errors)/float64(totalEvents)*100)
+	t.Logf("  Real Errors:  %d (%.1f%%)", realErrors, float64(realErrors)/float64(totalEvents)*100)
+	t.Logf("  Backpressure: %d (%.1f%%) [§20.1 semaphore]", backpressure, float64(backpressure)/float64(totalEvents)*100)
 	t.Logf("  Incidents:    %d", incidents)
 	t.Logf("═══════════════════════════════════════════════")
 
-	// Assertions: basic sanity checks.
-	require.Less(t, float64(errors)/float64(totalEvents), 0.05, "error rate should be < 5%%")
+	// Assertions: backpressure rejections are expected; only real errors are failures.
+	require.Less(t, float64(realErrors)/float64(totalEvents), 0.05, "real error rate should be < 5%")
 	require.Greater(t, eventsPerSec, float64(100), "should sustain > 100 events/sec")
 }
 

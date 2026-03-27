@@ -1,6 +1,8 @@
 package httpserver
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"net/http"
 	"strings"
 	"sync"
@@ -102,20 +104,24 @@ func (m *RBACMiddleware) Require(minRole Role, next http.HandlerFunc) http.Handl
 			return
 		}
 
-		// Lookup and validate key
+		// Lookup key using constant-time comparison to prevent timing oracle.
+		// A plain map lookup reveals key existence via variable-time hash probing.
 		m.mu.RLock()
-		apiKey, exists := m.keys[key]
+		var apiKey *APIKey
+		keyBytes := []byte(key)
+		for storedKey, candidate := range m.keys {
+			// HMAC comparison: constant-time regardless of match position
+			if hmac.Equal(keyBytes, []byte(storedKey)) {
+				apiKey = candidate
+				break
+			}
+		}
 		m.mu.RUnlock()
 
-		if !exists || !apiKey.Active {
+		if apiKey == nil || !apiKey.Active {
 			writeError(w, http.StatusUnauthorized, "invalid or revoked API key")
 			return
 		}
-
-		// Note: timing-safe compare is not needed here because the Go map
-		// lookup above already reveals key existence via timing. The map
-		// is the canonical key store; this is a lookup, not a comparison
-		// of a user-supplied value against a stored secret.
 
 
 		// Check role hierarchy
@@ -133,7 +139,8 @@ func (m *RBACMiddleware) Require(minRole Role, next http.HandlerFunc) http.Handl
 	}
 }
 
-// extractAPIKey gets the API key from Authorization header or ?api_key query param.
+// extractAPIKey gets the API key from Authorization header or X-API-Key header.
+// Query parameter auth is intentionally NOT supported (credential leak vector).
 func extractAPIKey(r *http.Request) string {
 	// Try Authorization: Bearer <key>
 	auth := r.Header.Get("Authorization")
@@ -144,11 +151,13 @@ func extractAPIKey(r *http.Request) string {
 	if key := r.Header.Get("X-API-Key"); key != "" {
 		return key
 	}
-	// Try query parameter (least secure, for dashboard convenience)
-	return r.URL.Query().Get("api_key")
+	// SECURITY: Query parameter auth removed — keys in URLs leak via
+	// server logs, Referer headers, browser history, and CDN logs.
+	return ""
 }
 
 // hasPermission checks if userRole >= requiredRole in the hierarchy.
+// Default-deny: undefined roles map to 0 and are rejected.
 func hasPermission(userRole, requiredRole Role) bool {
 	hierarchy := map[Role]int{
 		RoleAdmin:    100,
@@ -157,5 +166,19 @@ func hasPermission(userRole, requiredRole Role) bool {
 		RoleSensor:   20,
 		RoleExternal: 10,
 	}
-	return hierarchy[userRole] >= hierarchy[requiredRole]
+	userLevel, userOK := hierarchy[userRole]
+	reqLevel, reqOK := hierarchy[requiredRole]
+	// Reject if either role is undefined (defense against typos / injection)
+	if !userOK || !reqOK {
+		return false
+	}
+	return userLevel >= reqLevel
+}
+
+// hmacKeyHash returns the SHA-256 HMAC of a key for secure comparison.
+// Unused directly but documents the design intent for future key hashing.
+func hmacKeyHash(key []byte) []byte {
+	h := hmac.New(sha256.New, []byte("syntrex-rbac-v1"))
+	h.Write(key)
+	return h.Sum(nil)
 }

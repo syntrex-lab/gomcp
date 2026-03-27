@@ -69,12 +69,23 @@ type DecisionLogger struct {
 // NewDecisionLogger creates a tamper-evident decision logger.
 func NewDecisionLogger(rlmDir string) (*DecisionLogger, error) {
 	if err := os.MkdirAll(rlmDir, 0o755); err != nil {
-		return nil, fmt.Errorf("decisions: mkdir %s: %w", rlmDir, err)
+		// FALLBACK: Use temp directory if permission denied (e.g. /var/log/sentinel)
+		rlmDir = filepath.Join(os.TempDir(), "sentinel-audit")
+		if fallbackErr := os.MkdirAll(rlmDir, 0o755); fallbackErr != nil {
+			return nil, fmt.Errorf("decisions: mkdir %s: %v (fallback failed: %v)", rlmDir, err, fallbackErr)
+		}
 	}
 	path := filepath.Join(rlmDir, decisionsFileName)
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
-		return nil, fmt.Errorf("decisions: open %s: %w", path, err)
+		// Try one more fallback if OpenFile fails but MkdirAll passed earlier.
+		rlmDir = filepath.Join(os.TempDir(), "sentinel-audit")
+		_ = os.MkdirAll(rlmDir, 0o755)
+		path = filepath.Join(rlmDir, decisionsFileName)
+		f, err = os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+		if err != nil {
+			return nil, fmt.Errorf("decisions: open %s: %w", path, err)
+		}
 	}
 	return &DecisionLogger{
 		file:     f,

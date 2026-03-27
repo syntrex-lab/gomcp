@@ -61,10 +61,11 @@ type cachedScan struct {
 	expiry   time.Time
 }
 
-// promptHash returns a fast SHA-256 hash of the prompt for cache keying.
+// promptHash returns a SHA-256 hash of the prompt for cache keying.
+// T4-4 FIX: Uses full 256-bit hash (was truncated to 128-bit).
 func promptHash(prompt string) string {
 	h := sha256.Sum256([]byte(prompt))
-	return hex.EncodeToString(h[:16]) // 128-bit is enough for cache key
+	return hex.EncodeToString(h[:]) // Full 256-bit — no truncation
 }
 
 // New creates an HTTP server bound to the given port.
@@ -124,6 +125,11 @@ func (s *Server) SetJWTAuth(secret []byte, db ...*sql.DB) {
 		s.userStore = auth.NewUserStore()
 	}
 	slog.Info("JWT authentication enabled")
+
+	// Seed demo tenant with read-only demo/demo account (idempotent)
+	if s.tenantStore != nil && s.socSvc != nil {
+		go auth.SeedDemoTenant(s.userStore, s.tenantStore, s.socSvc.Repo())
+	}
 }
 
 // SetUsageTracker sets the usage/quota tracker for scan metering.

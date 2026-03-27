@@ -197,6 +197,29 @@ func DefaultSOCCorrelationRules() []SOCCorrelationRule {
 			MITREMapping:   []string{"T1059", "T1548"},
 			Description:    "Crescendo attack: 3+ jailbreak attempts with ascending severity within 15 minutes. Gradual guardrail erosion detected.",
 		},
+		// ── Shadow AI Rules (§C³ Shadow Guard) ──────────────────────────
+		{
+			ID:                 "SOC-CR-022",
+			Name:               "Shadow AI Exfiltration",
+			RequiredCategories: []string{"shadow_ai", "exfiltration"},
+			MinEvents:          2,
+			TimeWindow:         30 * time.Minute,
+			Severity:           SeverityCritical,
+			KillChainPhase:     "Exfiltration",
+			MITREMapping:       []string{"T1567", "T1048"},
+			Description:        "Shadow AI usage combined with data exfiltration. Unauthorized AI tool sending corporate data to external endpoints.",
+		},
+		{
+			ID:                 "SOC-CR-023",
+			Name:               "Shadow AI Credential Spray",
+			SequenceCategories: []string{"shadow_ai", "auth_bypass"},
+			MinEvents:          2,
+			TimeWindow:         10 * time.Minute,
+			Severity:           SeverityHigh,
+			KillChainPhase:     "Initial Access",
+			MITREMapping:       []string{"T1110", "T1567"},
+			Description:        "Shadow AI detected followed by auth bypass. AI tool used as recon before credential attack.",
+		},
 	}
 }
 
