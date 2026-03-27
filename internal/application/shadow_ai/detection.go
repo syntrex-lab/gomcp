@@ -68,6 +68,8 @@ func (db *AISignatureDB) loadDefaults() {
 		"x-goog-api-key:",              // Google AI
 		"authorization: bearer gsk_",   // Groq
 		"authorization: bearer hf_",    // HuggingFace
+		"api-key:",                      // Azure OpenAI (x-ms header)
+		"x-api-key: xai-",              // xAI Grok API
 	}
 }
 
@@ -465,11 +467,16 @@ func defaultAIServices() []AIServiceInfo {
 		{Name: "OpenRouter", Vendor: "OpenRouter", Domains: []string{"openrouter.ai", "*.openrouter.ai"}, Category: "llm"},
 		{Name: "Scale AI", Vendor: "Scale", Domains: []string{"scale.com", "api.scale.com", "*.scale.com"}, Category: "llm"},
 		{Name: "Inflection Pi", Vendor: "Inflection", Domains: []string{"pi.ai", "api.inflection.ai"}, Category: "llm"},
-		{Name: "Grok", Vendor: "xAI", Domains: []string{"grok.x.ai", "api.x.ai"}, Category: "llm"},
+		{Name: "Grok", Vendor: "xAI", Domains: []string{"grok.x.ai", "api.x.ai", "console.x.ai"}, Category: "llm"},
 		{Name: "Character.AI", Vendor: "Character.AI", Domains: []string{"character.ai", "*.character.ai"}, Category: "llm"},
 		{Name: "Poe", Vendor: "Quora", Domains: []string{"poe.com", "*.poe.com"}, Category: "llm"},
 		{Name: "You.com", Vendor: "You.com", Domains: []string{"you.com", "api.you.com"}, Category: "llm"},
 		{Name: "Phind", Vendor: "Phind", Domains: []string{"phind.com", "*.phind.com"}, Category: "llm"},
+		// Cloud provider AI services (Feb 2026 gap closure)
+		{Name: "Azure OpenAI", Vendor: "Microsoft", Domains: []string{"*.openai.azure.com", "*.cognitiveservices.azure.com"}, Category: "llm"},
+		{Name: "Amazon Bedrock", Vendor: "AWS", Domains: []string{"bedrock-runtime.*.amazonaws.com", "bedrock.*.amazonaws.com"}, Category: "llm"},
+		{Name: "Meta Llama API", Vendor: "Meta", Domains: []string{"llama-api.meta.com", "api.llama.meta.com", "*.llama.meta.com"}, Category: "llm"},
+		{Name: "xAI API v2", Vendor: "xAI", Domains: []string{"api.x.ai", "console.x.ai"}, Category: "llm"},
 	}
 }
 
@@ -483,6 +490,9 @@ func defaultAPIKeyPatterns() []*APIKeyPattern {
 		{Name: "Groq API Key", Pattern: regexp.MustCompile(`gsk_[a-zA-Z0-9]{52}`), Entropy: 4.5},
 		{Name: "Cohere API Key", Pattern: regexp.MustCompile(`[a-zA-Z0-9]{10,}-[a-zA-Z0-9]{4,}-[a-zA-Z0-9]{4,}-[a-zA-Z0-9]{4,}-[a-zA-Z0-9]{12,}`), Entropy: 4.5},
 		{Name: "Replicate API Token", Pattern: regexp.MustCompile(`r8_[a-zA-Z0-9]{37}`), Entropy: 4.5},
+		// Feb 2026 gap closure: Azure OpenAI, Bedrock, xAI
+		{Name: "Azure OpenAI API Key", Pattern: regexp.MustCompile(`[a-f0-9]{32}`), Entropy: 3.8},
+		{Name: "xAI API Key", Pattern: regexp.MustCompile(`xai-[a-zA-Z0-9]{48,}`), Entropy: 4.5},
 	}
 }
 
