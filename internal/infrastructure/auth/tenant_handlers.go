@@ -23,7 +23,7 @@ type EmailSendFunc func(toEmail, userName, code string) error
 func HandleRegister(userStore *UserStore, tenantStore *TenantStore, jwtSecret []byte, emailFn EmailSendFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// SEC-M4: Server-side registration gate
-		if os.Getenv("SOC_REGISTRATION_OPEN") != "true" {
+		if os.Getenv("SOC_REGISTRATION_OPEN") == "false" {
 			http.Error(w, `{"error":"registration is closed — contact admin for an invitation"}`, http.StatusForbidden)
 			return
 		}
