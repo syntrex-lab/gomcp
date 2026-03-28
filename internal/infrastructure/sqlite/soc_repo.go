@@ -76,24 +76,23 @@ func (r *SOCRepo) migrate() error {
 			hostname          TEXT NOT NULL DEFAULT '',
 			version           TEXT NOT NULL DEFAULT ''
 		)`,
-		// Indexes for common queries.
+		// Indexes for non-tenant columns only — safe on any schema version.
+		// tenant_id indexes are applied after ALTER TABLE migrations below.
 		`CREATE INDEX IF NOT EXISTS idx_soc_events_timestamp ON soc_events(timestamp)`,
 		`CREATE INDEX IF NOT EXISTS idx_soc_events_severity ON soc_events(severity)`,
 		`CREATE INDEX IF NOT EXISTS idx_soc_events_category ON soc_events(category)`,
 		`CREATE INDEX IF NOT EXISTS idx_soc_events_sensor ON soc_events(sensor_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_soc_events_content_hash ON soc_events(content_hash)`,
-		`CREATE INDEX IF NOT EXISTS idx_soc_events_tenant ON soc_events(tenant_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_soc_incidents_status ON soc_incidents(status)`,
-		`CREATE INDEX IF NOT EXISTS idx_soc_incidents_tenant ON soc_incidents(tenant_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_soc_sensors_status ON soc_sensors(status)`,
-		`CREATE INDEX IF NOT EXISTS idx_soc_sensors_tenant ON soc_sensors(tenant_id)`,
 	}
 	for _, ddl := range tables {
 		if _, err := r.db.Exec(ddl); err != nil {
 			return fmt.Errorf("exec %q: %w", ddl[:40], err)
 		}
 	}
-	// Migration: add columns (safe to re-run — ignore "already exists" errors)
+	// Migration: add columns and tenant indexes after columns are guaranteed to exist.
+	// All steps ignore errors — safe to re-run on any schema version.
 	migrations := []string{
 		`ALTER TABLE soc_incidents ADD COLUMN assigned_to TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE soc_incidents ADD COLUMN notes_json TEXT NOT NULL DEFAULT '[]'`,
@@ -101,9 +100,13 @@ func (r *SOCRepo) migrate() error {
 		`ALTER TABLE soc_events ADD COLUMN tenant_id TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE soc_incidents ADD COLUMN tenant_id TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE soc_sensors ADD COLUMN tenant_id TEXT NOT NULL DEFAULT ''`,
+		// tenant_id indexes — must come AFTER the ALTER TABLE statements above.
+		`CREATE INDEX IF NOT EXISTS idx_soc_events_tenant ON soc_events(tenant_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_soc_incidents_tenant ON soc_incidents(tenant_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_soc_sensors_tenant ON soc_sensors(tenant_id)`,
 	}
 	for _, m := range migrations {
-		r.db.Exec(m) // Ignore errors (column already exists)
+		r.db.Exec(m) // Ignore errors (column/index already exists)
 	}
 	return nil
 }

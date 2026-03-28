@@ -79,17 +79,18 @@ type HeartbeatResult struct {
 
 // Orchestrator runs the DIP heartbeat pipeline.
 type Orchestrator struct {
-	mu            sync.RWMutex
-	config        Config
-	peerReg       *peer.Registry
-	store         memory.FactStore
-	synapseStore  synapse.SynapseStore // v3.4: Module 9
-	alertBus      *alert.Bus
-	running       bool
-	cycle         int
-	history       []HeartbeatResult
-	lastSync      time.Time
-	lastFactCount int
+	mu                   sync.RWMutex
+	config               Config
+	peerReg              *peer.Registry
+	store                memory.FactStore
+	synapseStore         synapse.SynapseStore // v3.4: Module 9
+	alertBus             *alert.Bus
+	running              bool
+	cycle                int
+	history              []HeartbeatResult
+	lastSync             time.Time
+	lastFactCount        int
+	lastApoptosisWritten time.Time // debounce: prevents WATCHDOG_RECOVERY flood
 }
 
 // New creates a new orchestrator.
@@ -415,16 +416,32 @@ func (o *Orchestrator) stabilityCheck(ctx context.Context, result *HeartbeatResu
 
 	if normalizedEntropy >= o.config.EntropyThreshold {
 		result.ApoptosisTriggered = true
-		currentHash := memory.CompiledGenomeHash()
-		recoveryMarker := memory.NewFact(
-			fmt.Sprintf("[WATCHDOG_RECOVERY] genome_hash=%s entropy=%.4f cycle=%d",
-				currentHash, normalizedEntropy, result.Cycle),
-			memory.LevelProject,
-			"recovery",
-			"watchdog",
-		)
-		recoveryMarker.Source = "watchdog"
-		_ = o.store.Add(ctx, recoveryMarker)
+
+		// Debounce: write a recovery marker at most once per 24h.
+		// Without this guard, every heartbeat cycle (~5 min) that has high
+		// entropy writes a new record, flooding the DB with thousands of
+		// identical WATCHDOG_RECOVERY entries and causing context deadline
+		// exceeded on the next server startup.
+		o.mu.RLock()
+		lastWritten := o.lastApoptosisWritten
+		o.mu.RUnlock()
+
+		if time.Since(lastWritten) >= 24*time.Hour {
+			currentHash := memory.CompiledGenomeHash()
+			recoveryMarker := memory.NewFact(
+				fmt.Sprintf("[WATCHDOG_RECOVERY] genome_hash=%s entropy=%.4f cycle=%d",
+					currentHash, normalizedEntropy, result.Cycle),
+				memory.LevelProject,
+				"recovery",
+				"watchdog",
+			)
+			recoveryMarker.Source = "watchdog"
+			if err := o.store.Add(ctx, recoveryMarker); err == nil {
+				o.mu.Lock()
+				o.lastApoptosisWritten = time.Now()
+			o.mu.Unlock()
+			}
+		}
 	}
 
 	return genomeOK, normalizedEntropy
@@ -596,11 +613,26 @@ func (o *Orchestrator) memoryHygiene(ctx context.Context, result *HeartbeatResul
 		}
 	}
 
-	// Step 2: Archive facts that have been stale for a while.
+	// Step 2: Purge aged watchdog recovery markers (domain=recovery, source=watchdog).
+	// These are purely diagnostic breadcrumbs — they accumulate forever and bloat
+	// the DB. Delete any that are older than 24h; only the latest is ever useful.
+	watchdogCutoff := time.Now().Add(-24 * time.Hour)
+	wdFacts, wdErr := o.store.ListByLevel(ctx, memory.LevelProject)
+	if wdErr == nil {
+		for _, f := range wdFacts {
+			if f.Domain == "recovery" && f.Source == "watchdog" && f.CreatedAt.Before(watchdogCutoff) {
+				if delErr := o.store.Delete(ctx, f.ID); delErr == nil {
+					archived++ // reuse counter — reported as "archived" in log
+				}
+			}
+		}
+	}
+
+	// Step 3: Archive facts that have been stale for a while.
 	staleFacts, err := o.store.GetStale(ctx, false) // exclude already-archived
 	if err != nil {
 		result.Errors = append(result.Errors, fmt.Sprintf("hygiene get-stale: %v", err))
-		return expired, 0
+		return expired, archived
 	}
 	staleThreshold := time.Now().Add(-24 * time.Hour) // Archive if stale > 24h.
 	for _, f := range staleFacts {
