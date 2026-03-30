@@ -64,23 +64,45 @@ func NewUserStore(db ...*sql.DB) *UserStore {
 		}
 	}
 
-	// Ensure default admin exists
-	if _, err := s.GetByEmail("admin@syntrex.pro"); err != nil {
-		adminPass := os.Getenv("SYNTREX_ADMIN_PASSWORD")
-		if adminPass == "" {
-			b := make([]byte, 16)
-			rand.Read(b)
-			adminPass = hex.EncodeToString(b)
+	// Ensure default admin exists or is updated
+	adminPass := os.Getenv("SYNTREX_ADMIN_PASSWORD")
+	if adminPass == "" {
+		// If no env var, use a secure random password to prevent accidental exposure 
+		// if the database is clean, but do not override an existing admin's password.
+		b := make([]byte, 16)
+		rand.Read(b)
+		adminPass = hex.EncodeToString(b)
+	}
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte(adminPass), bcrypt.DefaultCost)
+
+	if existingAdmin, err := s.GetByEmail("admin@syntrex.pro"); err == nil {
+		// User exists. Let's update their password and role to superadmin
+		// only if SYNTREX_ADMIN_PASSWORD was explicitly provided.
+		if os.Getenv("SYNTREX_ADMIN_PASSWORD") != "" {
+			existingAdmin.PasswordHash = string(hash)
+			existingAdmin.Role = "superadmin" // Guarantee superadmin role
+			s.mu.Lock()
+			s.users[existingAdmin.Email] = existingAdmin
+			s.mu.Unlock()
+			if s.db != nil {
+				// Use PostgreSQL placeholder $1, $2, $3 instead of ?
+				s.db.Exec(`UPDATE users SET password_hash=$1, role=$2 WHERE email=$3`, string(hash), "superadmin", existingAdmin.Email)
+			}
+			slog.Info("default admin updated with password from SYNTREX_ADMIN_PASSWORD")
+		}
+	} else {
+		// User does not exist, create it.
+		if os.Getenv("SYNTREX_ADMIN_PASSWORD") == "" {
 			slog.Warn("SYNTREX_ADMIN_PASSWORD not set. Generated random admin password", "password", adminPass)
 		}
-		hash, _ := bcrypt.GenerateFromPassword([]byte(adminPass), bcrypt.DefaultCost)
 		admin := &User{
 			ID:            generateID("usr"),
 			Email:         "admin@syntrex.pro",
 			DisplayName:   "Administrator",
-			Role:          "admin",
+			Role:          "superadmin",
 			Active:        true,
-			EmailVerified: true, // default admin is pre-verified
+			EmailVerified: true,
 			PasswordHash:  string(hash),
 			CreatedAt:     time.Now(),
 		}

@@ -406,3 +406,123 @@ func usagePercent(used, limit int) float64 {
 	}
 	return pct
 }
+
+// HandleListTenants returns a list of all tenants for superadmin dashboard.
+// GET /api/auth/tenants
+func HandleListTenants(tenantStore *TenantStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims := GetClaims(r.Context())
+		if claims == nil || claims.Role != "superadmin" {
+			http.Error(w, `{"error":"forbidden: superadmin only"}`, http.StatusForbidden)
+			return
+		}
+
+		tenants := tenantStore.ListTenants()
+		
+		type tenantResp struct {
+			ID     string `json:"id"`
+			Name   string `json:"name"`
+			Slug   string `json:"slug"`
+			PlanID string `json:"plan_id"`
+			Active bool   `json:"active"`
+		}
+		
+		res := make([]tenantResp, len(tenants))
+		for i, t := range tenants {
+			res[i] = tenantResp{
+				ID:     t.ID,
+				Name:   t.Name,
+				Slug:   t.Slug,
+				PlanID: t.PlanID,
+				Active: t.Active,
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(res)
+	}
+}
+
+// HandleImpersonateTenant allows a superadmin to switch their working tenant context.
+// POST /api/auth/impersonate
+func HandleImpersonateTenant(tenantStore *TenantStore, jwtSecret []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims := GetClaims(r.Context())
+		if claims == nil || claims.Role != "superadmin" {
+			http.Error(w, `{"error":"forbidden: superadmin only"}`, http.StatusForbidden)
+			return
+		}
+
+		var req struct {
+			TenantID string `json:"tenant_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Verify target tenant is valid
+		if _, err := tenantStore.GetTenant(req.TenantID); err != nil {
+			http.Error(w, `{"error":"tenant not found"}`, http.StatusNotFound)
+			return
+		}
+
+		// Issue new token with updated TenantID
+		accessClaims := Claims{
+			Sub:       claims.Sub,
+			Role:      claims.Role, // Preserves superadmin explicitly
+			TenantID:  req.TenantID, // The impersonated tenant ID
+			TokenType: "access",
+			Exp:       time.Now().Add(15 * time.Minute).Unix(),
+		}
+		
+		refreshClaims := Claims{
+			Sub:       claims.Sub,
+			Role:      claims.Role,
+			TenantID:  req.TenantID, 
+			TokenType: "refresh",
+			Exp:       time.Now().Add(7 * 24 * time.Hour).Unix(),
+		}
+
+		accessToken, err := Sign(accessClaims, jwtSecret)
+		if err != nil {
+			http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+			return
+		}
+		refreshToken, err := Sign(refreshClaims, jwtSecret)
+		if err != nil {
+			http.Error(w, `{"error":"token generation failed"}`, http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_token",
+			Value:    accessToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+			MaxAge:   900,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_refresh",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+			MaxAge:   7 * 24 * 3600,
+		})
+
+		// Also provide CSRF token for strict SPA requirements
+		csrfToken := hmacSign([]byte(accessToken), jwtSecret)[:32]
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "success",
+			"tenant_id": req.TenantID,
+			"csrf_token": csrfToken,
+		})
+	}
+}

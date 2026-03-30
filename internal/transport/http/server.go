@@ -379,6 +379,9 @@ func (s *Server) Start(ctx context.Context) error {
 			mux.HandleFunc("POST /api/auth/tenant/plan", auth.HandleUpdateTenantPlan(s.tenantStore))
 			mux.HandleFunc("GET /api/auth/billing", auth.HandleBillingStatus(s.tenantStore))
 			mux.HandleFunc("POST /api/billing/webhook", auth.HandleStripeWebhook(s.tenantStore))
+			// Superadmin endpoints
+			mux.HandleFunc("GET /api/auth/tenants", auth.HandleListTenants(s.tenantStore))
+			mux.HandleFunc("POST /api/auth/impersonate", auth.HandleImpersonateTenant(s.tenantStore, s.jwtSecret))
 		}
 	}
 
