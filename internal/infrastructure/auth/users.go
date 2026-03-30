@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"sync"
 	"time"
 
@@ -65,7 +66,14 @@ func NewUserStore(db ...*sql.DB) *UserStore {
 
 	// Ensure default admin exists
 	if _, err := s.GetByEmail("admin@syntrex.pro"); err != nil {
-		hash, _ := bcrypt.GenerateFromPassword([]byte("syntrex-admin-2026"), bcrypt.DefaultCost)
+		adminPass := os.Getenv("SYNTREX_ADMIN_PASSWORD")
+		if adminPass == "" {
+			b := make([]byte, 16)
+			rand.Read(b)
+			adminPass = hex.EncodeToString(b)
+			slog.Warn("SYNTREX_ADMIN_PASSWORD not set. Generated random admin password", "password", adminPass)
+		}
+		hash, _ := bcrypt.GenerateFromPassword([]byte(adminPass), bcrypt.DefaultCost)
 		admin := &User{
 			ID:            generateID("usr"),
 			Email:         "admin@syntrex.pro",
