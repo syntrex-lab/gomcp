@@ -33,6 +33,7 @@ func NewJWTMiddleware(secret []byte) *JWTMiddleware {
 			"/api/auth/register": true,
 			"/api/auth/verify":   true,
 			"/api/auth/plans":    true,
+			"/api/auth/demo":     true,
 			"/api/v1/scan":       true, // public demo scanner
 			"/api/v1/usage":      true, // public usage/quota check
 			"/api/v1/soc/events": true, // sensor ingest (auth via RBAC API key when enabled)
