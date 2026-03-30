@@ -479,3 +479,133 @@ func APIKeyMiddleware(store *UserStore, next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// HandleDemo provisions a read-only demo session and logs the user in.
+// GET /api/auth/demo
+func HandleDemo(userStore *UserStore, tenantStore *TenantStore, secret []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		const demoEmail = "demo@syntrex.pro"
+		const demoTenantSlug = "syntrex-demo"
+
+		// 1. Ensure Demo Tenant exists
+		var tenant *Tenant
+		s := tenantStore.ListTenants()
+		for i := range s {
+			if s[i].Slug == demoTenantSlug {
+				tenant = s[i]
+				break
+			}
+		}
+
+		if tenant == nil {
+			// Need to create demo user and tenant
+			user, err := userStore.CreateUser(demoEmail, "Demo Visitor", "demo-random-pass-1234!!", "viewer")
+			if err != nil && err != ErrUserExists {
+				writeAuthError(w, http.StatusInternalServerError, "demo setup failed")
+				return
+			}
+			if err == ErrUserExists {
+				userStore.mu.RLock()
+				user = userStore.users[demoEmail]
+				userStore.mu.RUnlock()
+			}
+
+			// Force verify the email and make viewer
+			if userStore.db != nil {
+				_, _ = userStore.db.Exec(`UPDATE users SET email_verified = true, role = 'viewer' WHERE id = $1`, user.ID)
+			}
+			user.EmailVerified = true
+			user.Role = "viewer"
+
+			// Create tenant
+			newTenant, err := tenantStore.CreateTenant("Syntrex Demo", demoTenantSlug, user.ID, "enterprise")
+			if err == nil {
+				tenant = newTenant
+				// Link user to tenant
+				if userStore.db != nil {
+					_, _ = userStore.db.Exec(`UPDATE users SET tenant_id = $1 WHERE id = $2`, tenant.ID, user.ID)
+				}
+				user.TenantID = tenant.ID
+			} else {
+				// Fallback if tenant exists but wasn't found in cache
+				for _, t := range tenantStore.ListTenants() {
+					if t.Slug == demoTenantSlug {
+						tenant = t
+						break
+					}
+				}
+			}
+		}
+
+		userStore.mu.RLock()
+		user := userStore.users[demoEmail]
+		userStore.mu.RUnlock()
+
+		if user == nil {
+			writeAuthError(w, http.StatusInternalServerError, "demo user not found")
+			return
+		}
+
+		if !user.EmailVerified {
+			if userStore.db != nil {
+				_, _ = userStore.db.Exec(`UPDATE users SET email_verified = true, role = 'viewer' WHERE id = $1`, user.ID)
+			}
+			user.EmailVerified = true
+			user.Role = "viewer"
+		}
+
+		// 2. Issuance of tokens
+		accessToken, err := Sign(Claims{
+			Sub:       user.Email,
+			Role:      "viewer",
+			TenantID:  tenant.ID,
+			TokenType: "access",
+			Exp:       time.Now().Add(15 * time.Minute).Unix(),
+		}, secret)
+		if err != nil {
+			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
+			return
+		}
+
+		refreshToken, err := Sign(Claims{
+			Sub:       user.Email,
+			Role:      "viewer",
+			TenantID:  tenant.ID,
+			TokenType: "refresh",
+			Exp:       time.Now().Add(7 * 24 * time.Hour).Unix(),
+		}, secret)
+		if err != nil {
+			writeAuthError(w, http.StatusInternalServerError, "token generation failed")
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_token",
+			Value:    accessToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+			MaxAge:   900,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "syntrex_refresh",
+			Value:    refreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+			MaxAge:   7 * 24 * 3600,
+		})
+
+		csrfToken := hmacSign([]byte(accessToken), secret)[:32]
+
+		resp := TokenResponse{
+			CSRFToken: csrfToken,
+			User:      user,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	}
+}

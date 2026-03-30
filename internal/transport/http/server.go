@@ -382,6 +382,9 @@ func (s *Server) Start(ctx context.Context) error {
 			// Superadmin endpoints
 			mux.HandleFunc("GET /api/auth/tenants", auth.HandleListTenants(s.tenantStore))
 			mux.HandleFunc("POST /api/auth/impersonate", auth.HandleImpersonateTenant(s.tenantStore, s.jwtSecret))
+			// Demo provisioning endpoint
+			demolimiter := auth.NewRateLimiter(2, time.Minute)
+			mux.HandleFunc("GET /api/auth/demo", auth.RateLimitMiddleware(demolimiter, auth.HandleDemo(s.userStore, s.tenantStore, s.jwtSecret)))
 		}
 	}
 
@@ -406,6 +409,9 @@ func (s *Server) Start(ctx context.Context) error {
 		// SSE keepalive (15s) ensures dead connections are detected.
 		IdleTimeout:       120 * time.Second,
 	}
+
+	// Start SOC Demo Background Simulator
+	go s.runDemoSimulator(ctx)
 
 	// Graceful shutdown on context cancellation (applies to both TLS and plain HTTP).
 	go func() {
