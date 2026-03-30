@@ -19,15 +19,12 @@ FROM alpine:3.20
 
 RUN apk add --no-cache ca-certificates
 
-RUN addgroup -S syntrex && adduser -S syntrex -G syntrex
-
 WORKDIR /app
 COPY --from=builder /gomcp /app/gomcp
 
-# Create data directory for SQLite + RLM
-RUN mkdir -p /data/.rlm && chown -R syntrex:syntrex /data
-
-USER syntrex
+# RUN addgroup -S syntrex && adduser -S syntrex -G syntrex
+# RUN mkdir -p /data/.rlm && chown -R syntrex:syntrex /data
+# USER syntrex
 
 EXPOSE 9750
 
