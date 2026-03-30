@@ -40,9 +40,9 @@ var DefaultPlans = map[string]Plan{
 	"free": {
 		ID: "free", Name: "Free",
 		Description: "Scanner API — 1 000 сканов/мес, все 66 движков, без SOC Dashboard",
-		MaxUsers: 1, MaxEventsMonth: 0, MaxIncidents: 0, MaxSensors: 0,
+		MaxUsers: 1, MaxEventsMonth: 1000, MaxIncidents: 100, MaxSensors: 1,
 		MaxScansMonth: 1000,
-		RetentionDays: 0,
+		RetentionDays: 3,
 		SOCEnabled: false, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
 		PriceMonthCents: 0,
 	},
