@@ -22,9 +22,9 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /gomcp /app/gomcp
 
-# RUN addgroup -S syntrex && adduser -S syntrex -G syntrex
-# RUN mkdir -p /data/.rlm && chown -R syntrex:syntrex /data
-# USER syntrex
+RUN addgroup -S syntrex && adduser -S syntrex -G syntrex
+RUN mkdir -p /data/.rlm && chown -R syntrex:syntrex /data
+USER syntrex
 
 EXPOSE 9750
 
