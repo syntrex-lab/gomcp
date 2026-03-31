@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package pqcrypto implements SEC-013 (Homomorphic Encryption research)
 // and SEC-014 (Post-Quantum Signatures).
 //
@@ -43,21 +47,21 @@ type HybridSignature struct {
 
 // HybridSigner provides quantum-resistant signing with classical fallback.
 type HybridSigner struct {
-	mu          sync.RWMutex
-	scheme      SignatureScheme
+	mu            sync.RWMutex
+	scheme        SignatureScheme
 	classicalPub  ed25519.PublicKey
 	classicalPriv ed25519.PrivateKey
-	logger      *slog.Logger
-	stats       SignerStats
+	logger        *slog.Logger
+	stats         SignerStats
 }
 
 // SignerStats tracks signing metrics.
 type SignerStats struct {
-	mu           sync.Mutex
-	TotalSigns   int64          `json:"total_signs"`
-	TotalVerifies int64         `json:"total_verifies"`
-	Scheme       SignatureScheme `json:"scheme"`
-	StartedAt    time.Time      `json:"started_at"`
+	mu            sync.Mutex
+	TotalSigns    int64           `json:"total_signs"`
+	TotalVerifies int64           `json:"total_verifies"`
+	Scheme        SignatureScheme `json:"scheme"`
+	StartedAt     time.Time       `json:"started_at"`
 }
 
 // NewHybridSigner creates a new post-quantum hybrid signer.
@@ -164,9 +168,9 @@ const (
 
 // EncryptedEvent represents a homomorphically encrypted SOC event.
 type EncryptedEvent struct {
-	CiphertextID string   `json:"ciphertext_id"`
-	Scheme       HEScheme `json:"scheme"`
-	FieldCount   int      `json:"field_count"`
+	CiphertextID string    `json:"ciphertext_id"`
+	Scheme       HEScheme  `json:"scheme"`
+	FieldCount   int       `json:"field_count"`
 	Created      time.Time `json:"created"`
 }
 

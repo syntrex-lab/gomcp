@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package auth
 
 import (
@@ -62,13 +66,13 @@ func SeedDemoTenant(userStore *UserStore, tenantStore *TenantStore, socRepo doms
 
 	// 2. Create demo tenant (demo plan 1000 events max)
 	demoTenant := &Tenant{
-		ID:          DemoTenantID,
-		Name:        "SYNTREX Demo",
-		Slug:        "demo",
-		PlanID:      "demo",
-		OwnerUserID: demoUser.ID,
-		Active:      true,
-		CreatedAt:   time.Now(),
+		ID:           DemoTenantID,
+		Name:         "SYNTREX Demo",
+		Slug:         "demo",
+		PlanID:       "demo",
+		OwnerUserID:  demoUser.ID,
+		Active:       true,
+		CreatedAt:    time.Now(),
 		MonthResetAt: monthStart(time.Now().AddDate(0, 1, 0)),
 	}
 

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -26,34 +30,34 @@ type IncidentNote struct {
 
 // TimelineEntry represents a single event in the incident timeline.
 type TimelineEntry struct {
-	Timestamp   time.Time `json:"timestamp"`
-	Type        string    `json:"type"`        // event, playbook, status_change, note, assign
-	Actor       string    `json:"actor"`       // system, analyst name, playbook ID
-	Description string    `json:"description"`
+	Timestamp   time.Time      `json:"timestamp"`
+	Type        string         `json:"type"`  // event, playbook, status_change, note, assign
+	Actor       string         `json:"actor"` // system, analyst name, playbook ID
+	Description string         `json:"description"`
 	Metadata    map[string]any `json:"metadata,omitempty"`
 }
 
 // Incident represents a correlated security incident aggregated from multiple SOCEvents.
 // Each incident maintains a cryptographic anchor to the Decision Logger hash chain.
 type Incident struct {
-	ID                  string         `json:"id"` // INC-YYYY-NNNN
-	TenantID            string         `json:"tenant_id,omitempty"`
-	Status              IncidentStatus `json:"status"`
-	Severity            EventSeverity  `json:"severity"` // Max severity of constituent events
-	Title               string         `json:"title"`
-	Description         string         `json:"description"`
-	Events              []string       `json:"events"` // Event IDs
-	EventCount          int            `json:"event_count"`
-	DecisionChainAnchor string         `json:"decision_chain_anchor"` // SHA-256 hash (§5.6)
-	ChainLength         int            `json:"chain_length"`
-	CorrelationRule     string         `json:"correlation_rule"` // Rule that triggered this incident
-	KillChainPhase      string         `json:"kill_chain_phase"` // Reconnaissance/Exploitation/Exfiltration
-	MITREMapping        []string       `json:"mitre_mapping"`    // T-codes
-	PlaybookApplied     string         `json:"playbook_applied,omitempty"`
-	CreatedAt           time.Time      `json:"created_at"`
-	UpdatedAt           time.Time      `json:"updated_at"`
-	ResolvedAt          *time.Time     `json:"resolved_at,omitempty"`
-	AssignedTo          string         `json:"assigned_to,omitempty"`
+	ID                  string          `json:"id"` // INC-YYYY-NNNN
+	TenantID            string          `json:"tenant_id,omitempty"`
+	Status              IncidentStatus  `json:"status"`
+	Severity            EventSeverity   `json:"severity"` // Max severity of constituent events
+	Title               string          `json:"title"`
+	Description         string          `json:"description"`
+	Events              []string        `json:"events"` // Event IDs
+	EventCount          int             `json:"event_count"`
+	DecisionChainAnchor string          `json:"decision_chain_anchor"` // SHA-256 hash (§5.6)
+	ChainLength         int             `json:"chain_length"`
+	CorrelationRule     string          `json:"correlation_rule"` // Rule that triggered this incident
+	KillChainPhase      string          `json:"kill_chain_phase"` // Reconnaissance/Exploitation/Exfiltration
+	MITREMapping        []string        `json:"mitre_mapping"`    // T-codes
+	PlaybookApplied     string          `json:"playbook_applied,omitempty"`
+	CreatedAt           time.Time       `json:"created_at"`
+	UpdatedAt           time.Time       `json:"updated_at"`
+	ResolvedAt          *time.Time      `json:"resolved_at,omitempty"`
+	AssignedTo          string          `json:"assigned_to,omitempty"`
 	Notes               []IncidentNote  `json:"notes,omitempty"`
 	Timeline            []TimelineEntry `json:"timeline,omitempty"`
 }
@@ -198,4 +202,3 @@ func (inc *Incident) MTTR() time.Duration {
 	}
 	return inc.ResolvedAt.Sub(inc.CreatedAt)
 }
-

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package zerotrust implements SEC-008 Zero-Trust Internal Networking.
 //
 // Provides mTLS with SPIFFE identity for all internal SOC communication:
@@ -62,27 +66,27 @@ var AuthzPolicy = map[SPIFFEID][]SPIFFEID{
 
 // Identity holds a service's mTLS identity.
 type Identity struct {
-	mu          sync.RWMutex
-	spiffeID    SPIFFEID
-	serviceName string
-	cert        *tls.Certificate
-	caCert      *x509.Certificate
-	caKey       *ecdsa.PrivateKey
-	caPool      *x509.CertPool
+	mu             sync.RWMutex
+	spiffeID       SPIFFEID
+	serviceName    string
+	cert           *tls.Certificate
+	caCert         *x509.Certificate
+	caKey          *ecdsa.PrivateKey
+	caPool         *x509.CertPool
 	allowedCallers []SPIFFEID
-	logger      *slog.Logger
-	stats       IdentityStats
+	logger         *slog.Logger
+	stats          IdentityStats
 }
 
 // IdentityStats tracks mTLS metrics.
 type IdentityStats struct {
-	mu                sync.Mutex
-	CertRotations     int64     `json:"cert_rotations"`
-	ConnectionsAccepted int64   `json:"connections_accepted"`
-	ConnectionsDenied   int64   `json:"connections_denied"`
-	LastRotation      time.Time `json:"last_rotation"`
-	CertExpiry        time.Time `json:"cert_expiry"`
-	StartedAt         time.Time `json:"started_at"`
+	mu                  sync.Mutex
+	CertRotations       int64     `json:"cert_rotations"`
+	ConnectionsAccepted int64     `json:"connections_accepted"`
+	ConnectionsDenied   int64     `json:"connections_denied"`
+	LastRotation        time.Time `json:"last_rotation"`
+	CertExpiry          time.Time `json:"cert_expiry"`
+	StartedAt           time.Time `json:"started_at"`
 }
 
 // NewIdentity creates a new zero-trust mTLS identity.
@@ -211,7 +215,7 @@ func (id *Identity) Stats() IdentityStats {
 	id.stats.mu.Lock()
 	defer id.stats.mu.Unlock()
 	return IdentityStats{
-		CertRotations:      id.stats.CertRotations,
+		CertRotations:       id.stats.CertRotations,
 		ConnectionsAccepted: id.stats.ConnectionsAccepted,
 		ConnectionsDenied:   id.stats.ConnectionsDenied,
 		LastRotation:        id.stats.LastRotation,

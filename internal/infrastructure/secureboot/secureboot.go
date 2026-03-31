@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package secureboot implements SEC-007 Secure Boot Integration.
 //
 // Provides a verification chain from bootloader to SOC binary:
@@ -28,24 +32,24 @@ import (
 
 // VerifyResult holds the outcome of a binary verification.
 type VerifyResult struct {
-	Valid         bool      `json:"valid"`
-	BinaryPath   string    `json:"binary_path"`
-	BinaryHash   string    `json:"binary_hash"`    // SHA-256
-	SignatureOK  bool      `json:"signature_ok"`
-	ChainValid   bool      `json:"chain_valid"`
-	TrustedKey   string    `json:"trusted_key,omitempty"` // Key ID that signed
-	Error        string    `json:"error,omitempty"`
-	VerifiedAt   time.Time `json:"verified_at"`
+	Valid       bool      `json:"valid"`
+	BinaryPath  string    `json:"binary_path"`
+	BinaryHash  string    `json:"binary_hash"` // SHA-256
+	SignatureOK bool      `json:"signature_ok"`
+	ChainValid  bool      `json:"chain_valid"`
+	TrustedKey  string    `json:"trusted_key,omitempty"` // Key ID that signed
+	Error       string    `json:"error,omitempty"`
+	VerifiedAt  time.Time `json:"verified_at"`
 }
 
 // BootAttestation is a measured boot report.
 type BootAttestation struct {
-	NodeID       string            `json:"node_id"`
-	Timestamp    time.Time         `json:"timestamp"`
-	Binaries     []BinaryRecord    `json:"binaries"`
-	ChainValid   bool              `json:"chain_valid"`
-	AllVerified  bool              `json:"all_verified"`
-	PCRValues    map[string]string `json:"pcr_values,omitempty"`
+	NodeID      string            `json:"node_id"`
+	Timestamp   time.Time         `json:"timestamp"`
+	Binaries    []BinaryRecord    `json:"binaries"`
+	ChainValid  bool              `json:"chain_valid"`
+	AllVerified bool              `json:"all_verified"`
+	PCRValues   map[string]string `json:"pcr_values,omitempty"`
 }
 
 // BinaryRecord is a single binary in the boot chain.
@@ -62,7 +66,7 @@ type BinaryRecord struct {
 type TrustedKey struct {
 	ID        string            `json:"id"`
 	Algorithm string            `json:"algorithm"` // ed25519, rsa
-	PublicKey ed25519.PublicKey  `json:"-"`
+	PublicKey ed25519.PublicKey `json:"-"`
 	PublicHex string            `json:"public_hex"`
 	Purpose   string            `json:"purpose"` // binary_signing, config_signing
 	AddedAt   time.Time         `json:"added_at"`
@@ -83,7 +87,7 @@ type BinarySignature struct {
 
 // Verifier validates the boot chain of SOC binaries.
 type Verifier struct {
-	mu         sync.RWMutex
+	mu          sync.RWMutex
 	trustedKeys map[string]*TrustedKey
 	signatures  *SignatureStore
 	logger      *slog.Logger
@@ -92,7 +96,7 @@ type Verifier struct {
 
 // VerifierStats tracks verification metrics.
 type VerifierStats struct {
-	mu              sync.Mutex
+	mu                 sync.Mutex
 	TotalVerifications int64     `json:"total_verifications"`
 	Passed             int64     `json:"passed"`
 	Failed             int64     `json:"failed"`

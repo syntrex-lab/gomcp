@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package orchestrator implements the DIP Heartbeat Orchestrator.
 //
 // The orchestrator runs a background loop with 4 modules:
@@ -439,7 +443,7 @@ func (o *Orchestrator) stabilityCheck(ctx context.Context, result *HeartbeatResu
 			if err := o.store.Add(ctx, recoveryMarker); err == nil {
 				o.mu.Lock()
 				o.lastApoptosisWritten = time.Now()
-			o.mu.Unlock()
+				o.mu.Unlock()
 			}
 		}
 	}

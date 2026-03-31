@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package auth
 
 import (
@@ -13,7 +17,7 @@ const claimsKey ctxKey = "jwt_claims"
 
 // JWTMiddleware validates Bearer tokens on protected routes.
 type JWTMiddleware struct {
-	secret   []byte
+	secret []byte
 	// PublicPaths are exempt from auth (e.g., /health, /api/auth/login).
 	PublicPaths map[string]bool
 }
@@ -23,23 +27,23 @@ func NewJWTMiddleware(secret []byte) *JWTMiddleware {
 	return &JWTMiddleware{
 		secret: secret,
 		PublicPaths: map[string]bool{
-			"/health":          true,
-			"/healthz":         true,
-			"/readyz":          true,
-			"/metrics":         true,
-			"/api/auth/login":  true,
-			"/api/auth/logout": true,
-			"/api/auth/refresh": true,
-			"/api/auth/register": true,
-			"/api/auth/verify":   true,
-			"/api/auth/plans":    true,
-			"/api/auth/demo":     true,
-			"/api/v1/scan":       true, // public demo scanner
-			"/api/v1/usage":      true, // public usage/quota check
-			"/api/v1/soc/events": true, // sensor ingest (auth via RBAC API key when enabled)
+			"/health":                true,
+			"/healthz":               true,
+			"/readyz":                true,
+			"/metrics":               true,
+			"/api/auth/login":        true,
+			"/api/auth/logout":       true,
+			"/api/auth/refresh":      true,
+			"/api/auth/register":     true,
+			"/api/auth/verify":       true,
+			"/api/auth/plans":        true,
+			"/api/auth/demo":         true,
+			"/api/v1/scan":           true, // public demo scanner
+			"/api/v1/usage":          true, // public usage/quota check
+			"/api/v1/soc/events":     true, // sensor ingest (auth via RBAC API key when enabled)
 			"/api/soc/events/stream": true, // SSE uses query param auth
-			"/api/soc/stream":         true, // SSE live feed (EventSource can't send headers)
-			"/api/soc/ws":             true, // WebSocket-style SSE push
+			"/api/soc/stream":        true, // SSE live feed (EventSource can't send headers)
+			"/api/soc/ws":            true, // WebSocket-style SSE push
 		},
 	}
 }

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package guidance implements the Security Context MCP server domain (SDD-006).
 //
 // Provides security guidance, safe patterns, and standards references
@@ -27,7 +31,7 @@ type GuidanceEntry struct {
 	Guidance     string      `json:"guidance"`
 	SafePatterns []string    `json:"safe_patterns,omitempty"`
 	Standards    []Reference `json:"standards"`
-	Severity     string      `json:"severity"` // "critical", "high", "medium", "low"
+	Severity     string      `json:"severity"`            // "critical", "high", "medium", "low"
 	Languages    []string    `json:"languages,omitempty"` // Applicable languages
 }
 
@@ -179,7 +183,7 @@ func DefaultOWASPLLMTop10() []GuidanceEntry {
 		},
 		{
 			Topic: "overreliance", Title: "LLM09: Overreliance",
-			Guidance: "Never use LLM output as sole input for security decisions. Implement cross-validation with deterministic engines. Maintain human-in-the-loop for critical paths.",
+			Guidance:  "Never use LLM output as sole input for security decisions. Implement cross-validation with deterministic engines. Maintain human-in-the-loop for critical paths.",
 			Severity:  "medium",
 			Standards: []Reference{{Source: "OWASP LLM Top 10", Section: "LLM09"}},
 		},

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resilience
 
 import (
@@ -63,12 +67,12 @@ type ComponentConfig struct {
 
 // ComponentHealth tracks the health state of a single component.
 type ComponentHealth struct {
-	Name        string            `json:"name"`
-	Status      ComponentStatus   `json:"status"`
+	Name        string             `json:"name"`
+	Status      ComponentStatus    `json:"status"`
 	Metrics     map[string]float64 `json:"metrics"`
-	LastCheck   time.Time         `json:"last_check"`
-	Consecutive int               `json:"consecutive_failures"`
-	Config      ComponentConfig   `json:"-"`
+	LastCheck   time.Time          `json:"last_check"`
+	Consecutive int                `json:"consecutive_failures"`
+	Config      ComponentConfig    `json:"-"`
 }
 
 // HealthAlert represents a detected health anomaly.

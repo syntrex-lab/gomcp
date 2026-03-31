@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resources
 
 import (
@@ -5,11 +9,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 	"github.com/syntrex-lab/gomcp/internal/domain/session"
 	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func newTestProvider(t *testing.T) (*Provider, *sqlite.DB, *sqlite.DB) {

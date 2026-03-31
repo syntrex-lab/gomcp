@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package pivot implements the autonomous multi-step attack engine (v3.8 Strike Force).
 // Module 10 in Orchestrator: finite state machine for iterative offensive operations.
 package pivot

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 //go:build windows
 
 package antitamper
@@ -10,7 +14,7 @@ import (
 )
 
 var (
-	kernel32           = syscall.NewLazyDLL("kernel32.dll")
+	kernel32          = syscall.NewLazyDLL("kernel32.dll")
 	isDebuggerPresent = kernel32.NewProc("IsDebuggerPresent")
 )
 
@@ -41,7 +45,7 @@ func (s *Shield) isDebuggerAttached() bool {
 
 	// Check parent process name for known debuggers.
 	// This is a heuristic — not foolproof.
-	_ = strings.Contains // suppress unused import
+	_ = strings.Contains    // suppress unused import
 	_ = unsafe.Pointer(nil) // suppress unused import
 
 	return false

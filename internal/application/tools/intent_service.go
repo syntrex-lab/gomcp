@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package tools provides application-level tool services.
 // This file adds the Intent Distiller MCP tool integration (DIP H0.2).
 package tools

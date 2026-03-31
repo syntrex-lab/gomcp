@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package formalspec implements SEC-012 TLA+ Formal Verification.
 //
 // Provides a Go representation of the Event Bus pipeline and
@@ -26,22 +30,22 @@ import (
 type PipelineState string
 
 const (
-	StateInit       PipelineState = "INIT"
-	StateScanning   PipelineState = "SCANNING"    // Secret Scanner (Step 0)
-	StateDedup      PipelineState = "DEDUP"       // Deduplication
-	StateCorrelate  PipelineState = "CORRELATE"   // Correlation Engine
-	StatePersist    PipelineState = "PERSIST"      // SQLite Persist
+	StateInit        PipelineState = "INIT"
+	StateScanning    PipelineState = "SCANNING"     // Secret Scanner (Step 0)
+	StateDedup       PipelineState = "DEDUP"        // Deduplication
+	StateCorrelate   PipelineState = "CORRELATE"    // Correlation Engine
+	StatePersist     PipelineState = "PERSIST"      // SQLite Persist
 	StateDecisionLog PipelineState = "DECISION_LOG" // Audit Decision Logger
-	StateComplete   PipelineState = "COMPLETE"
-	StateError      PipelineState = "ERROR"
+	StateComplete    PipelineState = "COMPLETE"
+	StateError       PipelineState = "ERROR"
 )
 
 // Transition represents a state transition in the pipeline.
 type Transition struct {
 	From      PipelineState `json:"from"`
 	To        PipelineState `json:"to"`
-	Guard     string        `json:"guard"`     // Condition for transition
-	Action    string        `json:"action"`    // Side effect
+	Guard     string        `json:"guard"`  // Condition for transition
+	Action    string        `json:"action"` // Side effect
 	Timestamp time.Time     `json:"timestamp"`
 }
 
@@ -223,8 +227,8 @@ func (v *SpecVerifier) VerifyPipeline(state PipelineState, history []Transition)
 		v.mu.Unlock()
 
 		results = append(results, InvariantResult{
-			Name:   inv.Name,
-			Passed: passed,
+			Name:    inv.Name,
+			Passed:  passed,
 			Details: fmt.Sprintf("%s: %v", inv.Description, passed),
 		})
 	}
@@ -246,8 +250,8 @@ func (v *SpecVerifier) VerifyChain(chain []ChainEntry) []InvariantResult {
 		v.mu.Unlock()
 
 		results = append(results, InvariantResult{
-			Name:   inv.Name,
-			Passed: passed,
+			Name:    inv.Name,
+			Passed:  passed,
 			Details: fmt.Sprintf("%s: %v", inv.Description, passed),
 		})
 	}

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -524,4 +528,3 @@ func TestE2E_CrescendoEscalation(t *testing.T) {
 	assert.Equal(t, domsoc.SeverityCritical, lastInc.Severity)
 	assert.Contains(t, lastInc.MITREMapping, "T1059")
 }
-

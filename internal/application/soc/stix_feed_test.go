@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -111,8 +115,8 @@ func TestProcessBundle_FiltersNonIndicators(t *testing.T) {
 		Objects: []STIXObject{
 			{Type: "indicator", Pattern: "[ipv4-addr:value = '10.0.0.1']", Modified: time.Now()},
 			{Type: "malware", Name: "BadMalware"},   // should be skipped
-			{Type: "indicator", Pattern: ""},          // empty pattern → skipped
-			{Type: "attack-pattern", Name: "Phish"},   // should be skipped
+			{Type: "indicator", Pattern: ""},        // empty pattern → skipped
+			{Type: "attack-pattern", Name: "Phish"}, // should be skipped
 			{Type: "indicator", Pattern: "[domain-name:value = 'bad.com']", Modified: time.Now()},
 		},
 	}

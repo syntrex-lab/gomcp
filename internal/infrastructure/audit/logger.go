@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package audit provides an append-only audit trail for Zero-G operations.
 // The audit logger writes to .rlm/zero_g.audit with O_APPEND semantics,
 // making programmatic deletion of records impossible.

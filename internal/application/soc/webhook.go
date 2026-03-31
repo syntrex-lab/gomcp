@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package webhook provides outbound SOAR webhook notifications
 // for the SOC pipeline. Fires HTTP POST on incident creation/update.
 package soc
@@ -38,8 +42,8 @@ type WebhookConfig struct {
 type WebhookPayload struct {
 	EventType string          `json:"event_type"` // incident_created, incident_updated, sensor_offline
 	Timestamp time.Time       `json:"timestamp"`
-	Source    string           `json:"source"`
-	Data     json.RawMessage  `json:"data"`
+	Source    string          `json:"source"`
+	Data      json.RawMessage `json:"data"`
 }
 
 // WebhookResult tracks delivery status per endpoint.
@@ -80,8 +84,6 @@ func NewWebhookNotifier(config WebhookConfig) *WebhookNotifier {
 	}
 }
 
-
-
 // NotifyIncident sends an incident webhook to all configured endpoints.
 // Non-blocking: fires goroutines for each endpoint.
 func (w *WebhookNotifier) NotifyIncident(eventType string, incident *domsoc.Incident) []WebhookResult {
@@ -105,7 +107,7 @@ func (w *WebhookNotifier) NotifyIncident(eventType string, incident *domsoc.Inci
 		EventType: eventType,
 		Timestamp: time.Now().UTC(),
 		Source:    "sentinel-soc",
-		Data:     data,
+		Data:      data,
 	}
 
 	body, err := json.Marshal(payload)
@@ -151,7 +153,7 @@ func (w *WebhookNotifier) NotifySensorOffline(sensor domsoc.Sensor) []WebhookRes
 		EventType: "sensor_offline",
 		Timestamp: time.Now().UTC(),
 		Source:    "sentinel-soc",
-		Data:     data,
+		Data:      data,
 	}
 
 	body, _ := json.Marshal(payload)

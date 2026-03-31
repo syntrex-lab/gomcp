@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package vectorstore — PolarQuant multi-bit vector compression.
 //
 // Based on Google's TurboQuant research (ICLR 2026, §3.2).
@@ -187,7 +191,7 @@ func (c *PolarQuantCodec) CompressedBytes() int {
 
 // CompressionRatio returns the ratio of original to compressed size.
 func (c *PolarQuantCodec) CompressionRatio() float64 {
-	origBytes := c.dim * 8 // float64
+	origBytes := c.dim * 8               // float64
 	compBytes := c.CompressedBytes() + 4 // + float32 radius
 	return float64(origBytes) / float64(compBytes)
 }

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package onnx provides a native Go ONNX Runtime embedder for the Sentinel Local Oracle.
 //
 // Replaces the Python bridge (pybridge) with direct ONNX inference.

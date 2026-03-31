@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -19,13 +23,13 @@ const (
 
 // PluginHealth tracks the health state of a single plugin.
 type PluginHealth struct {
-	Vendor      string       `json:"vendor"`
-	Type        PluginType   `json:"type"`
-	Status      PluginStatus `json:"status"`
-	LastCheck   time.Time    `json:"last_check"`
-	Consecutive int          `json:"consecutive_failures"`
+	Vendor      string        `json:"vendor"`
+	Type        PluginType    `json:"type"`
+	Status      PluginStatus  `json:"status"`
+	LastCheck   time.Time     `json:"last_check"`
+	Consecutive int           `json:"consecutive_failures"`
 	Latency     time.Duration `json:"latency"`
-	LastError   string       `json:"last_error,omitempty"`
+	LastError   string        `json:"last_error,omitempty"`
 }
 
 // MaxConsecutivePluginFailures before marking offline.

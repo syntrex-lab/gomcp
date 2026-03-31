@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resilience
 
 import (
@@ -43,13 +47,13 @@ type ModeActionFunc func(mode EmergencyMode, action string, params map[string]in
 
 // PreservationEngine manages emergency modes (safe/lockdown/apoptosis).
 type PreservationEngine struct {
-	mu           sync.RWMutex
-	currentMode  EmergencyMode
-	activation   *ModeActivation
-	history      []PreservationEvent
-	actionFn     ModeActionFunc
-	integrityFn  func() IntegrityReport // pluggable integrity check
-	logger       *slog.Logger
+	mu          sync.RWMutex
+	currentMode EmergencyMode
+	activation  *ModeActivation
+	history     []PreservationEvent
+	actionFn    ModeActionFunc
+	integrityFn func() IntegrityReport // pluggable integrity check
+	logger      *slog.Logger
 }
 
 // NewPreservationEngine creates a new preservation engine.

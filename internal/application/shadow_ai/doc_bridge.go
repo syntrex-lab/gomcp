@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -17,62 +21,62 @@ import (
 type DocReviewStatus string
 
 const (
-	DocReviewPending   DocReviewStatus = "pending"
-	DocReviewScanning  DocReviewStatus = "scanning"
-	DocReviewClean     DocReviewStatus = "clean"
-	DocReviewRedacted  DocReviewStatus = "redacted"
-	DocReviewBlocked   DocReviewStatus = "blocked"
-	DocReviewApproved  DocReviewStatus = "approved"
+	DocReviewPending  DocReviewStatus = "pending"
+	DocReviewScanning DocReviewStatus = "scanning"
+	DocReviewClean    DocReviewStatus = "clean"
+	DocReviewRedacted DocReviewStatus = "redacted"
+	DocReviewBlocked  DocReviewStatus = "blocked"
+	DocReviewApproved DocReviewStatus = "approved"
 )
 
 // ScanResult contains the results of scanning a document.
 type ScanResult struct {
-	DocumentID  string        `json:"document_id"`
-	Status      DocReviewStatus `json:"status"`
-	PIIFound    []PIIMatch    `json:"pii_found,omitempty"`
-	SecretsFound []SecretMatch `json:"secrets_found,omitempty"`
-	DataClass   DataClassification `json:"data_classification"`
-	ContentHash string        `json:"content_hash"`
-	ScannedAt   time.Time     `json:"scanned_at"`
-	SizeBytes   int           `json:"size_bytes"`
+	DocumentID   string             `json:"document_id"`
+	Status       DocReviewStatus    `json:"status"`
+	PIIFound     []PIIMatch         `json:"pii_found,omitempty"`
+	SecretsFound []SecretMatch      `json:"secrets_found,omitempty"`
+	DataClass    DataClassification `json:"data_classification"`
+	ContentHash  string             `json:"content_hash"`
+	ScannedAt    time.Time          `json:"scanned_at"`
+	SizeBytes    int                `json:"size_bytes"`
 }
 
 // PIIMatch represents a detected PII pattern in content.
 type PIIMatch struct {
-	Type     string `json:"type"`      // "email", "phone", "ssn", "credit_card", "passport"
-	Location int    `json:"location"`  // Character offset
+	Type     string `json:"type"`     // "email", "phone", "ssn", "credit_card", "passport"
+	Location int    `json:"location"` // Character offset
 	Length   int    `json:"length"`
-	Masked   string `json:"masked"`    // Redacted value, e.g., "j***@example.com"
+	Masked   string `json:"masked"` // Redacted value, e.g., "j***@example.com"
 }
 
 // SecretMatch represents a detected secret/API key in content.
 type SecretMatch struct {
-	Type     string `json:"type"`      // "api_key", "password", "token", "private_key"
+	Type     string `json:"type"` // "api_key", "password", "token", "private_key"
 	Location int    `json:"location"`
 	Length   int    `json:"length"`
-	Provider string `json:"provider"`  // "OpenAI", "AWS", "GitHub", etc.
+	Provider string `json:"provider"` // "OpenAI", "AWS", "GitHub", etc.
 }
 
 // DocBridge manages document scanning, redaction, and review workflow.
 type DocBridge struct {
-	mu             sync.RWMutex
-	reviews        map[string]*ScanResult
-	piiPatterns    []*piiPattern
-	secretPats     []secretPattern // Cached compiled patterns
-	signatures     *AISignatureDB  // Reused across scans
-	maxDocSize     int             // bytes
+	mu          sync.RWMutex
+	reviews     map[string]*ScanResult
+	piiPatterns []*piiPattern
+	secretPats  []secretPattern // Cached compiled patterns
+	signatures  *AISignatureDB  // Reused across scans
+	maxDocSize  int             // bytes
 }
 
 type piiPattern struct {
-	name    string
-	regex   *regexp.Regexp
-	maskFn  func(string) string
+	name   string
+	regex  *regexp.Regexp
+	maskFn func(string) string
 }
 
 // NewDocBridge creates a new Document Review Bridge.
 func NewDocBridge() *DocBridge {
 	return &DocBridge{
-		reviews:    make(map[string]*ScanResult),
+		reviews:     make(map[string]*ScanResult),
 		piiPatterns: defaultPIIPatterns(),
 		secretPats:  secretPatterns(),
 		signatures:  NewAISignatureDB(),

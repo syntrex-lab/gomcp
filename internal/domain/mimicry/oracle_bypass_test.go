@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package mimicry — PoC: Oracle Keyword Semantic Gap (H2)
 //
 // This test proves that the Euphemism Engine can translate offensive commands
@@ -13,8 +17,8 @@ package mimicry
 import (
 	"testing"
 
-	"github.com/syntrex-lab/gomcp/internal/domain/oracle"
 	"github.com/stretchr/testify/assert"
+	"github.com/syntrex-lab/gomcp/internal/domain/oracle"
 )
 
 // TestOracleBypass_EuphemismSemantic proves H2: Oracle keywords are

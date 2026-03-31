@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package httpserver
 
 import (
@@ -38,9 +42,9 @@ type RBACConfig struct {
 
 // RBACMiddleware provides role-based access control for HTTP endpoints (§17).
 type RBACMiddleware struct {
-	mu      sync.RWMutex
-	config  RBACConfig
-	keys    map[string]*APIKey // raw key → APIKey
+	mu     sync.RWMutex
+	config RBACConfig
+	keys   map[string]*APIKey // raw key → APIKey
 }
 
 // NewRBACMiddleware creates RBAC middleware. If not enabled, all requests pass through.
@@ -122,7 +126,6 @@ func (m *RBACMiddleware) Require(minRole Role, next http.HandlerFunc) http.Handl
 			writeError(w, http.StatusUnauthorized, "invalid or revoked API key")
 			return
 		}
-
 
 		// Check role hierarchy
 		if !hasPermission(apiKey.Role, minRole) {

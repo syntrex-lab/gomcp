@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // GoMCP v2 — High-performance Go-native MCP server for the RLM Toolkit.
 // Provides hierarchical persistent memory, cognitive state management,
 // causal reasoning chains, and code crystal indexing.

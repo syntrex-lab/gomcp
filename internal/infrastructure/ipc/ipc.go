@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package ipc provides a cross-platform inter-process communication layer
 // for SENTINEL SOC Process Isolation (SEC-001).
 //
@@ -234,10 +238,10 @@ func DialWithRetry(ctx context.Context, name string, maxRetries int) (net.Conn, 
 // BufferedSender wraps a Sender with an async buffer for non-blocking sends.
 // If the downstream pipe is slow, messages are buffered up to BufferSize.
 type BufferedSender struct {
-	sender  *Sender
-	msgCh   chan *SOCMessage
-	done    chan struct{}
-	logger  *slog.Logger
+	sender *Sender
+	msgCh  chan *SOCMessage
+	done   chan struct{}
+	logger *slog.Logger
 }
 
 // NewBufferedSender creates a buffered async sender.

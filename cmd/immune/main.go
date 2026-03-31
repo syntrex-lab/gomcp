@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package main provides the SENTINEL immune agent (SEC-002 eBPF Runtime Guard).
 //
 // The immune agent monitors SOC processes at the kernel level using eBPF

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package vectorstore implements persistent storage for intent vectors (DIP H2.1).
 //
 // Intent vectors are the output of the Intent Distiller (H0.2). Storing them
@@ -75,7 +79,7 @@ func DefaultConfig() Config {
 		QJLProjections: 256,
 		QJLSeed:        42,
 		QJLVectorDim:   128,
-		PQBitsPerDim:   0,  // Disabled by default.
+		PQBitsPerDim:   0, // Disabled by default.
 		PQSeed:         7,
 	}
 }
@@ -84,14 +88,14 @@ func DefaultConfig() Config {
 type Store struct {
 	mu         sync.RWMutex
 	records    []*IntentRecord
-	signatures []QJLSignature      // Parallel QJL signatures (same index as records)
-	compressed []CompressedVector  // Parallel PolarQuant codes (same index as records)
-	index      map[string]int      // id → position in records
+	signatures []QJLSignature     // Parallel QJL signatures (same index as records)
+	compressed []CompressedVector // Parallel PolarQuant codes (same index as records)
+	index      map[string]int     // id → position in records
 	capacity   int
 	nextID     int
-	qjl        *QJLProjection      // nil if QJL disabled
-	pq         *PolarQuantCodec    // nil if PolarQuant disabled
-	dropFloat  bool                // If true, clear rec.Vector after encoding
+	qjl        *QJLProjection   // nil if QJL disabled
+	pq         *PolarQuantCodec // nil if PolarQuant disabled
+	dropFloat  bool             // If true, clear rec.Vector after encoding
 }
 
 // New creates a new vector store.

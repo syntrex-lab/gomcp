@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -36,7 +40,7 @@ func (m *mockFirewall) BlockDomain(_ context.Context, domain string, _ string) e
 	return nil
 }
 
-func (m *mockFirewall) UnblockIP(_ context.Context, _ string) error   { return nil }
+func (m *mockFirewall) UnblockIP(_ context.Context, _ string) error     { return nil }
 func (m *mockFirewall) UnblockDomain(_ context.Context, _ string) error { return nil }
 
 func (m *mockFirewall) HealthCheck(_ context.Context) error {
@@ -61,8 +65,8 @@ func (m *mockEDR) IsolateHost(_ context.Context, hostname string) error {
 	m.isolated = append(m.isolated, hostname)
 	return nil
 }
-func (m *mockEDR) ReleaseHost(_ context.Context, _ string) error          { return nil }
-func (m *mockEDR) KillProcess(_ context.Context, _ string, _ int) error   { return nil }
+func (m *mockEDR) ReleaseHost(_ context.Context, _ string) error              { return nil }
+func (m *mockEDR) KillProcess(_ context.Context, _ string, _ int) error       { return nil }
 func (m *mockEDR) QuarantineFile(_ context.Context, _ string, _ string) error { return nil }
 
 func (m *mockEDR) HealthCheck(_ context.Context) error {
@@ -87,8 +91,8 @@ func (m *mockGateway) BlockURL(_ context.Context, url string, _ string) error {
 	m.blockedURLs = append(m.blockedURLs, url)
 	return nil
 }
-func (m *mockGateway) UnblockURL(_ context.Context, _ string) error      { return nil }
-func (m *mockGateway) BlockCategory(_ context.Context, _ string) error   { return nil }
+func (m *mockGateway) UnblockURL(_ context.Context, _ string) error    { return nil }
+func (m *mockGateway) BlockCategory(_ context.Context, _ string) error { return nil }
 
 func (m *mockGateway) HealthCheck(_ context.Context) error {
 	if !m.healthy {
@@ -1075,8 +1079,8 @@ func TestApproval_ExpireOverdue(t *testing.T) {
 
 func TestApproval_Stats(t *testing.T) {
 	ae := NewApprovalEngine()
-	ae.SubmitRequest("u1", "d1", DataPublic)   // auto
-	ae.SubmitRequest("u2", "d2", DataInternal)  // pending
+	ae.SubmitRequest("u1", "d1", DataPublic)              // auto
+	ae.SubmitRequest("u2", "d2", DataInternal)            // pending
 	req := ae.SubmitRequest("u3", "d3", DataConfidential) // pending
 	_ = ae.Deny(req.ID, "ciso", "no")
 
@@ -1222,4 +1226,3 @@ func TestController_ReviewDocument_WithSecrets(t *testing.T) {
 		t.Fatal("blocked docs should not create approval")
 	}
 }
-

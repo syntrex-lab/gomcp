@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -146,8 +150,8 @@ func TestGenAIChildProcessRule(t *testing.T) {
 	events := []SOCEvent{
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAIChildProcess,
-			Severity: SeverityInfo,
+			Category:  CategoryGenAIChildProcess,
+			Severity:  SeverityInfo,
 			Timestamp: now.Add(-30 * time.Second),
 			Metadata: map[string]string{
 				"parent_process": "claude",
@@ -170,14 +174,14 @@ func TestGenAISuspiciousDescendantRule(t *testing.T) {
 	events := []SOCEvent{
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAIChildProcess,
-			Severity: SeverityInfo,
+			Category:  CategoryGenAIChildProcess,
+			Severity:  SeverityInfo,
 			Timestamp: now.Add(-3 * time.Minute),
 		},
 		{
 			Source:    SourceImmune,
-			Category: "tool_abuse",
-			Severity: SeverityMedium,
+			Category:  "tool_abuse",
+			Severity:  SeverityMedium,
 			Timestamp: now.Add(-1 * time.Minute),
 		},
 	}
@@ -196,14 +200,14 @@ func TestGenAICredentialAccessRule(t *testing.T) {
 	events := []SOCEvent{
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAIChildProcess,
-			Severity: SeverityInfo,
+			Category:  CategoryGenAIChildProcess,
+			Severity:  SeverityInfo,
 			Timestamp: now.Add(-1 * time.Minute),
 		},
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAICredentialAccess,
-			Severity: SeverityCritical,
+			Category:  CategoryGenAICredentialAccess,
+			Severity:  SeverityCritical,
 			Timestamp: now.Add(-30 * time.Second),
 			Metadata: map[string]string{
 				"file_path": "/home/user/.config/google-chrome/Default/Login Data",
@@ -238,14 +242,14 @@ func TestGenAIPersistenceRule(t *testing.T) {
 	events := []SOCEvent{
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAIChildProcess,
-			Severity: SeverityInfo,
+			Category:  CategoryGenAIChildProcess,
+			Severity:  SeverityInfo,
 			Timestamp: now.Add(-8 * time.Minute),
 		},
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAIPersistence,
-			Severity: SeverityHigh,
+			Category:  CategoryGenAIPersistence,
+			Severity:  SeverityHigh,
 			Timestamp: now.Add(-2 * time.Minute),
 		},
 	}
@@ -264,8 +268,8 @@ func TestGenAIConfigModificationRule(t *testing.T) {
 	events := []SOCEvent{
 		{
 			Source:    SourceImmune,
-			Category: CategoryGenAIConfigModification,
-			Severity: SeverityMedium,
+			Category:  CategoryGenAIConfigModification,
+			Severity:  SeverityMedium,
 			Timestamp: now.Add(-2 * time.Minute),
 		},
 	}
@@ -282,8 +286,8 @@ func TestGenAINonGenAIProcessIgnored(t *testing.T) {
 	events := []SOCEvent{
 		{
 			Source:    SourceSentinelCore,
-			Category: "prompt_injection",
-			Severity: SeverityHigh,
+			Category:  "prompt_injection",
+			Severity:  SeverityHigh,
 			Timestamp: now.Add(-1 * time.Minute),
 		},
 	}

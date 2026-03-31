@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -12,8 +16,8 @@ import (
 type SOCCorrelationRule struct {
 	ID                 string        `json:"id"`
 	Name               string        `json:"name"`
-	RequiredCategories []string      `json:"required_categories"`  // Co-occurrence (unordered)
-	SequenceCategories []string      `json:"sequence_categories"` // Temporal sequence (ordered A→B→C)
+	RequiredCategories []string      `json:"required_categories"`      // Co-occurrence (unordered)
+	SequenceCategories []string      `json:"sequence_categories"`      // Temporal sequence (ordered A→B→C)
 	SeverityTrend      string        `json:"severity_trend,omitempty"` // "ascending" — detect escalation pattern
 	TrendCategory      string        `json:"trend_category,omitempty"` // Category to track for severity trend
 	MinEvents          int           `json:"min_events"`

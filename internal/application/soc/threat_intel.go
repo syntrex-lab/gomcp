@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package soc provides a threat intelligence feed integration
 // for enriching SOC events and correlation rules.
 //
@@ -36,9 +40,9 @@ const (
 type IOC struct {
 	Type       IOCType   `json:"type"`
 	Value      string    `json:"value"`
-	Source     string    `json:"source"`     // Feed name
-	Severity   string    `json:"severity"`   // critical/high/medium/low
-	Tags       []string  `json:"tags"`       // MITRE ATT&CK, campaign, etc.
+	Source     string    `json:"source"`   // Feed name
+	Severity   string    `json:"severity"` // critical/high/medium/low
+	Tags       []string  `json:"tags"`     // MITRE ATT&CK, campaign, etc.
 	FirstSeen  time.Time `json:"first_seen"`
 	LastSeen   time.Time `json:"last_seen"`
 	Confidence float64   `json:"confidence"` // 0.0-1.0
@@ -46,31 +50,31 @@ type IOC struct {
 
 // ThreatFeed represents a configured threat intelligence source.
 type ThreatFeed struct {
-	Name        string        `json:"name"`
-	URL         string        `json:"url"`
-	Type        string        `json:"type"` // stix, csv, json
-	Enabled     bool          `json:"enabled"`
-	Interval    time.Duration `json:"interval"`
-	APIKey      string        `json:"api_key,omitempty"`
-	LastFetch   time.Time     `json:"last_fetch"`
-	IOCCount    int           `json:"ioc_count"`
-	LastError   string        `json:"last_error,omitempty"`
+	Name      string        `json:"name"`
+	URL       string        `json:"url"`
+	Type      string        `json:"type"` // stix, csv, json
+	Enabled   bool          `json:"enabled"`
+	Interval  time.Duration `json:"interval"`
+	APIKey    string        `json:"api_key,omitempty"`
+	LastFetch time.Time     `json:"last_fetch"`
+	IOCCount  int           `json:"ioc_count"`
+	LastError string        `json:"last_error,omitempty"`
 }
 
 // ─── Threat Intel Store ─────────────────────────────────
 
 // ThreatIntelStore manages IOCs from multiple feeds.
 type ThreatIntelStore struct {
-	mu    sync.RWMutex
-	iocs  map[string]*IOC     // key: type:value
-	feeds []ThreatFeed
+	mu     sync.RWMutex
+	iocs   map[string]*IOC // key: type:value
+	feeds  []ThreatFeed
 	client *http.Client
 
 	// Stats
-	TotalIOCs    int `json:"total_iocs"`
-	TotalFeeds   int `json:"total_feeds"`
+	TotalIOCs    int       `json:"total_iocs"`
+	TotalFeeds   int       `json:"total_feeds"`
 	LastRefresh  time.Time `json:"last_refresh"`
-	MatchesFound int64 `json:"matches_found"`
+	MatchesFound int64     `json:"matches_found"`
 }
 
 // NewThreatIntelStore creates an empty threat intel store.

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package cache
 
 import (
@@ -5,9 +9,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 	bolt "go.etcd.io/bbolt"
 )
 

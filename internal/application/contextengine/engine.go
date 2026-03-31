@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package contextengine implements the Proactive Context Engine.
 // It automatically injects relevant memory facts into every MCP tool response
 // via ToolHandlerMiddleware, so the LLM always has context without asking.

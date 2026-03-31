@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package watchdog implements the SEC-004 Watchdog Mesh Framework.
 //
 // Mutual monitoring between SOC agents (immune, sidecar, shield)
@@ -49,7 +53,7 @@ type PeerHealth struct {
 	MissedCount    int        `json:"missed_count"`
 	RestartCount   int        `json:"restart_count"`
 	LastRestart    time.Time  `json:"last_restart,omitempty"`
-	ResponseTimeMs int64     `json:"response_time_ms"`
+	ResponseTimeMs int64      `json:"response_time_ms"`
 }
 
 // EscalationHandler is called when a peer requires escalation action.
@@ -57,11 +61,11 @@ type EscalationHandler func(action EscalationAction)
 
 // EscalationAction describes what the mesh decided to do.
 type EscalationAction struct {
-	Timestamp time.Time  `json:"timestamp"`
-	PeerName  string     `json:"peer_name"`
-	Action    string     `json:"action"` // restart, isolate, alert_architect
-	Reason    string     `json:"reason"`
-	Severity  string     `json:"severity"`
+	Timestamp time.Time `json:"timestamp"`
+	PeerName  string    `json:"peer_name"`
+	Action    string    `json:"action"` // restart, isolate, alert_architect
+	Reason    string    `json:"reason"`
+	Severity  string    `json:"severity"`
 }
 
 // Monitor is the watchdog mesh peer monitor.
@@ -78,13 +82,13 @@ type Monitor struct {
 
 // MonitorStats tracks mesh health metrics.
 type MonitorStats struct {
-	mu             sync.Mutex
-	TotalChecks    int64          `json:"total_checks"`
-	TotalMisses    int64          `json:"total_misses"`
-	TotalRestarts  int64          `json:"total_restarts"`
-	TotalIsolations int64        `json:"total_isolations"`
-	StartedAt      time.Time     `json:"started_at"`
-	PeerCount      int           `json:"peer_count"`
+	mu              sync.Mutex
+	TotalChecks     int64     `json:"total_checks"`
+	TotalMisses     int64     `json:"total_misses"`
+	TotalRestarts   int64     `json:"total_restarts"`
+	TotalIsolations int64     `json:"total_isolations"`
+	StartedAt       time.Time `json:"started_at"`
+	PeerCount       int       `json:"peer_count"`
 }
 
 // NewMonitor creates a new watchdog mesh monitor.

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -14,11 +18,11 @@ import (
 
 // AISignatureDB contains known AI service signatures for detection.
 type AISignatureDB struct {
-	mu              sync.RWMutex
-	services        []AIServiceInfo
-	domainPatterns  []*domainPattern
-	apiKeyPatterns  []*APIKeyPattern
-	httpSignatures  []string
+	mu             sync.RWMutex
+	services       []AIServiceInfo
+	domainPatterns []*domainPattern
+	apiKeyPatterns []*APIKeyPattern
+	httpSignatures []string
 }
 
 type domainPattern struct {
@@ -62,14 +66,14 @@ func (db *AISignatureDB) loadDefaults() {
 
 	// HTTP header signatures.
 	db.httpSignatures = []string{
-		"authorization: bearer sk-",     // OpenAI
-		"authorization: bearer ant-",    // Anthropic
-		"x-api-key: sk-ant-",            // Anthropic v2
-		"x-goog-api-key:",              // Google AI
-		"authorization: bearer gsk_",   // Groq
-		"authorization: bearer hf_",    // HuggingFace
-		"api-key:",                      // Azure OpenAI (x-ms header)
-		"x-api-key: xai-",              // xAI Grok API
+		"authorization: bearer sk-",  // OpenAI
+		"authorization: bearer ant-", // Anthropic
+		"x-api-key: sk-ant-",         // Anthropic v2
+		"x-goog-api-key:",            // Google AI
+		"authorization: bearer gsk_", // Groq
+		"authorization: bearer hf_",  // HuggingFace
+		"api-key:",                   // Azure OpenAI (x-ms header)
+		"x-api-key: xai-",            // xAI Grok API
 	}
 }
 
@@ -246,7 +250,7 @@ func (nd *NetworkDetector) SignatureDB() *AISignatureDB {
 // UserBehaviorProfile tracks a user's AI access behavior for anomaly detection.
 type UserBehaviorProfile struct {
 	UserID            string    `json:"user_id"`
-	AccessFrequency   float64   `json:"access_frequency"`    // Requests per hour
+	AccessFrequency   float64   `json:"access_frequency"`     // Requests per hour
 	DataVolumePerHour float64   `json:"data_volume_per_hour"` // Bytes per hour
 	KnownDestinations []string  `json:"known_destinations"`
 	UpdatedAt         time.Time `json:"updated_at"`

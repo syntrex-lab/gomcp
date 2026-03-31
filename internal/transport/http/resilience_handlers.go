@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package httpserver
 
 import (
@@ -11,11 +15,11 @@ import (
 
 // ResilienceAPI holds references to the SARL engines for HTTP handlers.
 type ResilienceAPI struct {
-	healthMonitor  *resilience.HealthMonitor
-	healingEngine  *resilience.HealingEngine
-	preservation   *resilience.PreservationEngine
-	behavioral     *resilience.BehavioralAnalyzer
-	playbooks      *resilience.RecoveryPlaybookEngine
+	healthMonitor *resilience.HealthMonitor
+	healingEngine *resilience.HealingEngine
+	preservation  *resilience.PreservationEngine
+	behavioral    *resilience.BehavioralAnalyzer
+	playbooks     *resilience.RecoveryPlaybookEngine
 }
 
 // NewResilienceAPI creates a new resilience API handler.
@@ -66,11 +70,11 @@ func (api *ResilienceAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 	// Add emergency mode info from preservation engine.
 	response := map[string]any{
-		"overall_status":       health.OverallStatus,
-		"components":           health.Components,
-		"quorum_valid":         health.QuorumValid,
-		"last_check":           health.LastCheck,
-		"anomalies_detected":   health.AnomaliesDetected,
+		"overall_status":        health.OverallStatus,
+		"components":            health.Components,
+		"quorum_valid":          health.QuorumValid,
+		"last_check":            health.LastCheck,
+		"anomalies_detected":    health.AnomaliesDetected,
 		"active_emergency_mode": string(resilience.ModeNone),
 	}
 
@@ -110,12 +114,12 @@ func (api *ResilienceAPI) handleAudit(w http.ResponseWriter, r *http.Request) {
 		ops := api.healingEngine.RecentOperations(50)
 		for _, op := range ops {
 			entries = append(entries, map[string]any{
-				"type":       "healing",
-				"timestamp":  op.StartedAt,
-				"component":  op.Component,
-				"strategy":   op.StrategyID,
-				"result":     op.Result,
-				"error":      op.Error,
+				"type":      "healing",
+				"timestamp": op.StartedAt,
+				"component": op.Component,
+				"strategy":  op.StrategyID,
+				"result":    op.Result,
+				"error":     op.Error,
 			})
 		}
 	}
@@ -137,12 +141,12 @@ func (api *ResilienceAPI) handleAudit(w http.ResponseWriter, r *http.Request) {
 		execs := api.playbooks.RecentExecutions(50)
 		for _, exec := range execs {
 			entries = append(entries, map[string]any{
-				"type":       "playbook",
-				"timestamp":  exec.StartedAt,
-				"playbook":   exec.PlaybookID,
-				"component":  exec.Component,
-				"status":     exec.Status,
-				"error":      exec.Error,
+				"type":      "playbook",
+				"timestamp": exec.StartedAt,
+				"playbook":  exec.PlaybookID,
+				"component": exec.Component,
+				"status":    exec.Status,
+				"error":     exec.Error,
 			})
 		}
 	}

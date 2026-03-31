@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -14,10 +18,10 @@ import (
 type ApprovalStatus string
 
 const (
-	ApprovalPending  ApprovalStatus = "pending"
-	ApprovalApproved ApprovalStatus = "approved"
-	ApprovalDenied   ApprovalStatus = "denied"
-	ApprovalExpired  ApprovalStatus = "expired"
+	ApprovalPending      ApprovalStatus = "pending"
+	ApprovalApproved     ApprovalStatus = "approved"
+	ApprovalDenied       ApprovalStatus = "denied"
+	ApprovalExpired      ApprovalStatus = "expired"
 	ApprovalAutoApproved ApprovalStatus = "auto_approved"
 )
 

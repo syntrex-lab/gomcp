@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -20,14 +24,14 @@ type P2PSyncService struct {
 
 // SOCPeer represents a connected SOC peer node.
 type SOCPeer struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Endpoint    string    `json:"endpoint"`
-	Status      string    `json:"status"` // connected, disconnected, syncing
-	LastSync    time.Time `json:"last_sync"`
-	EventsSent  int       `json:"events_sent"`
-	EventsRecv  int       `json:"events_recv"`
-	TrustLevel  string    `json:"trust_level"` // full, partial, readonly
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Endpoint   string    `json:"endpoint"`
+	Status     string    `json:"status"` // connected, disconnected, syncing
+	LastSync   time.Time `json:"last_sync"`
+	EventsSent int       `json:"events_sent"`
+	EventsRecv int       `json:"events_recv"`
+	TrustLevel string    `json:"trust_level"` // full, partial, readonly
 }
 
 // SyncMessage is a SOC data unit exchanged between peers.
@@ -43,10 +47,10 @@ type SyncMessage struct {
 type SyncMessageType string
 
 const (
-	SyncEvent    SyncMessageType = "EVENT"
-	SyncIncident SyncMessageType = "INCIDENT"
-	SyncIOC      SyncMessageType = "IOC"
-	SyncRule     SyncMessageType = "RULE"
+	SyncEvent     SyncMessageType = "EVENT"
+	SyncIncident  SyncMessageType = "INCIDENT"
+	SyncIOC       SyncMessageType = "IOC"
+	SyncRule      SyncMessageType = "RULE"
 	SyncHeartbeat SyncMessageType = "HEARTBEAT"
 )
 

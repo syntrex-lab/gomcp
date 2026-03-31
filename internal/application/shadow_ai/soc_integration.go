@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -19,7 +23,7 @@ type ShadowAIController struct {
 	behavioral    *BehavioralDetector
 	docBridge     *DocBridge
 	approval      *ApprovalEngine
-	events        []ShadowAIEvent       // In-memory event store (bounded)
+	events        []ShadowAIEvent // In-memory event store (bounded)
 	maxEvents     int
 	socEventFn    func(source, severity, category, description string, meta map[string]string) // Bridge to SOC event bus
 	logger        *slog.Logger

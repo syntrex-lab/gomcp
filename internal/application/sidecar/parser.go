@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package sidecar implements the Universal Sidecar (§5.5) — a zero-dependency
 // Go binary that runs alongside SENTINEL sensors, tails their STDOUT/logs,
 // and pushes parsed security events to the SOC Event Bus.

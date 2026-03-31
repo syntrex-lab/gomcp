@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -13,10 +17,10 @@ type PluginFactory func() interface{}
 // Thread-safe via sync.RWMutex.
 type PluginRegistry struct {
 	mu        sync.RWMutex
-	plugins   map[string]interface{}     // vendor → plugin instance
-	factories map[string]PluginFactory   // "type_vendor" → factory
-	configs   map[string]*PluginConfig   // vendor → config
-	health    map[string]*PluginHealth   // vendor → health status
+	plugins   map[string]interface{}   // vendor → plugin instance
+	factories map[string]PluginFactory // "type_vendor" → factory
+	configs   map[string]*PluginConfig // vendor → config
+	health    map[string]*PluginHealth // vendor → health status
 	logger    *slog.Logger
 }
 

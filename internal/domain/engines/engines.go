@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package engines
 
 import (
@@ -9,9 +13,9 @@ import (
 type EngineStatus string
 
 const (
-	EngineHealthy     EngineStatus = "HEALTHY"
-	EngineDegraded    EngineStatus = "DEGRADED"
-	EngineOffline     EngineStatus = "OFFLINE"
+	EngineHealthy      EngineStatus = "HEALTHY"
+	EngineDegraded     EngineStatus = "DEGRADED"
+	EngineOffline      EngineStatus = "OFFLINE"
 	EngineInitializing EngineStatus = "INITIALIZING"
 )
 
@@ -84,10 +88,10 @@ type BlockedIP struct {
 // StubSentinelCore is a no-op sentinel-core when Rust engine is not deployed.
 type StubSentinelCore struct{}
 
-func NewStubSentinelCore() *StubSentinelCore { return &StubSentinelCore{} }
-func (s *StubSentinelCore) Name() string     { return "sentinel-core-stub" }
+func NewStubSentinelCore() *StubSentinelCore     { return &StubSentinelCore{} }
+func (s *StubSentinelCore) Name() string         { return "sentinel-core-stub" }
 func (s *StubSentinelCore) Status() EngineStatus { return EngineOffline }
-func (s *StubSentinelCore) Version() string  { return "stub-1.0" }
+func (s *StubSentinelCore) Version() string      { return "stub-1.0" }
 
 func (s *StubSentinelCore) ScanPrompt(_ context.Context, _ string) (*ScanResult, error) {
 	return &ScanResult{
@@ -114,10 +118,10 @@ func (s *StubSentinelCore) ScanResponse(_ context.Context, _ string) (*ScanResul
 // StubShield is a no-op shield when C++ engine is not deployed.
 type StubShield struct{}
 
-func NewStubShield() *StubShield         { return &StubShield{} }
-func (s *StubShield) Name() string       { return "shield-stub" }
+func NewStubShield() *StubShield           { return &StubShield{} }
+func (s *StubShield) Name() string         { return "shield-stub" }
 func (s *StubShield) Status() EngineStatus { return EngineOffline }
-func (s *StubShield) Version() string    { return "stub-1.0" }
+func (s *StubShield) Version() string      { return "stub-1.0" }
 
 func (s *StubShield) InspectTraffic(_ context.Context, _ []byte, _ map[string]string) (*ScanResult, error) {
 	return &ScanResult{

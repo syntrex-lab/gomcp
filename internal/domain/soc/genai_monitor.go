@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 // GenAI Process Monitoring & Detection
@@ -58,11 +62,11 @@ var LLMDNSEndpoints = []string{
 
 // GenAI event categories for the SOC event bus.
 const (
-	CategoryGenAIChildProcess      = "genai_child_process"
-	CategoryGenAISensitiveFile     = "genai_sensitive_file_access"
-	CategoryGenAIUnusualDomain     = "genai_unusual_domain"
-	CategoryGenAICredentialAccess  = "genai_credential_access"
-	CategoryGenAIPersistence       = "genai_persistence"
+	CategoryGenAIChildProcess       = "genai_child_process"
+	CategoryGenAISensitiveFile      = "genai_sensitive_file_access"
+	CategoryGenAIUnusualDomain      = "genai_unusual_domain"
+	CategoryGenAICredentialAccess   = "genai_credential_access"
+	CategoryGenAIPersistence        = "genai_persistence"
 	CategoryGenAIConfigModification = "genai_config_modification"
 )
 

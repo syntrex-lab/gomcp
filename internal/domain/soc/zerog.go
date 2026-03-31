@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -18,17 +22,17 @@ type ZeroGMode struct {
 
 // ZeroGRequest represents a pending approval request.
 type ZeroGRequest struct {
-	ID          string         `json:"id"`
-	EventID     string         `json:"event_id"`
-	IncidentID  string         `json:"incident_id,omitempty"`
-	Action      string         `json:"action"` // What would auto-execute
-	Severity    string         `json:"severity"`
-	Description string         `json:"description"`
-	Status      ZeroGStatus    `json:"status"`
-	CreatedAt   time.Time      `json:"created_at"`
-	ResolvedAt  *time.Time     `json:"resolved_at,omitempty"`
-	ResolvedBy  string         `json:"resolved_by,omitempty"`
-	Verdict     ZeroGVerdict   `json:"verdict,omitempty"`
+	ID          string       `json:"id"`
+	EventID     string       `json:"event_id"`
+	IncidentID  string       `json:"incident_id,omitempty"`
+	Action      string       `json:"action"` // What would auto-execute
+	Severity    string       `json:"severity"`
+	Description string       `json:"description"`
+	Status      ZeroGStatus  `json:"status"`
+	CreatedAt   time.Time    `json:"created_at"`
+	ResolvedAt  *time.Time   `json:"resolved_at,omitempty"`
+	ResolvedBy  string       `json:"resolved_by,omitempty"`
+	Verdict     ZeroGVerdict `json:"verdict,omitempty"`
 }
 
 // ZeroGStatus tracks the request lifecycle.
@@ -174,11 +178,11 @@ func (z *ZeroGMode) Stats() map[string]any {
 	}
 
 	return map[string]any{
-		"enabled":          z.enabled,
-		"pending":          len(z.queue),
-		"total_resolved":   len(z.resolved),
-		"approved":         approved,
-		"denied":           denied,
-		"expired":          expired,
+		"enabled":        z.enabled,
+		"pending":        len(z.queue),
+		"total_resolved": len(z.resolved),
+		"approved":       approved,
+		"denied":         denied,
+		"expired":        expired,
 	}
 }

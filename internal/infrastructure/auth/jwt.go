@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package auth provides JWT authentication for the SOC HTTP API.
 // Uses HMAC-SHA256 (HS256) with configurable secret.
 // Zero external dependencies — pure Go stdlib.
@@ -16,21 +20,21 @@ import (
 
 // Standard JWT errors.
 var (
-	ErrInvalidToken    = errors.New("auth: invalid token")
-	ErrExpiredToken    = errors.New("auth: token expired")
-	ErrInvalidSecret   = errors.New("auth: secret too short (min 32 bytes)")
-	ErrWrongTokenType  = errors.New("auth: wrong token type")
+	ErrInvalidToken   = errors.New("auth: invalid token")
+	ErrExpiredToken   = errors.New("auth: token expired")
+	ErrInvalidSecret  = errors.New("auth: secret too short (min 32 bytes)")
+	ErrWrongTokenType = errors.New("auth: wrong token type")
 )
 
 // Claims represents JWT payload.
 type Claims struct {
-	Sub       string `json:"sub"`                   // Subject (username or user ID)
-	Role      string `json:"role"`                  // RBAC role: admin, operator, analyst, viewer
-	TenantID  string `json:"tenant_id,omitempty"`   // Multi-tenant isolation
+	Sub       string `json:"sub"`                  // Subject (username or user ID)
+	Role      string `json:"role"`                 // RBAC role: admin, operator, analyst, viewer
+	TenantID  string `json:"tenant_id,omitempty"`  // Multi-tenant isolation
 	TokenType string `json:"token_type,omitempty"` // "access" or "refresh"
-	Exp       int64  `json:"exp"`                   // Expiration (Unix timestamp)
-	Iat       int64  `json:"iat"`                   // Issued at
-	Iss       string `json:"iss,omitempty"`         // Issuer
+	Exp       int64  `json:"exp"`                  // Expiration (Unix timestamp)
+	Iat       int64  `json:"iat"`                  // Issued at
+	Iss       string `json:"iss,omitempty"`        // Issuer
 }
 
 // IsExpired returns true if the token has expired.

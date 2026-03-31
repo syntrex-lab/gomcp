@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package pivot — Execution Layer for Pivot Engine (v3.8 Strike Force).
 // Executes system commands in ZERO-G mode after Oracle verification.
 // All executions are logged to decisions.log (tamper-evident).

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -134,7 +138,7 @@ func (fm *FallbackManager) logDetectOnly(target, reason string) {
 			DetectionMethod: DetectNetwork,
 			Action:          "detect_only",
 			Metadata: map[string]string{
-				"reason":           reason,
+				"reason":            reason,
 				"fallback_strategy": fm.strategy,
 			},
 			Timestamp: time.Now(),

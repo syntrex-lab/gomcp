@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package httpserver
 
 import (
@@ -129,6 +133,7 @@ func (s *Server) handleReadyz(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
+
 // handleSensors returns registered sensors with health status.
 // GET /api/soc/sensors
 func (s *Server) handleSensors(w http.ResponseWriter, r *http.Request) {
@@ -224,17 +229,17 @@ func (s *Server) handleAnalytics(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleIngestEvent(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Source      string            `json:"source"`
-		SensorID   string            `json:"sensor_id"`
-		SensorKey  string            `json:"sensor_key"`
-		Severity   string            `json:"severity"`
-		Category   string            `json:"category"`
-		Subcategory string           `json:"subcategory"`
-		Confidence float64           `json:"confidence"`
-		Description string           `json:"description"`
-		Payload    string            `json:"payload"`
-		SessionID  string            `json:"session_id"`
-		ZeroGMode  bool              `json:"zero_g_mode"`
-		Metadata   map[string]string `json:"metadata"`
+		SensorID    string            `json:"sensor_id"`
+		SensorKey   string            `json:"sensor_key"`
+		Severity    string            `json:"severity"`
+		Category    string            `json:"category"`
+		Subcategory string            `json:"subcategory"`
+		Confidence  float64           `json:"confidence"`
+		Description string            `json:"description"`
+		Payload     string            `json:"payload"`
+		SessionID   string            `json:"session_id"`
+		ZeroGMode   bool              `json:"zero_g_mode"`
+		Metadata    map[string]string `json:"metadata"`
 	}
 
 	defer r.Body.Close()
@@ -351,17 +356,17 @@ const MaxBatchSize = 1000
 func (s *Server) handleBatchIngest(w http.ResponseWriter, r *http.Request) {
 	var events []struct {
 		Source      string            `json:"source"`
-		SensorID   string            `json:"sensor_id"`
-		SensorKey  string            `json:"sensor_key"`
-		Severity   string            `json:"severity"`
-		Category   string            `json:"category"`
-		Subcategory string           `json:"subcategory"`
-		Confidence float64           `json:"confidence"`
-		Description string           `json:"description"`
-		Payload    string            `json:"payload"`
-		SessionID  string            `json:"session_id"`
-		ZeroGMode  bool              `json:"zero_g_mode"`
-		Metadata   map[string]string `json:"metadata"`
+		SensorID    string            `json:"sensor_id"`
+		SensorKey   string            `json:"sensor_key"`
+		Severity    string            `json:"severity"`
+		Category    string            `json:"category"`
+		Subcategory string            `json:"subcategory"`
+		Confidence  float64           `json:"confidence"`
+		Description string            `json:"description"`
+		Payload     string            `json:"payload"`
+		SessionID   string            `json:"session_id"`
+		ZeroGMode   bool              `json:"zero_g_mode"`
+		Metadata    map[string]string `json:"metadata"`
 	}
 
 	limitBody(w, r)
@@ -440,6 +445,7 @@ func (s *Server) handleBatchIngest(w http.ResponseWriter, r *http.Request) {
 		"results":  results,
 	})
 }
+
 // handleSensorHeartbeat records a sensor heartbeat (§11.3).
 // POST /api/soc/sensors/heartbeat
 func (s *Server) handleSensorHeartbeat(w http.ResponseWriter, r *http.Request) {
@@ -836,7 +842,6 @@ func (s *Server) handleIncidentFullDetail(w http.ResponseWriter, r *http.Request
 	writeJSON(w, http.StatusOK, inc)
 }
 
-
 // === Webhook Management Endpoints (SOAR §15) ===
 
 // GET /api/soc/webhooks → returns webhook config + delivery stats
@@ -1043,11 +1048,11 @@ func (s *Server) getEngine(name string) engines.SentinelCore {
 func (s *Server) handleSovereignConfig(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"sovereign": map[string]any{
-			"enabled":       s.sovereignEnabled,
-			"mode":          s.sovereignMode,
-			"air_gapped":    s.sovereignMode == "airgap",
-			"external_api":  !s.sovereignEnabled,
-			"local_only":    s.sovereignMode == "airgap",
+			"enabled":      s.sovereignEnabled,
+			"mode":         s.sovereignMode,
+			"air_gapped":   s.sovereignMode == "airgap",
+			"external_api": !s.sovereignEnabled,
+			"local_only":   s.sovereignMode == "airgap",
 		},
 	})
 }
@@ -1321,9 +1326,9 @@ func (s *Server) handleIncidentExplain(w http.ResponseWriter, r *http.Request) {
 			"created_at": incident.CreatedAt.Format(time.RFC3339),
 		},
 		"kill_chain": map[string]any{
-			"phase":        incident.KillChainPhase,
-			"mitre_ids":    incident.MITREMapping,
-			"description":  fmt.Sprintf("This incident is classified in the '%s' phase of the Cyber Kill Chain.", incident.KillChainPhase),
+			"phase":       incident.KillChainPhase,
+			"mitre_ids":   incident.MITREMapping,
+			"description": fmt.Sprintf("This incident is classified in the '%s' phase of the Cyber Kill Chain.", incident.KillChainPhase),
 		},
 		"evidence": map[string]any{
 			"event_count":    len(incident.Events),
@@ -1486,9 +1491,9 @@ func (s *Server) handleIncidentSLA(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleSLAConfig(w http.ResponseWriter, _ *http.Request) {
 	thresholds := appsoc.DefaultSLAThresholds()
 	type slaEntry struct {
-		Severity       string  `json:"severity"`
-		ResponseMin    float64 `json:"response_time_min"`
-		ResolutionMin  float64 `json:"resolution_time_min"`
+		Severity      string  `json:"severity"`
+		ResponseMin   float64 `json:"response_time_min"`
+		ResolutionMin float64 `json:"resolution_time_min"`
 	}
 	entries := make([]slaEntry, 0, len(thresholds))
 	for _, t := range thresholds {
@@ -1719,11 +1724,11 @@ func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUsage(w http.ResponseWriter, r *http.Request) {
 	if s.usageTracker == nil {
 		writeJSON(w, http.StatusOK, map[string]any{
-			"plan":       "free",
-			"scans_used": 0,
+			"plan":        "free",
+			"scans_used":  0,
 			"scans_limit": 1000,
-			"remaining":  1000,
-			"unlimited":  false,
+			"remaining":   1000,
+			"unlimited":   false,
 		})
 		return
 	}

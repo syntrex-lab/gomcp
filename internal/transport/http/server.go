@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package httpserver provides an HTTP API transport for GoMCP SOC dashboard.
 //
 // Zero CGO: Uses ONLY Go stdlib net/http (supports HTTP/2 natively).
@@ -180,10 +184,10 @@ func (s *Server) StartEventBridge(ctx context.Context) {
 					return
 				}
 				s.wsHub.Broadcast("soc_event", map[string]any{
-					"id":       evt.ID,
-					"source":   string(evt.Source),
-					"severity": string(evt.Severity),
-					"category": evt.Category,
+					"id":          evt.ID,
+					"source":      string(evt.Source),
+					"severity":    string(evt.Severity),
+					"category":    evt.Category,
 					"description": evt.Description,
 					"session_id":  evt.SessionID,
 				})
@@ -407,7 +411,7 @@ func (s *Server) Start(ctx context.Context) error {
 		// NOTE: WriteTimeout is intentionally 0 (disabled) to support SSE/WebSocket
 		// long-lived connections. ReadHeaderTimeout protects against slowloris.
 		// SSE keepalive (15s) ensures dead connections are detected.
-		IdleTimeout:       120 * time.Second,
+		IdleTimeout: 120 * time.Second,
 	}
 
 	// Start SOC Demo Background Simulator

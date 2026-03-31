@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package contextengine
 
 import (
@@ -10,9 +14,9 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 
-	ctxdomain "github.com/syntrex-lab/gomcp/internal/domain/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	ctxdomain "github.com/syntrex-lab/gomcp/internal/domain/context"
 )
 
 // --- Mock FactProvider ---

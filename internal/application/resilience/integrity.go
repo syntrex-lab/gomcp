@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resilience
 
 import (
@@ -23,11 +27,11 @@ const (
 
 // IntegrityReport is the full result of an integrity verification.
 type IntegrityReport struct {
-	Overall    IntegrityStatus            `json:"overall"`
-	Timestamp  time.Time                  `json:"timestamp"`
-	Binaries   map[string]BinaryStatus    `json:"binaries,omitempty"`
-	Chain      *ChainStatus               `json:"chain,omitempty"`
-	Configs    map[string]ConfigStatus     `json:"configs,omitempty"`
+	Overall   IntegrityStatus         `json:"overall"`
+	Timestamp time.Time               `json:"timestamp"`
+	Binaries  map[string]BinaryStatus `json:"binaries,omitempty"`
+	Chain     *ChainStatus            `json:"chain,omitempty"`
+	Configs   map[string]ConfigStatus `json:"configs,omitempty"`
 }
 
 // BinaryStatus is the integrity status of a single binary.
@@ -56,13 +60,13 @@ type ConfigStatus struct {
 // IntegrityVerifier performs periodic integrity checks on binaries,
 // decision chain, and config files.
 type IntegrityVerifier struct {
-	mu            sync.RWMutex
-	binaryHashes  map[string]string // path → expected SHA-256
-	configPaths   []string          // config files to verify
-	hmacKey       []byte            // key for config HMAC-SHA256
-	chainPath     string            // path to decision chain log
-	logger        *slog.Logger
-	lastReport    *IntegrityReport
+	mu           sync.RWMutex
+	binaryHashes map[string]string // path → expected SHA-256
+	configPaths  []string          // config files to verify
+	hmacKey      []byte            // key for config HMAC-SHA256
+	chainPath    string            // path to decision chain log
+	logger       *slog.Logger
+	lastReport   *IntegrityReport
 }
 
 // NewIntegrityVerifier creates a new integrity verifier.

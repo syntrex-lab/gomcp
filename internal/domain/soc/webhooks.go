@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -23,12 +27,12 @@ const (
 
 // WebhookConfig defines a webhook destination.
 type WebhookConfig struct {
-	ID      string            `yaml:"id" json:"id"`
-	URL     string            `yaml:"url" json:"url"`
+	ID      string             `yaml:"id" json:"id"`
+	URL     string             `yaml:"url" json:"url"`
 	Events  []WebhookEventType `yaml:"events" json:"events"`
-	Headers map[string]string `yaml:"headers" json:"headers"`
-	Active  bool              `yaml:"active" json:"active"`
-	Retries int               `yaml:"retries" json:"retries"`
+	Headers map[string]string  `yaml:"headers" json:"headers"`
+	Active  bool               `yaml:"active" json:"active"`
+	Retries int                `yaml:"retries" json:"retries"`
 }
 
 // WebhookPayload is the JSON body sent to webhook endpoints.

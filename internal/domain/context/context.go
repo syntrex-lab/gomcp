@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package context defines domain entities for the Proactive Context Engine.
 // The engine automatically injects relevant memory facts into every tool response,
 // ensuring the LLM always has context without explicitly requesting it.

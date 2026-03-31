@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package main provides the standalone SOC API server entry point.
 //
 // @title SYNTREX Sentinel SOC API
@@ -29,10 +33,10 @@ import (
 	"syscall"
 
 	"github.com/syntrex-lab/gomcp/internal/application/soc"
-	socdomain "github.com/syntrex-lab/gomcp/internal/domain/soc"
 	"github.com/syntrex-lab/gomcp/internal/domain/engines"
-	"github.com/syntrex-lab/gomcp/internal/infrastructure/auth"
+	socdomain "github.com/syntrex-lab/gomcp/internal/domain/soc"
 	"github.com/syntrex-lab/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/auth"
 	"github.com/syntrex-lab/gomcp/internal/infrastructure/email"
 	"github.com/syntrex-lab/gomcp/internal/infrastructure/logging"
 	"github.com/syntrex-lab/gomcp/internal/infrastructure/postgres"
@@ -274,4 +278,3 @@ func configureMemorySafety(logger *slog.Logger) {
 		"sys_mib", m.Sys/1024/1024,
 	)
 }
-

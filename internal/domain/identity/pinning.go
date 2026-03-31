@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package identity
 
 // Context-aware trimming with security event pinning (SDD-003 M5).
@@ -8,23 +12,23 @@ package identity
 
 // Message represents a context window message.
 type Message struct {
-	Role      string `json:"role"`       // "user", "assistant", "system", "security"
-	Content   string `json:"content"`
-	TokenCount int   `json:"token_count"`
-	IsPinned  bool   `json:"is_pinned"`  // Security events are pinned
-	EventType string `json:"event_type,omitempty"` // For security messages
+	Role       string `json:"role"` // "user", "assistant", "system", "security"
+	Content    string `json:"content"`
+	TokenCount int    `json:"token_count"`
+	IsPinned   bool   `json:"is_pinned"`            // Security events are pinned
+	EventType  string `json:"event_type,omitempty"` // For security messages
 }
 
 // PinnedEventTypes are security events that MUST NOT be trimmed from context.
 var PinnedEventTypes = map[string]bool{
-	"permission_denied":        true,
-	"injection_detected":       true,
-	"circuit_breaker_open":     true,
+	"permission_denied":         true,
+	"injection_detected":        true,
+	"circuit_breaker_open":      true,
 	"credential_access_blocked": true,
-	"exfiltration_attempt":     true,
-	"ssrf_blocked":             true,
-	"genai_credential_access":  true,
-	"genai_persistence":        true,
+	"exfiltration_attempt":      true,
+	"ssrf_blocked":              true,
+	"genai_credential_access":   true,
+	"genai_persistence":         true,
 }
 
 // IsPinnedEvent returns true if the event type should be pinned (never trimmed).
@@ -84,7 +88,7 @@ func TrimContext(messages []Message, maxTokens int) []Message {
 	usedTokens := 0
 	// Keep messages from the END (newest) that fit
 	for i := len(unpinned) - 1; i >= 0; i-- {
-		if usedTokens + unpinned[i].msg.TokenCount <= remainingBudget {
+		if usedTokens+unpinned[i].msg.TokenCount <= remainingBudget {
 			survivingUnpinned = append([]indexedMsg{unpinned[i]}, survivingUnpinned...)
 			usedTokens += unpinned[i].msg.TokenCount
 		}

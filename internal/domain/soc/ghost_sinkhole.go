@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -22,13 +26,13 @@ type GhostSinkhole struct {
 type SinkholeResponse struct {
 	ID            string            `json:"id"`
 	Timestamp     time.Time         `json:"timestamp"`
-	Category      string            `json:"category"`       // Threat category that triggered sinkhole
-	OriginalHash  string            `json:"original_hash"`   // SHA-256 of original request (redacted)
-	DecoyContent  string            `json:"decoy_content"`   // Fake response that was served
-	TTPs          map[string]string `json:"ttps"`            // Captured attacker techniques
+	Category      string            `json:"category"`      // Threat category that triggered sinkhole
+	OriginalHash  string            `json:"original_hash"` // SHA-256 of original request (redacted)
+	DecoyContent  string            `json:"decoy_content"` // Fake response that was served
+	TTPs          map[string]string `json:"ttps"`          // Captured attacker techniques
 	SourceIP      string            `json:"source_ip,omitempty"`
 	UserAgent     string            `json:"user_agent,omitempty"`
-	DecoyTemplate string            `json:"decoy_template"`  // Which template was used
+	DecoyTemplate string            `json:"decoy_template"` // Which template was used
 }
 
 type sinkholeTemplate struct {
@@ -157,11 +161,11 @@ func (gs *GhostSinkhole) Stats() map[string]any {
 	}
 
 	return map[string]any{
-		"total_decoys":  len(gs.responses),
-		"by_category":   byCategory,
-		"by_template":   byTemplate,
-		"buffer_size":   gs.maxStore,
-		"buffer_usage":  fmt.Sprintf("%.1f%%", float64(len(gs.responses))/float64(gs.maxStore)*100),
+		"total_decoys": len(gs.responses),
+		"by_category":  byCategory,
+		"by_template":  byTemplate,
+		"buffer_size":  gs.maxStore,
+		"buffer_usage": fmt.Sprintf("%.1f%%", float64(len(gs.responses))/float64(gs.maxStore)*100),
 	}
 }
 

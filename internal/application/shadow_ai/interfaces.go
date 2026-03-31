@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package shadow_ai implements the Sentinel Shadow AI Control Module.
 //
 // Five levels of shadow AI management:
@@ -107,7 +111,7 @@ type PluginConfig struct {
 // IntegrationConfig is the top-level Shadow AI configuration.
 type IntegrationConfig struct {
 	Plugins             []PluginConfig `yaml:"plugins" json:"plugins"`
-	FallbackStrategy    string         `yaml:"fallback_strategy" json:"fallback_strategy"`       // "detect_only" | "alert_only"
+	FallbackStrategy    string         `yaml:"fallback_strategy" json:"fallback_strategy"`         // "detect_only" | "alert_only"
 	HealthCheckInterval time.Duration  `yaml:"health_check_interval" json:"health_check_interval"` // default: 30s
 }
 
@@ -117,13 +121,13 @@ type IntegrationConfig struct {
 type DetectionMethod string
 
 const (
-	DetectNetwork    DetectionMethod = "network"     // Domain/IP match
-	DetectHTTP       DetectionMethod = "http"        // HTTP header signature
-	DetectTLS        DetectionMethod = "tls"         // TLS/JA3 fingerprint
-	DetectProcess    DetectionMethod = "process"     // AI tool process execution
-	DetectAPIKey     DetectionMethod = "api_key"     // AI API key in payload
-	DetectBehavioral DetectionMethod = "behavioral"  // Anomalous AI access pattern
-	DetectClipboard  DetectionMethod = "clipboard"   // Large clipboard → AI browser pattern
+	DetectNetwork    DetectionMethod = "network"    // Domain/IP match
+	DetectHTTP       DetectionMethod = "http"       // HTTP header signature
+	DetectTLS        DetectionMethod = "tls"        // TLS/JA3 fingerprint
+	DetectProcess    DetectionMethod = "process"    // AI tool process execution
+	DetectAPIKey     DetectionMethod = "api_key"    // AI API key in payload
+	DetectBehavioral DetectionMethod = "behavioral" // Anomalous AI access pattern
+	DetectClipboard  DetectionMethod = "clipboard"  // Large clipboard → AI browser pattern
 )
 
 // DataClassification determines the approval tier required.
@@ -141,22 +145,22 @@ type ShadowAIEvent struct {
 	ID              string            `json:"id"`
 	UserID          string            `json:"user_id"`
 	Hostname        string            `json:"hostname"`
-	Destination     string            `json:"destination"`      // Target AI service domain/IP
-	AIService       string            `json:"ai_service"`       // "chatgpt", "claude", "gemini", etc.
+	Destination     string            `json:"destination"` // Target AI service domain/IP
+	AIService       string            `json:"ai_service"`  // "chatgpt", "claude", "gemini", etc.
 	DetectionMethod DetectionMethod   `json:"detection_method"`
-	Action          string            `json:"action"`           // "blocked", "allowed", "pending"
-	EnforcedBy      string            `json:"enforced_by"`      // Plugin vendor that enforced
-	DataSize        int64             `json:"data_size"`        // Bytes sent to AI
+	Action          string            `json:"action"`      // "blocked", "allowed", "pending"
+	EnforcedBy      string            `json:"enforced_by"` // Plugin vendor that enforced
+	DataSize        int64             `json:"data_size"`   // Bytes sent to AI
 	Timestamp       time.Time         `json:"timestamp"`
 	Metadata        map[string]string `json:"metadata,omitempty"`
 }
 
 // AIServiceInfo describes a known AI service for signature matching.
 type AIServiceInfo struct {
-	Name     string   `json:"name"`      // "ChatGPT", "Claude", "Gemini"
-	Vendor   string   `json:"vendor"`    // "OpenAI", "Anthropic", "Google"
-	Domains  []string `json:"domains"`   // ["*.openai.com", "chat.openai.com"]
-	Category string   `json:"category"`  // "llm", "image_gen", "code_assist"
+	Name     string   `json:"name"`     // "ChatGPT", "Claude", "Gemini"
+	Vendor   string   `json:"vendor"`   // "OpenAI", "Anthropic", "Google"
+	Domains  []string `json:"domains"`  // ["*.openai.com", "chat.openai.com"]
+	Category string   `json:"category"` // "llm", "image_gen", "code_assist"
 }
 
 // BlockRequest is an API request to manually block a target.
@@ -188,27 +192,27 @@ type Violator struct {
 
 // ApprovalTier defines the approval requirements for a data classification level.
 type ApprovalTier struct {
-	Name           string        `yaml:"name" json:"name"`
+	Name           string             `yaml:"name" json:"name"`
 	DataClass      DataClassification `yaml:"data_class" json:"data_class"`
-	ApprovalNeeded []string      `yaml:"approval_needed" json:"approval_needed"` // ["manager"], ["manager", "soc"], ["ciso"]
-	SLA            time.Duration `yaml:"sla" json:"sla"`
-	AutoApprove    bool          `yaml:"auto_approve" json:"auto_approve"`
+	ApprovalNeeded []string           `yaml:"approval_needed" json:"approval_needed"` // ["manager"], ["manager", "soc"], ["ciso"]
+	SLA            time.Duration      `yaml:"sla" json:"sla"`
+	AutoApprove    bool               `yaml:"auto_approve" json:"auto_approve"`
 }
 
 // ApprovalRequest tracks a pending approval for AI access.
 type ApprovalRequest struct {
-	ID          string             `json:"id"`
-	DocID       string             `json:"doc_id"`
-	UserID      string             `json:"user_id"`
-	Tier        string             `json:"tier"`
-	DataClass   DataClassification `json:"data_class"`
-	Status      string             `json:"status"` // "pending", "approved", "denied", "expired"
-	ApprovedBy  string             `json:"approved_by,omitempty"`
-	DeniedBy    string             `json:"denied_by,omitempty"`
-	Reason      string             `json:"reason,omitempty"`
-	CreatedAt   time.Time          `json:"created_at"`
-	ExpiresAt   time.Time          `json:"expires_at"`
-	ResolvedAt  time.Time          `json:"resolved_at,omitempty"`
+	ID         string             `json:"id"`
+	DocID      string             `json:"doc_id"`
+	UserID     string             `json:"user_id"`
+	Tier       string             `json:"tier"`
+	DataClass  DataClassification `json:"data_class"`
+	Status     string             `json:"status"` // "pending", "approved", "denied", "expired"
+	ApprovedBy string             `json:"approved_by,omitempty"`
+	DeniedBy   string             `json:"denied_by,omitempty"`
+	Reason     string             `json:"reason,omitempty"`
+	CreatedAt  time.Time          `json:"created_at"`
+	ExpiresAt  time.Time          `json:"expires_at"`
+	ResolvedAt time.Time          `json:"resolved_at,omitempty"`
 }
 
 // ComplianceReport is the Shadow AI compliance report for GDPR/SOC2/EU AI Act.

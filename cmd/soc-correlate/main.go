@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package main provides the SOC Correlate process (SEC-001 Process Isolation).
 //
 // Responsibility: Receives persisted events from soc-ingest via IPC,

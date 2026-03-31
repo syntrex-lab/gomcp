@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package auth
 
 import (
@@ -250,8 +254,8 @@ func HandleGetTenant(tenantStore *TenantStore) http.HandlerFunc {
 			"plan":   plan,
 			"usage": map[string]interface{}{
 				"events_this_month": tenant.EventsThisMonth,
-				"events_limit":     plan.MaxEventsMonth,
-				"usage_percent":    usagePercent(tenant.EventsThisMonth, plan.MaxEventsMonth),
+				"events_limit":      plan.MaxEventsMonth,
+				"usage_percent":     usagePercent(tenant.EventsThisMonth, plan.MaxEventsMonth),
 			},
 		})
 	}
@@ -339,13 +343,13 @@ func HandleBillingStatus(tenantStore *TenantStore) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"plan":               plan,
+			"plan":                plan,
 			"payment_customer_id": tenant.PaymentCustomerID,
 			"payment_sub_id":      tenant.PaymentSubID,
-			"events_used":        tenant.EventsThisMonth,
-			"events_limit":       plan.MaxEventsMonth,
-			"usage_percent":      usagePercent(tenant.EventsThisMonth, plan.MaxEventsMonth),
-			"next_reset":         tenant.MonthResetAt,
+			"events_used":         tenant.EventsThisMonth,
+			"events_limit":        plan.MaxEventsMonth,
+			"usage_percent":       usagePercent(tenant.EventsThisMonth, plan.MaxEventsMonth),
+			"next_reset":          tenant.MonthResetAt,
 		})
 	}
 }
@@ -419,7 +423,7 @@ func HandleListTenants(tenantStore *TenantStore) http.HandlerFunc {
 		}
 
 		tenants := tenantStore.ListTenants()
-		
+
 		type tenantResp struct {
 			ID     string `json:"id"`
 			Name   string `json:"name"`
@@ -427,7 +431,7 @@ func HandleListTenants(tenantStore *TenantStore) http.HandlerFunc {
 			PlanID string `json:"plan_id"`
 			Active bool   `json:"active"`
 		}
-		
+
 		res := make([]tenantResp, len(tenants))
 		for i, t := range tenants {
 			res[i] = tenantResp{
@@ -471,16 +475,16 @@ func HandleImpersonateTenant(tenantStore *TenantStore, jwtSecret []byte) http.Ha
 		// Issue new token with updated TenantID
 		accessClaims := Claims{
 			Sub:       claims.Sub,
-			Role:      claims.Role, // Preserves superadmin explicitly
+			Role:      claims.Role,  // Preserves superadmin explicitly
 			TenantID:  req.TenantID, // The impersonated tenant ID
 			TokenType: "access",
 			Exp:       time.Now().Add(15 * time.Minute).Unix(),
 		}
-		
+
 		refreshClaims := Claims{
 			Sub:       claims.Sub,
 			Role:      claims.Role,
-			TenantID:  req.TenantID, 
+			TenantID:  req.TenantID,
 			TokenType: "refresh",
 			Exp:       time.Now().Add(7 * 24 * time.Hour).Unix(),
 		}
@@ -521,8 +525,8 @@ func HandleImpersonateTenant(tenantStore *TenantStore, jwtSecret []byte) http.Ha
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
-			"status": "success",
-			"tenant_id": req.TenantID,
+			"status":     "success",
+			"tenant_id":  req.TenantID,
 			"csrf_token": csrfToken,
 		})
 	}

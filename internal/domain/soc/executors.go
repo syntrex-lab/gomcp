@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -281,8 +285,8 @@ func (e *NotifyExecutor) Execute(params ActionParams) (string, error) {
 // QuarantineExecutor marks a session or IP as quarantined.
 // Maintains an in-memory blocklist and logs quarantine actions.
 type QuarantineExecutor struct {
-	mu         sync.RWMutex
-	blocklist  map[string]time.Time // IP/session → quarantine expiry
+	mu        sync.RWMutex
+	blocklist map[string]time.Time // IP/session → quarantine expiry
 }
 
 func NewQuarantineExecutor() *QuarantineExecutor {
@@ -446,4 +450,3 @@ func (h *ExecutorActionHandler) Handle(action PlaybookAction, incidentID string)
 	)
 	return nil
 }
-

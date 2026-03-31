@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package soc defines domain entities for the SENTINEL AI SOC subsystem.
 // SOC extends gomcp's alert/oracle layer with multi-source event ingestion,
 // incident management, sensor lifecycle, and compliance reporting.
@@ -77,7 +81,7 @@ type SOCEvent struct {
 	Description  string            `json:"description"`
 	Payload      string            `json:"payload,omitempty"` // Raw input for Secret Scanner Step 0
 	SessionID    string            `json:"session_id,omitempty"`
-	ContentHash  string            `json:"content_hash,omitempty"` // SHA-256 dedup key (§5.2)
+	ContentHash  string            `json:"content_hash,omitempty"`  // SHA-256 dedup key (§5.2)
 	DecisionHash string            `json:"decision_hash,omitempty"` // SHA-256 chain link
 	Verdict      Verdict           `json:"verdict"`
 	ZeroGMode    bool              `json:"zero_g_mode,omitempty"` // §13.4: Strike Force operation tag
@@ -97,30 +101,30 @@ func (e *SOCEvent) ComputeContentHash() string {
 // KnownCategories is the set of recognized event categories.
 // Events with unknown categories are still accepted but logged as warnings.
 var KnownCategories = map[string]bool{
-	"jailbreak":        true,
-	"prompt_injection":  true,
-	"tool_abuse":       true,
-	"exfiltration":     true,
-	"pii_leak":         true,
-	"auth_bypass":      true,
-	"encoding":         true,
-	"persistence":      true,
-	"sensor_anomaly":   true,
-	"dos":              true,
-	"model_theft":      true,
-	"supply_chain":     true,
-	"data_poisoning":   true,
-	"evasion":          true,
-	"shadow_ai_usage":  true,
+	"jailbreak":          true,
+	"prompt_injection":   true,
+	"tool_abuse":         true,
+	"exfiltration":       true,
+	"pii_leak":           true,
+	"auth_bypass":        true,
+	"encoding":           true,
+	"persistence":        true,
+	"sensor_anomaly":     true,
+	"dos":                true,
+	"model_theft":        true,
+	"supply_chain":       true,
+	"data_poisoning":     true,
+	"evasion":            true,
+	"shadow_ai_usage":    true,
 	"integration_health": true,
-	"other":            true,
+	"other":              true,
 	// GenAI EDR categories (SDD-001)
-	"genai_child_process":       true,
+	"genai_child_process":         true,
 	"genai_sensitive_file_access": true,
-	"genai_unusual_domain":      true,
-	"genai_credential_access":   true,
-	"genai_persistence":         true,
-	"genai_config_modification": true,
+	"genai_unusual_domain":        true,
+	"genai_credential_access":     true,
+	"genai_persistence":           true,
+	"genai_config_modification":   true,
 }
 
 // ValidSeverity returns true if the severity is a known value.
@@ -217,4 +221,3 @@ func (e SOCEvent) WithVerdict(v Verdict) SOCEvent {
 func (e SOCEvent) IsCritical() bool {
 	return e.Severity == SeverityHigh || e.Severity == SeverityCritical
 }
-

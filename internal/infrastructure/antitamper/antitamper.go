@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package antitamper implements SEC-005 Anti-Tamper Protection.
 //
 // Provides runtime protection against:
@@ -26,11 +30,11 @@ import (
 type TamperType string
 
 const (
-	TamperDebugger    TamperType = "debugger_attached"
-	TamperPtrace      TamperType = "ptrace_attempt"
-	TamperBinaryMod   TamperType = "binary_modified"
-	TamperEnvTamper   TamperType = "env_tampering"
-	TamperMemoryDump  TamperType = "memory_dump"
+	TamperDebugger   TamperType = "debugger_attached"
+	TamperPtrace     TamperType = "ptrace_attempt"
+	TamperBinaryMod  TamperType = "binary_modified"
+	TamperEnvTamper  TamperType = "env_tampering"
+	TamperMemoryDump TamperType = "memory_dump"
 
 	// CheckInterval for periodic integrity verification.
 	DefaultCheckInterval = 5 * time.Minute
@@ -51,24 +55,24 @@ type TamperHandler func(event TamperEvent)
 
 // Shield provides anti-tamper protection for SOC processes.
 type Shield struct {
-	mu             sync.RWMutex
-	binaryPath     string
-	binaryHash     string // SHA-256 at startup
-	envSnapshot    map[string]string
-	handlers       []TamperHandler
-	logger         *slog.Logger
-	stats          ShieldStats
+	mu          sync.RWMutex
+	binaryPath  string
+	binaryHash  string // SHA-256 at startup
+	envSnapshot map[string]string
+	handlers    []TamperHandler
+	logger      *slog.Logger
+	stats       ShieldStats
 }
 
 // ShieldStats tracks anti-tamper metrics.
 type ShieldStats struct {
-	mu               sync.Mutex
-	TotalChecks      int64 `json:"total_checks"`
-	TamperDetected   int64 `json:"tamper_detected"`
-	DebuggerBlocked  int64 `json:"debugger_blocked"`
-	BinaryIntegrity  bool  `json:"binary_integrity"`
-	LastCheck        time.Time `json:"last_check"`
-	StartedAt        time.Time `json:"started_at"`
+	mu              sync.Mutex
+	TotalChecks     int64     `json:"total_checks"`
+	TamperDetected  int64     `json:"tamper_detected"`
+	DebuggerBlocked int64     `json:"debugger_blocked"`
+	BinaryIntegrity bool      `json:"binary_integrity"`
+	LastCheck       time.Time `json:"last_check"`
+	StartedAt       time.Time `json:"started_at"`
 }
 
 // NewShield creates a new anti-tamper shield.

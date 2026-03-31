@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -17,7 +21,7 @@ type STIXBundle struct {
 
 // STIXObject represents a generic STIX 2.1 object.
 type STIXObject struct {
-	Type        string    `json:"type"`    // indicator, malware, attack-pattern, etc.
+	Type        string    `json:"type"` // indicator, malware, attack-pattern, etc.
 	ID          string    `json:"id"`
 	Created     time.Time `json:"created"`
 	Modified    time.Time `json:"modified"`

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package hardware provides infrastructure for physical and logical
 // security controls: Soft Leash file-based kill switch (v3.1) and
 // Zero-G State Machine (v3.2).

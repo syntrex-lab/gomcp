@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package httpserver
 
 import (
@@ -12,12 +16,12 @@ import (
 // RateLimiter provides per-IP sliding window rate limiting (§17.3).
 // Supports burst tolerance (soft/hard limits) and standard X-RateLimit headers.
 type RateLimiter struct {
-	mu       sync.RWMutex
-	windows  map[string][]time.Time
-	limit    int           // max requests per window (soft limit)
-	burst    int           // burst tolerance (hard limit = limit + burst)
-	window   time.Duration // window size
-	enabled  bool
+	mu      sync.RWMutex
+	windows map[string][]time.Time
+	limit   int           // max requests per window (soft limit)
+	burst   int           // burst tolerance (hard limit = limit + burst)
+	window  time.Duration // window size
+	enabled bool
 }
 
 // NewRateLimiter creates a rate limiter. Set limit=0 to disable.

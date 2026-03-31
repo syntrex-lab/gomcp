@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package tpmaudit implements SEC-006 TPM-Sealed Decision Logger.
 //
 // Provides hardware-backed integrity for the audit decision chain:
@@ -37,57 +41,57 @@ const (
 
 // DecisionEntry is a single audit decision record.
 type DecisionEntry struct {
-	ID            string    `json:"id"`
-	Timestamp     time.Time `json:"timestamp"`
-	Action        string    `json:"action"`         // ingest, correlate, respond, playbook
-	Decision      string    `json:"decision"`        // allow, deny, escalate
-	Reason        string    `json:"reason"`
-	EventID       string    `json:"event_id,omitempty"`
-	IncidentID    string    `json:"incident_id,omitempty"`
-	Operator      string    `json:"operator,omitempty"`
-	PreviousHash  string    `json:"previous_hash"`   // Chain link
+	ID           string    `json:"id"`
+	Timestamp    time.Time `json:"timestamp"`
+	Action       string    `json:"action"`   // ingest, correlate, respond, playbook
+	Decision     string    `json:"decision"` // allow, deny, escalate
+	Reason       string    `json:"reason"`
+	EventID      string    `json:"event_id,omitempty"`
+	IncidentID   string    `json:"incident_id,omitempty"`
+	Operator     string    `json:"operator,omitempty"`
+	PreviousHash string    `json:"previous_hash"` // Chain link
 }
 
 // SealedEntry wraps a decision with cryptographic sealing.
 type SealedEntry struct {
 	Entry     DecisionEntry `json:"entry"`
-	Hash      string        `json:"hash"`       // SHA-256 of entry
-	Signature string        `json:"signature"`   // TPM or HMAC signature
-	PCRValue  string        `json:"pcr_value"`   // Extended PCR (or simulated)
+	Hash      string        `json:"hash"`      // SHA-256 of entry
+	Signature string        `json:"signature"` // TPM or HMAC signature
+	PCRValue  string        `json:"pcr_value"` // Extended PCR (or simulated)
 	SealMode  SealMode      `json:"seal_mode"`
 	ChainIdx  int64         `json:"chain_idx"`
 }
 
 // ChainVerification holds the result of verifying an audit chain.
 type ChainVerification struct {
-	Valid          bool      `json:"valid"`
-	TotalEntries   int       `json:"total_entries"`
-	VerifiedCount  int       `json:"verified_count"`
-	BrokenAtIndex  int       `json:"broken_at_index,omitempty"`
-	BrokenReason   string    `json:"broken_reason,omitempty"`
-	VerifiedAt     time.Time `json:"verified_at"`
-	Mode           SealMode  `json:"mode"`
+	Valid         bool      `json:"valid"`
+	TotalEntries  int       `json:"total_entries"`
+	VerifiedCount int       `json:"verified_count"`
+	BrokenAtIndex int       `json:"broken_at_index,omitempty"`
+	BrokenReason  string    `json:"broken_reason,omitempty"`
+	VerifiedAt    time.Time `json:"verified_at"`
+	Mode          SealMode  `json:"mode"`
 }
 
 // SealedLogger provides TPM-sealed (or HMAC-fallback) audit logging.
 type SealedLogger struct {
-	mu          sync.Mutex
-	mode        SealMode
-	hmacKey     []byte        // Used in software mode
-	chain       []SealedEntry // In-memory chain (also persisted)
-	currentPCR  string        // Simulated PCR value
-	logFile     *os.File
-	logger      *slog.Logger
-	stats       LoggerStats
+	mu         sync.Mutex
+	mode       SealMode
+	hmacKey    []byte        // Used in software mode
+	chain      []SealedEntry // In-memory chain (also persisted)
+	currentPCR string        // Simulated PCR value
+	logFile    *os.File
+	logger     *slog.Logger
+	stats      LoggerStats
 }
 
 // LoggerStats tracks audit logger metrics.
 type LoggerStats struct {
-	TotalEntries    int64     `json:"total_entries"`
-	LastEntry       time.Time `json:"last_entry"`
-	ChainIntegrity  bool      `json:"chain_integrity"`
-	Mode            SealMode  `json:"mode"`
-	StartedAt       time.Time `json:"started_at"`
+	TotalEntries   int64     `json:"total_entries"`
+	LastEntry      time.Time `json:"last_entry"`
+	ChainIntegrity bool      `json:"chain_integrity"`
+	Mode           SealMode  `json:"mode"`
+	StartedAt      time.Time `json:"started_at"`
 }
 
 // NewSealedLogger creates a TPM-sealed decision logger.

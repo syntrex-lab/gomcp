@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 //go:build windows
 
 package ipc
@@ -38,7 +42,7 @@ func platformDial(name string) (net.Conn, error) {
 // In production, these would be actual Windows named pipes.
 func pipeTCPPort(name string) int {
 	ports := map[string]int{
-		"soc-ingest-to-correlate": 19751,
+		"soc-ingest-to-correlate":  19751,
 		"soc-correlate-to-respond": 19752,
 	}
 	if p, ok := ports[name]; ok {

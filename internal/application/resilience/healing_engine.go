@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resilience
 
 import (
@@ -66,10 +70,10 @@ type Action struct {
 
 // TriggerCondition defines when a healing strategy activates.
 type TriggerCondition struct {
-	Metrics             []string      `json:"metrics,omitempty"`
+	Metrics             []string          `json:"metrics,omitempty"`
 	Statuses            []ComponentStatus `json:"statuses,omitempty"`
-	ConsecutiveFailures int           `json:"consecutive_failures"`
-	WithinWindow        time.Duration `json:"within_window"`
+	ConsecutiveFailures int               `json:"consecutive_failures"`
+	WithinWindow        time.Duration     `json:"within_window"`
 }
 
 // RollbackPlan defines what happens if healing fails.
@@ -91,11 +95,11 @@ type HealingStrategy struct {
 
 // Diagnosis is the result of root cause analysis.
 type Diagnosis struct {
-	Component    string   `json:"component"`
-	Metric       string   `json:"metric"`
-	RootCause    string   `json:"root_cause"`
-	Confidence   float64  `json:"confidence"`
-	SuggestedFix string   `json:"suggested_fix"`
+	Component     string        `json:"component"`
+	Metric        string        `json:"metric"`
+	RootCause     string        `json:"root_cause"`
+	Confidence    float64       `json:"confidence"`
+	SuggestedFix  string        `json:"suggested_fix"`
 	RelatedAlerts []HealthAlert `json:"related_alerts,omitempty"`
 }
 
@@ -117,7 +121,7 @@ type HealingOperation struct {
 // ActionLog records the execution of a single action.
 type ActionLog struct {
 	Action    ActionType    `json:"action"`
-	StartedAt time.Time    `json:"started_at"`
+	StartedAt time.Time     `json:"started_at"`
 	Duration  time.Duration `json:"duration"`
 	Success   bool          `json:"success"`
 	Error     string        `json:"error,omitempty"`

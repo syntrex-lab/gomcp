@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package config
 
 import (
@@ -10,34 +14,34 @@ import (
 
 // Config is the root configuration loaded from syntrex.yaml (§19.3, §21).
 type Config struct {
-	Server     ServerConfig     `yaml:"server"`
-	SOC        SOCConfig        `yaml:"soc"`
-	RBAC       RBACConfig       `yaml:"rbac"`
-	Webhooks   []WebhookConfig  `yaml:"webhooks"`
+	Server      ServerConfig      `yaml:"server"`
+	SOC         SOCConfig         `yaml:"soc"`
+	RBAC        RBACConfig        `yaml:"rbac"`
+	Webhooks    []WebhookConfig   `yaml:"webhooks"`
 	ThreatIntel ThreatIntelConfig `yaml:"threat_intel"`
-	Sovereign  SovereignConfig  `yaml:"sovereign"`
-	P2P        P2PConfig        `yaml:"p2p"`
-	Logging    LoggingConfig    `yaml:"logging"`
+	Sovereign   SovereignConfig   `yaml:"sovereign"`
+	P2P         P2PConfig         `yaml:"p2p"`
+	Logging     LoggingConfig     `yaml:"logging"`
 }
 
 // ServerConfig defines HTTP server settings.
 type ServerConfig struct {
-	Port              int           `yaml:"port"`
-	ReadTimeout       time.Duration `yaml:"read_timeout"`
-	WriteTimeout      time.Duration `yaml:"write_timeout"`
-	RateLimitPerMin   int           `yaml:"rate_limit_per_min"`
-	CORSAllowOrigins  []string      `yaml:"cors_allow_origins"`
+	Port             int           `yaml:"port"`
+	ReadTimeout      time.Duration `yaml:"read_timeout"`
+	WriteTimeout     time.Duration `yaml:"write_timeout"`
+	RateLimitPerMin  int           `yaml:"rate_limit_per_min"`
+	CORSAllowOrigins []string      `yaml:"cors_allow_origins"`
 }
 
 // SOCConfig defines SOC pipeline settings (§7).
 type SOCConfig struct {
-	DataDir          string `yaml:"data_dir"`
-	MaxEventsPerHour int    `yaml:"max_events_per_hour"`
-	ClusterEnabled   bool   `yaml:"cluster_enabled"`
+	DataDir          string  `yaml:"data_dir"`
+	MaxEventsPerHour int     `yaml:"max_events_per_hour"`
+	ClusterEnabled   bool    `yaml:"cluster_enabled"`
 	ClusterEps       float64 `yaml:"cluster_eps"`
-	ClusterMinPts    int    `yaml:"cluster_min_pts"`
-	KillChainEnabled bool   `yaml:"kill_chain_enabled"`
-	SSEBufferSize    int    `yaml:"sse_buffer_size"`
+	ClusterMinPts    int     `yaml:"cluster_min_pts"`
+	KillChainEnabled bool    `yaml:"kill_chain_enabled"`
+	SSEBufferSize    int     `yaml:"sse_buffer_size"`
 }
 
 // RBACConfig defines API key authentication (§17).
@@ -65,9 +69,9 @@ type WebhookConfig struct {
 
 // ThreatIntelConfig defines IOC feed sources (§6).
 type ThreatIntelConfig struct {
-	Enabled       bool          `yaml:"enabled"`
+	Enabled         bool          `yaml:"enabled"`
 	RefreshInterval time.Duration `yaml:"refresh_interval"`
-	Feeds         []FeedConfig  `yaml:"feeds"`
+	Feeds           []FeedConfig  `yaml:"feeds"`
 }
 
 // FeedConfig is a single threat intel feed.
@@ -80,8 +84,8 @@ type FeedConfig struct {
 
 // SovereignConfig implements §21 — air-gapped deployment mode.
 type SovereignConfig struct {
-	Enabled           bool   `yaml:"enabled"`
-	Mode              string `yaml:"mode"` // airgap, restricted, open
+	Enabled            bool   `yaml:"enabled"`
+	Mode               string `yaml:"mode"` // airgap, restricted, open
 	DisableExternalAPI bool   `yaml:"disable_external_api"`
 	DisableTelemetry   bool   `yaml:"disable_telemetry"`
 	LocalModelsOnly    bool   `yaml:"local_models_only"`
@@ -108,7 +112,7 @@ type PeerConfig struct {
 
 // LoggingConfig defines structured logging settings.
 type LoggingConfig struct {
-	Level      string `yaml:"level"` // debug, info, warn, error
+	Level      string `yaml:"level"`  // debug, info, warn, error
 	Format     string `yaml:"format"` // json, text
 	AccessLog  bool   `yaml:"access_log"`
 	AuditLog   bool   `yaml:"audit_log"`

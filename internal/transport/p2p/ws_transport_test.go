@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package transport
 
 import (
@@ -6,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/syntrex-lab/gomcp/internal/domain/peer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/syntrex-lab/gomcp/internal/domain/peer"
 )
 
 func TestWSTransport_StartStop(t *testing.T) {

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package auth
 
 import (
@@ -67,7 +71,7 @@ func NewUserStore(db ...*sql.DB) *UserStore {
 	// Ensure default admin exists or is updated
 	adminPass := os.Getenv("SYNTREX_ADMIN_PASSWORD")
 	if adminPass == "" {
-		// If no env var, use a secure random password to prevent accidental exposure 
+		// If no env var, use a secure random password to prevent accidental exposure
 		// if the database is clean, but do not override an existing admin's password.
 		b := make([]byte, 16)
 		rand.Read(b)
@@ -408,12 +412,12 @@ func (s *UserStore) DeleteUser(id string) error {
 
 // APIKey represents an API key for programmatic access.
 type APIKey struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	Name      string    `json:"name"`
-	Role      string    `json:"role"`
-	KeyPrefix string    `json:"key_prefix"` // first 8 chars for display
-	CreatedAt time.Time `json:"created_at"`
+	ID        string     `json:"id"`
+	UserID    string     `json:"user_id"`
+	Name      string     `json:"name"`
+	Role      string     `json:"role"`
+	KeyPrefix string     `json:"key_prefix"` // first 8 chars for display
+	CreatedAt time.Time  `json:"created_at"`
 	LastUsed  *time.Time `json:"last_used,omitempty"`
 }
 

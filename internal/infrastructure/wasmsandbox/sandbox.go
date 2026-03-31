@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package wasmsandbox implements SEC-009 Wasm Sandbox for Playbooks.
 //
 // Executes playbook actions in isolated WebAssembly modules:
@@ -65,7 +69,7 @@ type ActionHandler func(ctx context.Context, params map[string]string) (string, 
 
 // SandboxStats tracks execution metrics.
 type SandboxStats struct {
-	mu             sync.Mutex
+	mu              sync.Mutex
 	TotalExecutions int64         `json:"total_executions"`
 	Succeeded       int64         `json:"succeeded"`
 	Failed          int64         `json:"failed"`

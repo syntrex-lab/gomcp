@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package guard implements the SEC-002 eBPF Runtime Guard policy engine.
 //
 // The guard monitors SOC processes at the kernel level using eBPF tracepoints
@@ -33,23 +37,23 @@ const (
 
 // Policy is the top-level runtime guard policy.
 type Policy struct {
-	Version   string                    `yaml:"version"`
-	Mode      Mode                      `yaml:"mode"`
-	Processes map[string]ProcessPolicy  `yaml:"processes"`
-	Alerts    AlertConfig               `yaml:"alerts"`
+	Version   string                   `yaml:"version"`
+	Mode      Mode                     `yaml:"mode"`
+	Processes map[string]ProcessPolicy `yaml:"processes"`
+	Alerts    AlertConfig              `yaml:"alerts"`
 }
 
 // ProcessPolicy defines allowed/blocked behavior for a single process.
 type ProcessPolicy struct {
-	Description    string   `yaml:"description"`
-	AllowedExec    []string `yaml:"allowed_exec"`
+	Description     string   `yaml:"description"`
+	AllowedExec     []string `yaml:"allowed_exec"`
 	BlockedSyscalls []string `yaml:"blocked_syscalls"`
-	AllowedFiles   []string `yaml:"allowed_files"`
-	BlockedFiles   []string `yaml:"blocked_files"`
-	AllowedNetwork []string `yaml:"allowed_network"`
-	BlockedNetwork []string `yaml:"blocked_network"`
-	MaxMemoryMB    int      `yaml:"max_memory_mb"`
-	MaxCPUPercent  int      `yaml:"max_cpu_percent"`
+	AllowedFiles    []string `yaml:"allowed_files"`
+	BlockedFiles    []string `yaml:"blocked_files"`
+	AllowedNetwork  []string `yaml:"allowed_network"`
+	BlockedNetwork  []string `yaml:"blocked_network"`
+	MaxMemoryMB     int      `yaml:"max_memory_mb"`
+	MaxCPUPercent   int      `yaml:"max_cpu_percent"`
 }
 
 // AlertConfig defines alert routing.
@@ -63,10 +67,10 @@ type Violation struct {
 	Timestamp   time.Time `json:"timestamp"`
 	ProcessName string    `json:"process_name"`
 	PID         int       `json:"pid"`
-	Type        string    `json:"type"`       // syscall, file, network, resource
-	Detail      string    `json:"detail"`     // Specific violation description
-	Severity    string    `json:"severity"`   // LOW, MEDIUM, HIGH, CRITICAL
-	Action      string    `json:"action"`     // logged, blocked, alerted
+	Type        string    `json:"type"`     // syscall, file, network, resource
+	Detail      string    `json:"detail"`   // Specific violation description
+	Severity    string    `json:"severity"` // LOW, MEDIUM, HIGH, CRITICAL
+	Action      string    `json:"action"`   // logged, blocked, alerted
 	PolicyMode  Mode      `json:"policy_mode"`
 }
 
@@ -79,19 +83,19 @@ type Guard struct {
 	policy   *Policy
 	handlers []ViolationHandler
 	logger   *slog.Logger
-	statsMu  sync.Mutex   // protects stats
+	statsMu  sync.Mutex // protects stats
 	stats    GuardStats
 }
 
 // GuardStats tracks guard operation metrics.
 // This is a pure data struct (no mutex) so it can be safely returned by value.
 type GuardStats struct {
-	TotalEvents    int64            `json:"total_events"`
-	Violations     int64            `json:"violations"`
-	Blocked        int64            `json:"blocked"`
-	ByProcess      map[string]int64 `json:"by_process"`
-	ByType         map[string]int64 `json:"by_type"`
-	StartedAt      time.Time        `json:"started_at"`
+	TotalEvents int64            `json:"total_events"`
+	Violations  int64            `json:"violations"`
+	Blocked     int64            `json:"blocked"`
+	ByProcess   map[string]int64 `json:"by_process"`
+	ByType      map[string]int64 `json:"by_type"`
+	StartedAt   time.Time        `json:"started_at"`
 }
 
 // New creates a new runtime guard with the given policy.

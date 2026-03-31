@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -42,13 +46,13 @@ type IOC struct {
 
 // Feed represents a threat intelligence source.
 type Feed struct {
-	Name        string    `json:"name"`
-	URL         string    `json:"url"`
-	Type        string    `json:"type"` // stix, csv, json
-	Enabled     bool      `json:"enabled"`
-	IOCCount    int       `json:"ioc_count"`
-	LastSync    time.Time `json:"last_sync"`
-	SyncInterval string  `json:"sync_interval"`
+	Name         string    `json:"name"`
+	URL          string    `json:"url"`
+	Type         string    `json:"type"` // stix, csv, json
+	Enabled      bool      `json:"enabled"`
+	IOCCount     int       `json:"ioc_count"`
+	LastSync     time.Time `json:"last_sync"`
+	SyncInterval string    `json:"sync_interval"`
 }
 
 // IOCHit records a match between an event and an IOC.

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -14,12 +18,12 @@ type DataRetentionPolicy struct {
 
 // RetentionRule defines how long data of a given type is kept.
 type RetentionRule struct {
-	DataType    string        `json:"data_type"`    // events, incidents, audit, anomaly_alerts
-	RetainDays  int           `json:"retain_days"`  // Max age in days
-	Action      string        `json:"action"`       // archive, delete, compress
-	Enabled     bool          `json:"enabled"`
-	LastRun     time.Time     `json:"last_run"`
-	ItemsPurged int           `json:"items_purged"`
+	DataType    string    `json:"data_type"`   // events, incidents, audit, anomaly_alerts
+	RetainDays  int       `json:"retain_days"` // Max age in days
+	Action      string    `json:"action"`      // archive, delete, compress
+	Enabled     bool      `json:"enabled"`
+	LastRun     time.Time `json:"last_run"`
+	ItemsPurged int       `json:"items_purged"`
 }
 
 // NewDataRetentionPolicy creates default retention rules.

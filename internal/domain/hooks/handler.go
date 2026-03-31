@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package hooks implements the Syntrex Hook Provider domain logic (SDD-004).
 //
 // The hook provider intercepts IDE agent tool calls (Claude Code, Gemini CLI,
@@ -15,9 +19,9 @@ import (
 type IDE string
 
 const (
-	IDEClaude  IDE = "claude"
-	IDEGemini  IDE = "gemini"
-	IDECursor  IDE = "cursor"
+	IDEClaude IDE = "claude"
+	IDEGemini IDE = "gemini"
+	IDECursor IDE = "cursor"
 )
 
 // EventType represents the type of hook event from the IDE.

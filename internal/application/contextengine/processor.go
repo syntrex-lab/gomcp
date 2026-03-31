@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package contextengine — processor.go
 // Processes unprocessed interaction log entries into session summary facts.
 // This closes the memory loop: tool calls → interaction log → summary facts → boot instructions.

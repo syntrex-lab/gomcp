@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package auth
 
 import (
@@ -37,9 +41,9 @@ func TestSign_Verify_RoundTrip(t *testing.T) {
 
 func TestVerify_ExpiredToken(t *testing.T) {
 	token, _ := Sign(Claims{
-		Sub: "user",
+		Sub:  "user",
 		Role: "viewer",
-		Exp: time.Now().Add(-time.Hour).Unix(),
+		Exp:  time.Now().Add(-time.Hour).Unix(),
 	}, testSecret)
 
 	_, err := Verify(token, testSecret)
@@ -50,9 +54,9 @@ func TestVerify_ExpiredToken(t *testing.T) {
 
 func TestVerify_InvalidSignature(t *testing.T) {
 	token, _ := Sign(Claims{
-		Sub: "user",
+		Sub:  "user",
 		Role: "viewer",
-		Exp: time.Now().Add(time.Hour).Unix(),
+		Exp:  time.Now().Add(time.Hour).Unix(),
 	}, testSecret)
 
 	wrongSecret := []byte("wrong-secret-that-is-also-32-bytes-x")

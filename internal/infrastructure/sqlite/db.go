@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package sqlite provides SQLite-based persistence using modernc.org/sqlite (pure Go, no CGO).
 package sqlite
 

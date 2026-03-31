@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package shadow_ai
 
 import (
@@ -14,9 +18,9 @@ import (
 
 // CheckPointEnforcer is a stub implementation for Check Point firewalls.
 type CheckPointEnforcer struct {
-	apiURL   string
-	apiKey   string
-	logger   *slog.Logger
+	apiURL string
+	apiKey string
+	logger *slog.Logger
 }
 
 func NewCheckPointEnforcer() *CheckPointEnforcer {

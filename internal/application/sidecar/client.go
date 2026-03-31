@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package sidecar
 
 import (
@@ -42,15 +46,15 @@ func NewBusClient(baseURL, sensorID, apiKey string) *BusClient {
 // ingestPayload matches the SOC ingest API expected JSON.
 type ingestPayload struct {
 	Source      string            `json:"source"`
-	SensorID   string            `json:"sensor_id"`
-	SensorKey  string            `json:"sensor_key,omitempty"`
-	Severity   string            `json:"severity"`
-	Category   string            `json:"category"`
-	Subcategory string           `json:"subcategory,omitempty"`
-	Confidence float64           `json:"confidence"`
-	Description string           `json:"description"`
-	SessionID  string            `json:"session_id,omitempty"`
-	Metadata   map[string]string `json:"metadata,omitempty"`
+	SensorID    string            `json:"sensor_id"`
+	SensorKey   string            `json:"sensor_key,omitempty"`
+	Severity    string            `json:"severity"`
+	Category    string            `json:"category"`
+	Subcategory string            `json:"subcategory,omitempty"`
+	Confidence  float64           `json:"confidence"`
+	Description string            `json:"description"`
+	SessionID   string            `json:"session_id,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
 // SendEvent posts a SOCEvent to the Event Bus.
@@ -58,15 +62,15 @@ type ingestPayload struct {
 func (c *BusClient) SendEvent(ctx context.Context, evt *domsoc.SOCEvent) error {
 	payload := ingestPayload{
 		Source:      string(evt.Source),
-		SensorID:   c.sensorID,
-		SensorKey:  c.apiKey,
-		Severity:   string(evt.Severity),
-		Category:   evt.Category,
+		SensorID:    c.sensorID,
+		SensorKey:   c.apiKey,
+		Severity:    string(evt.Severity),
+		Category:    evt.Category,
 		Subcategory: evt.Subcategory,
-		Confidence: evt.Confidence,
+		Confidence:  evt.Confidence,
 		Description: evt.Description,
-		SessionID:  evt.SessionID,
-		Metadata:   evt.Metadata,
+		SessionID:   evt.SessionID,
+		Metadata:    evt.Metadata,
 	}
 
 	body, err := json.Marshal(payload)

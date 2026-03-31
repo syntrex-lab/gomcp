@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package httpserver
 
 import (
@@ -10,12 +14,12 @@ import (
 
 // Metrics collects runtime metrics for Prometheus-style /metrics endpoint.
 type Metrics struct {
-	requestsTotal   atomic.Int64
-	requestErrors   atomic.Int64
-	eventsIngested  atomic.Int64
-	incidentsTotal  atomic.Int64
-	rateLimited     atomic.Int64
-	startTime       time.Time
+	requestsTotal  atomic.Int64
+	requestErrors  atomic.Int64
+	eventsIngested atomic.Int64
+	incidentsTotal atomic.Int64
+	rateLimited    atomic.Int64
+	startTime      time.Time
 }
 
 // NewMetrics creates a metrics collector.

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package email provides email notification service for the SYNTREX SOC platform.
 // Supports Resend (resend.com) as the primary transactional email provider.
 package email

@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package sbom implements SEC-010 SBOM + Release Signing.
 //
 // Generates SPDX Software Bill of Materials and provides
@@ -23,14 +27,14 @@ import (
 
 // SPDXDocument is an SPDX 2.3 SBOM document.
 type SPDXDocument struct {
-	SPDXVersion    string        `json:"spdxVersion"`
-	DataLicense    string        `json:"dataLicense"`
-	SPDXID         string        `json:"SPDXID"`
-	DocumentName   string        `json:"name"`
-	Namespace      string        `json:"documentNamespace"`
-	CreationInfo   CreationInfo  `json:"creationInfo"`
-	Packages       []Package     `json:"packages"`
-	Relationships  []Relationship `json:"relationships,omitempty"`
+	SPDXVersion   string         `json:"spdxVersion"`
+	DataLicense   string         `json:"dataLicense"`
+	SPDXID        string         `json:"SPDXID"`
+	DocumentName  string         `json:"name"`
+	Namespace     string         `json:"documentNamespace"`
+	CreationInfo  CreationInfo   `json:"creationInfo"`
+	Packages      []Package      `json:"packages"`
+	Relationships []Relationship `json:"relationships,omitempty"`
 }
 
 // CreationInfo describes when and how the SBOM was created.
@@ -42,13 +46,13 @@ type CreationInfo struct {
 
 // Package is an SPDX package entry.
 type Package struct {
-	SPDXID       string `json:"SPDXID"`
-	Name         string `json:"name"`
-	Version      string `json:"versionInfo"`
-	Supplier     string `json:"supplier,omitempty"`
-	License      string `json:"licenseConcluded"`
-	DownloadURL  string `json:"downloadLocation"`
-	Checksum     string `json:"checksum,omitempty"` // SHA256:hex
+	SPDXID      string `json:"SPDXID"`
+	Name        string `json:"name"`
+	Version     string `json:"versionInfo"`
+	Supplier    string `json:"supplier,omitempty"`
+	License     string `json:"licenseConcluded"`
+	DownloadURL string `json:"downloadLocation"`
+	Checksum    string `json:"checksum,omitempty"` // SHA256:hex
 }
 
 // Relationship links packages.
@@ -62,8 +66,8 @@ type Relationship struct {
 type ReleaseSignature struct {
 	Binary    string `json:"binary"`
 	Version   string `json:"version"`
-	Hash      string `json:"hash"`       // SHA-256
-	Signature string `json:"signature"`   // Ed25519 hex
+	Hash      string `json:"hash"`      // SHA-256
+	Signature string `json:"signature"` // Ed25519 hex
 	KeyID     string `json:"key_id"`
 	SignedAt  string `json:"signed_at"`
 }
@@ -97,9 +101,9 @@ func (g *Generator) AddDependency(name, version, license string) {
 // GenerateSPDX creates an SPDX 2.3 JSON document.
 func (g *Generator) GenerateSPDX() (*SPDXDocument, error) {
 	doc := &SPDXDocument{
-		SPDXVersion: "SPDX-2.3",
-		DataLicense: "CC0-1.0",
-		SPDXID:      "SPDXRef-DOCUMENT",
+		SPDXVersion:  "SPDX-2.3",
+		DataLicense:  "CC0-1.0",
+		SPDXID:       "SPDXRef-DOCUMENT",
 		DocumentName: fmt.Sprintf("%s-%s", g.productName, g.version),
 		Namespace:    fmt.Sprintf("https://sentinel.syntrex.pro/spdx/%s/%s", g.productName, g.version),
 		CreationInfo: CreationInfo{

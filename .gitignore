@@ -1,0 +1,35 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+gomcp
+soc
+immune
+sidecar
+dist/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*.wal
+*.shm
+
+# Logs & Secrets
+*.log
+.env
+*.key
+.decisions.log
+sentinel_leash
+.rlm/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vendor
+vendor/

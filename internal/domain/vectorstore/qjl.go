@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package vectorstore — QJL (Quantized Johnson-Lindenstrauss) 1-bit quantization.
 //
 // Based on Google's TurboQuant research (ICLR 2026, AAAI 2025).

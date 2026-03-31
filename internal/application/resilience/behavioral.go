@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resilience
 
 import (
@@ -10,24 +14,24 @@ import (
 
 // BehaviorProfile captures the runtime behavior of a component.
 type BehaviorProfile struct {
-	Goroutines     int                `json:"goroutines"`
-	HeapAllocMB    float64            `json:"heap_alloc_mb"`
-	HeapObjectsK   float64            `json:"heap_objects_k"`
-	GCPauseMs      float64            `json:"gc_pause_ms"`
-	NumGC          uint32             `json:"num_gc"`
-	FileDescriptors int               `json:"file_descriptors,omitempty"`
-	CustomMetrics  map[string]float64 `json:"custom_metrics,omitempty"`
+	Goroutines      int                `json:"goroutines"`
+	HeapAllocMB     float64            `json:"heap_alloc_mb"`
+	HeapObjectsK    float64            `json:"heap_objects_k"`
+	GCPauseMs       float64            `json:"gc_pause_ms"`
+	NumGC           uint32             `json:"num_gc"`
+	FileDescriptors int                `json:"file_descriptors,omitempty"`
+	CustomMetrics   map[string]float64 `json:"custom_metrics,omitempty"`
 }
 
 // BehavioralAlert is emitted when a behavioral anomaly is detected.
 type BehavioralAlert struct {
-	Component   string  `json:"component"`
-	AnomalyType string  `json:"anomaly_type"` // goroutine_leak, memory_leak, gc_pressure, etc.
-	Metric      string  `json:"metric"`
-	Current     float64 `json:"current"`
-	Baseline    float64 `json:"baseline"`
-	ZScore      float64 `json:"z_score"`
-	Severity    string  `json:"severity"`
+	Component   string    `json:"component"`
+	AnomalyType string    `json:"anomaly_type"` // goroutine_leak, memory_leak, gc_pressure, etc.
+	Metric      string    `json:"metric"`
+	Current     float64   `json:"current"`
+	Baseline    float64   `json:"baseline"`
+	ZScore      float64   `json:"z_score"`
+	Severity    string    `json:"severity"`
 	Timestamp   time.Time `json:"timestamp"`
 }
 
@@ -35,12 +39,12 @@ type BehavioralAlert struct {
 // It profiles the current process and compares against learned baselines.
 // On Linux, eBPF hooks (immune/resilience_hooks.c) extend this to kernel level.
 type BehavioralAnalyzer struct {
-	mu         sync.RWMutex
-	metricsDB  *MetricsDB
-	alertBus   chan BehavioralAlert
-	interval   time.Duration
-	component  string // self component name
-	logger     *slog.Logger
+	mu        sync.RWMutex
+	metricsDB *MetricsDB
+	alertBus  chan BehavioralAlert
+	interval  time.Duration
+	component string // self component name
+	logger    *slog.Logger
 }
 
 // NewBehavioralAnalyzer creates a new behavioral analyzer.
@@ -112,10 +116,10 @@ func (ba *BehavioralAnalyzer) storeMetrics(p BehaviorProfile) {
 // detectAnomalies checks each metric against its baseline via Z-score.
 func (ba *BehavioralAnalyzer) detectAnomalies(p BehaviorProfile) {
 	checks := []struct {
-		metric    string
-		value     float64
+		metric      string
+		value       float64
 		anomalyType string
-		severity  string
+		severity    string
 	}{
 		{"goroutines", float64(p.Goroutines), "goroutine_leak", "WARNING"},
 		{"heap_alloc_mb", p.HeapAllocMB, "memory_leak", "CRITICAL"},

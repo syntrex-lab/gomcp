@@ -1,18 +1,18 @@
-# GoMCP: Recursive Language Model Server
+# GoMCP: The Secure Memory Core for AI Agents
 
 ![Go Version](https://img.shields.io/badge/Go-1.25.0-blue.svg)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)
 ![Protocol](https://img.shields.io/badge/MCP-Supported-orange.svg)
 
-> **The only Open-Source RLM (Recursive Language Model) Memory Server with Mathematically Proven Safety.**
+> **"Единственный RLM-сервер памяти с математически доказанной безопасностью (Sentinel Lattice). Работает локально, масштабируется глобально."**
 
-GoMCP is the enterprise core of the Syntrex AI SOC ecosystem. It is an extremely fast, secure, and persistent Model Context Protocol (MCP) server entirely written in Go. GoMCP gives Large Language Models a permanent, evolving memory and self-modifying context, transforming standard text agents into self-improving persistent intelligences. 
+GoMCP is the enterprise core of the Syntrex AI SOC ecosystem. It is an extremely fast, secure, and persistent Model Context Protocol (MCP) server entirely written in Go. GoMCP gives Large Language Models a permanent, evolving memory and self-modifying context, transforming standard text agents into self-improving persistent intelligences.
 
 ## 🚀 Key Features
-- **Context Consciousness Crystal (C³):** Hierarchical memory layers (L0-L3) combined with SQLite-backed temporal caching.
-- **57+ Native MCP Tools:** Deeply integrated tools for agentic self-reflection, codebase navigation, and file editing. 
-- **Sub-millisecond latency:** Engineered for speed and durability under enterprise loads.
-- **Secure by Default:** Zero-G execution environment and robust isolation from the main operating system logic. DoH shielding, uTLS protocols, and session resumption natively integrated.
+- 🛡️ **Sentinel Lattice Primitives:** (TSA, CAFL, GPS...)
+- ⚡ **Sub-millisecond latency:** Pure Go execution with optional Rust bindings
+- 🔌 **57+ Native MCP Tools:** Deeply integrated tools right out of the box
+- 💾 **Persistent Causal Graph Memory:** Hierarchical memory layers (L0-L3) backed by robust SQLite temporal caching
 
 ## ⚡ Quick Start
 

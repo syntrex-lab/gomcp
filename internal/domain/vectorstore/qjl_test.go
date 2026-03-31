@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package vectorstore
 
 import (
@@ -81,8 +85,8 @@ func TestQJL_PreservesOrdering(t *testing.T) {
 	proj := NewQJLProjection(512, 128, 42)
 
 	query := randomVector(128, 1)
-	close := perturbVector(query, 0.1, 2)  // ~10% perturbation = close
-	far := perturbVector(query, 0.9, 3)     // ~90% perturbation = far
+	close := perturbVector(query, 0.1, 2) // ~10% perturbation = close
+	far := perturbVector(query, 0.9, 3)   // ~90% perturbation = far
 
 	cosClose := CosineSimilarity(query, close)
 	cosFar := CosineSimilarity(query, far)
@@ -114,8 +118,8 @@ func TestQJL_MemoryReduction(t *testing.T) {
 	vec := randomVector(128, 1)
 	sig := proj.Quantize(vec)
 
-	float64Bytes := 128 * 8           // 1024 bytes
-	qjlBytes := len(sig) * 8          // 4 * 8 = 32 bytes
+	float64Bytes := 128 * 8  // 1024 bytes
+	qjlBytes := len(sig) * 8 // 4 * 8 = 32 bytes
 	reduction := float64(float64Bytes) / float64(qjlBytes)
 
 	assert.Equal(t, 4, len(sig), "256 bits → 4 uint64 words")
@@ -286,7 +290,7 @@ func TestStore_PQ_DropFloat64(t *testing.T) {
 
 	// Original float64 vector should be nil'd out.
 	assert.Nil(t, s.Get("r1").Vector, "Vector should be dropped to save memory")
-	
+
 	stats := s.GetStats()
 	assert.True(t, stats.PQDropFloat64, "Stats should reflect drop float64 true")
 

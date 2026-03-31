@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package alert defines the Alert domain entity and severity levels
 // for the DIP-Watcher proactive monitoring system.
 package alert

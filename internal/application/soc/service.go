@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package soc provides application services for the SENTINEL AI SOC subsystem.
 package soc
 
@@ -29,14 +33,14 @@ const (
 // Service orchestrates the SOC event pipeline:
 // Step 0: Secret Scanner (INVARIANT) → DIP → Decision Logger → Persist → Correlation.
 type Service struct {
-	mu        sync.RWMutex
-	repo      domsoc.SOCRepository
-	logger    *audit.DecisionLogger
-	rules     []domsoc.SOCCorrelationRule
+	mu               sync.RWMutex
+	repo             domsoc.SOCRepository
+	logger           *audit.DecisionLogger
+	rules            []domsoc.SOCCorrelationRule
 	playbookEngine   *domsoc.PlaybookEngine
 	executorRegistry *domsoc.ExecutorRegistry
-	sensors   map[string]*domsoc.Sensor
-	draining  bool // §15.7: graceful shutdown mode — rejects new events
+	sensors          map[string]*domsoc.Sensor
+	draining         bool // §15.7: graceful shutdown mode — rejects new events
 
 	// Alert Clustering engine (§7.6): groups related alerts.
 	clusterEngine *domsoc.ClusterEngine
@@ -45,8 +49,8 @@ type Service struct {
 	eventBus *domsoc.EventBus
 
 	// Rate limiting per sensor (§17.3): sensorID → timestamps of recent events.
-	sensorRates        map[string][]time.Time
-	rateLimitDisabled  bool
+	sensorRates       map[string][]time.Time
+	rateLimitDisabled bool
 
 	// Sensor authentication (§17.3 T-01): sensorID → pre-shared key.
 	sensorKeys map[string]string
@@ -85,9 +89,9 @@ func NewService(repo domsoc.SOCRepository, logger *audit.DecisionLogger) *Servic
 	// Build executor registry with all SOAR action handlers
 	reg := domsoc.NewExecutorRegistry()
 	reg.Register(&domsoc.BlockIPExecutor{})
-	reg.Register(domsoc.NewNotifyExecutor(""))       // URL configured via SetNotifyURL()
+	reg.Register(domsoc.NewNotifyExecutor("")) // URL configured via SetNotifyURL()
 	reg.Register(domsoc.NewQuarantineExecutor())
-	reg.Register(domsoc.NewEscalateExecutor(""))      // URL configured via SetEscalateURL()
+	reg.Register(domsoc.NewEscalateExecutor("")) // URL configured via SetEscalateURL()
 	// Webhook executor configured separately via SetWebhookConfig()
 
 	// Create playbook engine with live executor handler (not just logging)
@@ -100,21 +104,21 @@ func NewService(repo domsoc.SOCRepository, logger *audit.DecisionLogger) *Servic
 	)
 
 	return &Service{
-		repo:             repo,
-		logger:           logger,
-		rules:            domsoc.DefaultSOCCorrelationRules(),
-		playbookEngine:   pe,
-		executorRegistry: reg,
-		sensors:          make(map[string]*domsoc.Sensor),
-		clusterEngine:    domsoc.NewClusterEngine(domsoc.DefaultClusterConfig()),
-		eventBus:         domsoc.NewEventBus(256),
-		sensorRates:      make(map[string][]time.Time),
-		zeroG:            domsoc.NewZeroGMode(),
-		p2pSync:          domsoc.NewP2PSyncService(),
-		anomaly:          domsoc.NewAnomalyDetector(),
+		repo:              repo,
+		logger:            logger,
+		rules:             domsoc.DefaultSOCCorrelationRules(),
+		playbookEngine:    pe,
+		executorRegistry:  reg,
+		sensors:           make(map[string]*domsoc.Sensor),
+		clusterEngine:     domsoc.NewClusterEngine(domsoc.DefaultClusterConfig()),
+		eventBus:          domsoc.NewEventBus(256),
+		sensorRates:       make(map[string][]time.Time),
+		zeroG:             domsoc.NewZeroGMode(),
+		p2pSync:           domsoc.NewP2PSyncService(),
+		anomaly:           domsoc.NewAnomalyDetector(),
 		threatIntelEngine: domsoc.NewThreatIntelEngine(),
-		retention:        domsoc.NewDataRetentionPolicy(),
-		scanSemaphore:    make(chan struct{}, 8), // §20.1: max 8 concurrent scans
+		retention:         domsoc.NewDataRetentionPolicy(),
+		scanSemaphore:     make(chan struct{}, 8), // §20.1: max 8 concurrent scans
 	}
 }
 
@@ -213,7 +217,6 @@ func (s *Service) TestWebhook() []WebhookResult {
 	return wh.NotifyIncident("webhook_test", testIncident)
 }
 
-
 // Drain puts the service into drain mode (§15.7 Stage 1).
 // New events are rejected with ErrDraining; existing processing continues.
 func (s *Service) Drain() {
@@ -301,6 +304,7 @@ func (s *Service) runRetentionPurge() {
 		}
 	}
 }
+
 // IngestEvent processes an incoming security event through the SOC pipeline.
 // Returns the event ID and any incident created by correlation.
 //
@@ -523,7 +527,7 @@ func (s *Service) isRateLimited(sensorID string) bool {
 			pruned = append(pruned, ts)
 		}
 	}
-	
+
 	rateLimited := len(pruned) >= MaxEventsPerSecondPerSensor
 	if !rateLimited {
 		pruned = append(pruned, now)
@@ -768,9 +772,9 @@ func (s *Service) GetRecentDecisions(limit int) []map[string]any {
 	return []map[string]any{
 		{
 			"total_decisions": s.logger.Count(),
-			"hash_chain":     s.logger.PrevHash(),
-			"log_path":       s.logger.Path(),
-			"status":         "operational",
+			"hash_chain":      s.logger.PrevHash(),
+			"log_path":        s.logger.Path(),
+			"status":          "operational",
 		},
 	}
 }
@@ -979,10 +983,10 @@ func (s *Service) ListIncidentsAdvanced(f IncidentFilter) (*IncidentFilterResult
 
 // BulkAction defines a batch operation on incidents.
 type BulkAction struct {
-	Action      string   `json:"action"`       // assign, status, close, delete
+	Action      string   `json:"action"` // assign, status, close, delete
 	IncidentIDs []string `json:"incident_ids"`
-	Value       string   `json:"value"`        // analyst email, new status
-	Actor       string   `json:"actor"`        // who initiated
+	Value       string   `json:"value"` // analyst email, new status
+	Actor       string   `json:"actor"` // who initiated
 }
 
 // BulkActionResult is the result of a batch operation.
@@ -1030,12 +1034,12 @@ type SLAThreshold struct {
 
 // SLAStatus represents an incident's SLA compliance state.
 type SLAStatus struct {
-	ResponseBreached   bool    `json:"response_breached"`
-	ResolutionBreached bool    `json:"resolution_breached"`
-	ResponseRemaining  float64 `json:"response_remaining_min"`  // minutes remaining (negative = breached)
+	ResponseBreached    bool    `json:"response_breached"`
+	ResolutionBreached  bool    `json:"resolution_breached"`
+	ResponseRemaining   float64 `json:"response_remaining_min"` // minutes remaining (negative = breached)
 	ResolutionRemaining float64 `json:"resolution_remaining_min"`
-	ResponseTarget     float64 `json:"response_target_min"`
-	ResolutionTarget   float64 `json:"resolution_target_min"`
+	ResponseTarget      float64 `json:"response_target_min"`
+	ResolutionTarget    float64 `json:"resolution_target_min"`
 }
 
 // DefaultSLAThresholds returns SLA targets per severity.
@@ -1161,7 +1165,7 @@ func (s *Service) Dashboard(tenantID string) (*DashboardData, error) {
 		return nil, err
 	}
 
-	lastHourEvents, err := s.repo.CountEventsSince(tenantID, time.Now().Add(-1 * time.Hour))
+	lastHourEvents, err := s.repo.CountEventsSince(tenantID, time.Now().Add(-1*time.Hour))
 	if err != nil {
 		return nil, err
 	}

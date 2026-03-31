@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package peer defines domain entities for Peer-to-Peer Genome Verification
 // and Distributed Fact Synchronization (DIP H1: Synapse).
 //

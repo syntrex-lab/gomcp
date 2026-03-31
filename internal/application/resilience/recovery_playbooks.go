@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package resilience
 
 import (
@@ -12,58 +16,58 @@ import (
 type PlaybookStatus string
 
 const (
-	PlaybookPending   PlaybookStatus = "PENDING"
-	PlaybookRunning   PlaybookStatus = "RUNNING"
-	PlaybookSucceeded PlaybookStatus = "SUCCEEDED"
-	PlaybookFailed    PlaybookStatus = "FAILED"
+	PlaybookPending    PlaybookStatus = "PENDING"
+	PlaybookRunning    PlaybookStatus = "RUNNING"
+	PlaybookSucceeded  PlaybookStatus = "SUCCEEDED"
+	PlaybookFailed     PlaybookStatus = "FAILED"
 	PlaybookRolledBack PlaybookStatus = "ROLLED_BACK"
 )
 
 // PlaybookStep is a single step in a recovery playbook.
 type PlaybookStep struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"` // shell, api, consensus, crypto, systemd, http, prometheus
-	Timeout     time.Duration          `json:"timeout"`
-	Retries     int                    `json:"retries"`
-	Params      map[string]interface{} `json:"params,omitempty"`
-	OnError     string                 `json:"on_error"` // abort, continue, rollback
-	Condition   string                 `json:"condition,omitempty"` // prerequisite condition
+	ID        string                 `json:"id"`
+	Name      string                 `json:"name"`
+	Type      string                 `json:"type"` // shell, api, consensus, crypto, systemd, http, prometheus
+	Timeout   time.Duration          `json:"timeout"`
+	Retries   int                    `json:"retries"`
+	Params    map[string]interface{} `json:"params,omitempty"`
+	OnError   string                 `json:"on_error"`            // abort, continue, rollback
+	Condition string                 `json:"condition,omitempty"` // prerequisite condition
 }
 
 // Playbook defines a complete recovery procedure.
 type Playbook struct {
-	ID              string                 `json:"id"`
-	Name            string                 `json:"name"`
-	Version         string                 `json:"version"`
-	TriggerMetric   string                 `json:"trigger_metric"`
-	TriggerSeverity string                 `json:"trigger_severity"`
-	DiagnosisChecks []PlaybookStep         `json:"diagnosis_checks"`
-	Actions         []PlaybookStep         `json:"actions"`
-	RollbackActions []PlaybookStep         `json:"rollback_actions"`
-	SuccessCriteria []string               `json:"success_criteria"`
+	ID              string         `json:"id"`
+	Name            string         `json:"name"`
+	Version         string         `json:"version"`
+	TriggerMetric   string         `json:"trigger_metric"`
+	TriggerSeverity string         `json:"trigger_severity"`
+	DiagnosisChecks []PlaybookStep `json:"diagnosis_checks"`
+	Actions         []PlaybookStep `json:"actions"`
+	RollbackActions []PlaybookStep `json:"rollback_actions"`
+	SuccessCriteria []string       `json:"success_criteria"`
 }
 
 // PlaybookExecution tracks a single playbook run.
 type PlaybookExecution struct {
-	ID           string         `json:"id"`
-	PlaybookID   string         `json:"playbook_id"`
-	Component    string         `json:"component"`
-	Status       PlaybookStatus `json:"status"`
-	StartedAt    time.Time      `json:"started_at"`
-	CompletedAt  time.Time      `json:"completed_at,omitempty"`
-	StepsRun     []StepResult   `json:"steps_run"`
-	Error        string         `json:"error,omitempty"`
+	ID          string         `json:"id"`
+	PlaybookID  string         `json:"playbook_id"`
+	Component   string         `json:"component"`
+	Status      PlaybookStatus `json:"status"`
+	StartedAt   time.Time      `json:"started_at"`
+	CompletedAt time.Time      `json:"completed_at,omitempty"`
+	StepsRun    []StepResult   `json:"steps_run"`
+	Error       string         `json:"error,omitempty"`
 }
 
 // StepResult records the execution of a single playbook step.
 type StepResult struct {
-	StepID    string        `json:"step_id"`
-	StepName  string        `json:"step_name"`
-	Success   bool          `json:"success"`
-	Duration  time.Duration `json:"duration"`
-	Output    string        `json:"output,omitempty"`
-	Error     string        `json:"error,omitempty"`
+	StepID   string        `json:"step_id"`
+	StepName string        `json:"step_name"`
+	Success  bool          `json:"success"`
+	Duration time.Duration `json:"duration"`
+	Output   string        `json:"output,omitempty"`
+	Error    string        `json:"error,omitempty"`
 }
 
 // PlaybookExecutorFunc runs a single playbook step.

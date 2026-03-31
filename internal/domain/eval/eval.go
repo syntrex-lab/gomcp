@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package eval implements the CLASP Evaluation Framework (SDD-005).
 //
 // Provides structured capability scoring for SOC agents across 6 dimensions
@@ -52,23 +56,23 @@ type Score struct {
 
 // EvalScenario defines a test scenario for agent evaluation.
 type EvalScenario struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Stage       Stage    `json:"stage"`
-	Description string   `json:"description"`
-	Inputs      []string `json:"inputs"`
-	Expected    string   `json:"expected"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Stage       Stage       `json:"stage"`
+	Description string      `json:"description"`
+	Inputs      []string    `json:"inputs"`
+	Expected    string      `json:"expected"`
 	Dimensions  []Dimension `json:"dimensions"` // Which dimensions this tests
 }
 
 // EvalResult represents the outcome of evaluating an agent on a scenario.
 type EvalResult struct {
-	AgentID     string              `json:"agent_id"`
-	Timestamp   time.Time           `json:"timestamp"`
-	ScenarioID  string              `json:"scenario_id"`
-	Scores      map[Dimension]Score `json:"scores"`
-	OverallL    int                 `json:"overall_l"` // 1-5 aggregate
-	JudgeModel  string              `json:"judge_model,omitempty"`
+	AgentID    string              `json:"agent_id"`
+	Timestamp  time.Time           `json:"timestamp"`
+	ScenarioID string              `json:"scenario_id"`
+	Scores     map[Dimension]Score `json:"scores"`
+	OverallL   int                 `json:"overall_l"` // 1-5 aggregate
+	JudgeModel string              `json:"judge_model,omitempty"`
 }
 
 // ComputeOverall calculates the aggregate maturity level (average, rounded down).
@@ -86,12 +90,12 @@ func (r *EvalResult) ComputeOverall() int {
 
 // AgentProfile aggregates multiple EvalResults into a capability profile.
 type AgentProfile struct {
-	AgentID    string              `json:"agent_id"`
-	Results    []EvalResult        `json:"results"`
+	AgentID    string                `json:"agent_id"`
+	Results    []EvalResult          `json:"results"`
 	Averages   map[Dimension]float64 `json:"averages"`
-	OverallL   int                 `json:"overall_l"`
-	EvalCount  int                 `json:"eval_count"`
-	LastEvalAt time.Time           `json:"last_eval_at"`
+	OverallL   int                   `json:"overall_l"`
+	EvalCount  int                   `json:"eval_count"`
+	LastEvalAt time.Time             `json:"last_eval_at"`
 }
 
 // ComputeAverages calculates per-dimension average scores across all results.

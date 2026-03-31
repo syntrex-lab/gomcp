@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package soc
 
 import (
@@ -16,13 +20,13 @@ import (
 //	timeout:  5m — force embedding mode after 5 minutes even if <50 events
 //	min_events_for_embedding: 50
 type AlertCluster struct {
-	ID        string     `json:"id"`
-	Events    []string   `json:"events"`     // Event IDs
-	Category  string     `json:"category"`   // Dominant category
-	Severity  string     `json:"severity"`   // Max severity
-	Source    string     `json:"source"`      // Dominant source
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID        string    `json:"id"`
+	Events    []string  `json:"events"`   // Event IDs
+	Category  string    `json:"category"` // Dominant category
+	Severity  string    `json:"severity"` // Max severity
+	Source    string    `json:"source"`   // Dominant source
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // ClusterEngine groups related alerts using configurable strategies.
@@ -68,8 +72,8 @@ func DefaultClusterConfig() ClusterConfig {
 type ClusterMode int
 
 const (
-	ClusterModeColdStart  ClusterMode = iota // Temporal+session_id fallback
-	ClusterModeEmbedding                     // Full embedding-based clustering
+	ClusterModeColdStart ClusterMode = iota // Temporal+session_id fallback
+	ClusterModeEmbedding                    // Full embedding-based clustering
 )
 
 func (m ClusterMode) String() string {
@@ -247,14 +251,14 @@ func (ce *ClusterEngine) Stats() map[string]any {
 	}
 
 	return map[string]any{
-		"mode":            ce.mode.String(),
-		"ui_hint":         uiHint,
-		"total_clusters":  len(ce.clusters),
-		"total_events":    totalEvents,
-		"avg_cluster_size": avgSize,
-		"max_cluster_size": maxSize,
-		"events_processed": ce.eventCount,
-		"embedding_model":  ce.config.EmbeddingModel,
+		"mode":                 ce.mode.String(),
+		"ui_hint":              uiHint,
+		"total_clusters":       len(ce.clusters),
+		"total_events":         totalEvents,
+		"avg_cluster_size":     avgSize,
+		"max_cluster_size":     maxSize,
+		"events_processed":     ce.eventCount,
+		"embedding_model":      ce.config.EmbeddingModel,
 		"cold_start_threshold": ce.config.MinEventsForEmbedding,
 	}
 }

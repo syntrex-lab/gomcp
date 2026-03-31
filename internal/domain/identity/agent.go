@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 // Package identity implements Non-Human Identity (NHI) for AI agents (SDD-003).
 //
 // Each agent has a unique AgentIdentity with capabilities (tool permissions),
@@ -30,11 +34,11 @@ type AgentIdentity struct {
 	AgentID         string            `json:"agent_id"`
 	AgentName       string            `json:"agent_name"`
 	AgentType       AgentType         `json:"agent_type"`
-	CreatedBy       string            `json:"created_by"`        // Human principal who deployed
-	DelegationChain []DelegationLink  `json:"delegation_chain"`  // Trust ancestry chain
-	Capabilities    []ToolPermission  `json:"capabilities"`      // Per-tool allowlists
-	Constraints     AgentConstraints  `json:"constraints"`       // Operational limits
-	Tags            map[string]string `json:"tags,omitempty"`    // Arbitrary metadata
+	CreatedBy       string            `json:"created_by"`       // Human principal who deployed
+	DelegationChain []DelegationLink  `json:"delegation_chain"` // Trust ancestry chain
+	Capabilities    []ToolPermission  `json:"capabilities"`     // Per-tool allowlists
+	Constraints     AgentConstraints  `json:"constraints"`      // Operational limits
+	Tags            map[string]string `json:"tags,omitempty"`   // Arbitrary metadata
 	CreatedAt       time.Time         `json:"created_at"`
 	LastSeenAt      time.Time         `json:"last_seen_at"`
 }

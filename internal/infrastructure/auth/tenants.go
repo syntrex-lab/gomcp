@@ -1,3 +1,7 @@
+// Copyright 2026 Syntrex Lab. All rights reserved.
+// Use of this source code is governed by an Apache-2.0 license
+// that can be found in the LICENSE file.
+
 package auth
 
 import (
@@ -22,17 +26,17 @@ type Plan struct {
 	Name              string `json:"name"`
 	Description       string `json:"description,omitempty"`
 	MaxUsers          int    `json:"max_users"`
-	MaxEventsMonth    int    `json:"max_events_month"`    // SOC event ingestion quota (-1=unlimited)
+	MaxEventsMonth    int    `json:"max_events_month"` // SOC event ingestion quota (-1=unlimited)
 	MaxIncidents      int    `json:"max_incidents"`
 	MaxSensors        int    `json:"max_sensors"`
-	MaxScansMonth     int    `json:"max_scans_month"`     // /api/v1/scan quota (-1=unlimited, 0=none)
+	MaxScansMonth     int    `json:"max_scans_month"` // /api/v1/scan quota (-1=unlimited, 0=none)
 	RetentionDays     int    `json:"retention_days"`
-	SOCEnabled        bool   `json:"soc_enabled"`         // SOC Dashboard access
+	SOCEnabled        bool   `json:"soc_enabled"` // SOC Dashboard access
 	SLAEnabled        bool   `json:"sla_enabled"`
 	SOAREnabled       bool   `json:"soar_enabled"`
 	ComplianceEnabled bool   `json:"compliance_enabled"`
-	OnPremise         bool   `json:"on_premise"`          // Enterprise: on-premise deployment
-	PriceMonthCents   int    `json:"price_month_cents"`   // 0 = free, -1 = custom pricing
+	OnPremise         bool   `json:"on_premise"`        // Enterprise: on-premise deployment
+	PriceMonthCents   int    `json:"price_month_cents"` // 0 = free, -1 = custom pricing
 }
 
 // DefaultPlans defines the standard pricing tiers (prices in RUB kopecks).
@@ -40,64 +44,64 @@ var DefaultPlans = map[string]Plan{
 	"free": {
 		ID: "free", Name: "Free",
 		Description: "Scanner API — 1 000 сканов/мес, все 66 движков, без SOC Dashboard",
-		MaxUsers: 1, MaxEventsMonth: 1000, MaxIncidents: 100, MaxSensors: 1,
+		MaxUsers:    1, MaxEventsMonth: 1000, MaxIncidents: 100, MaxSensors: 1,
 		MaxScansMonth: 1000,
 		RetentionDays: 3,
-		SOCEnabled: false, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
+		SOCEnabled:    false, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
 		PriceMonthCents: 0,
 	},
 	"demo": {
 		ID: "demo", Name: "Demo Sandbox",
 		Description: "Общая демо-песочница. Жёсткий лимит.",
-		MaxUsers: 10, MaxEventsMonth: 1000, MaxIncidents: 100, MaxSensors: 5,
+		MaxUsers:    10, MaxEventsMonth: 1000, MaxIncidents: 100, MaxSensors: 5,
 		MaxScansMonth: 1000,
 		RetentionDays: 1,
-		SOCEnabled: true, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
+		SOCEnabled:    true, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
 		PriceMonthCents: 0,
 	},
 	"starter": {
 		ID: "starter", Name: "Starter",
 		Description: "AI-мониторинг: до 5 сенсоров, базовая корреляция и алерты",
-		MaxUsers: 10, MaxEventsMonth: 100000, MaxIncidents: 200, MaxSensors: 5,
+		MaxUsers:    10, MaxEventsMonth: 100000, MaxIncidents: 200, MaxSensors: 5,
 		MaxScansMonth: 100000,
 		RetentionDays: 30,
-		SOCEnabled: true, SLAEnabled: true, SOAREnabled: false, ComplianceEnabled: false,
+		SOCEnabled:    true, SLAEnabled: true, SOAREnabled: false, ComplianceEnabled: false,
 		PriceMonthCents: 8990000, // 89 900 ₽/мес
 	},
 	"professional": {
 		ID: "professional", Name: "Professional",
 		Description: "Полный AI SOC: SOAR, compliance, расширенная аналитика",
-		MaxUsers: 50, MaxEventsMonth: 500000, MaxIncidents: 1000, MaxSensors: 25,
+		MaxUsers:    50, MaxEventsMonth: 500000, MaxIncidents: 1000, MaxSensors: 25,
 		MaxScansMonth: 500000,
 		RetentionDays: 90,
-		SOCEnabled: true, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
+		SOCEnabled:    true, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
 		PriceMonthCents: 14990000, // 149 900 ₽/мес
 	},
 	"enterprise": {
 		ID: "enterprise", Name: "Enterprise",
 		Description: "On-premise / выделенный инстанс. Сертификация — на стороне заказчика",
-		MaxUsers: -1, MaxEventsMonth: -1, MaxIncidents: -1, MaxSensors: -1,
+		MaxUsers:    -1, MaxEventsMonth: -1, MaxIncidents: -1, MaxSensors: -1,
 		MaxScansMonth: -1, // unlimited
 		RetentionDays: 365,
-		SOCEnabled: true, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
-		OnPremise: true,
+		SOCEnabled:    true, SLAEnabled: true, SOAREnabled: true, ComplianceEnabled: true,
+		OnPremise:       true,
 		PriceMonthCents: -1, // по запросу
 	},
 }
 
 // Tenant represents an isolated organization in the multi-tenant system.
 type Tenant struct {
-	ID               string    `json:"id"`
-	Name             string    `json:"name"`
-	Slug             string    `json:"slug"`
-	PlanID           string    `json:"plan_id"`
-	PaymentCustomerID string   `json:"payment_customer_id,omitempty"`
-	PaymentSubID      string   `json:"payment_sub_id,omitempty"`
-	OwnerUserID      string    `json:"owner_user_id"`
-	Active           bool      `json:"active"`
-	CreatedAt        time.Time `json:"created_at"`
-	EventsThisMonth  int       `json:"events_this_month"`
-	MonthResetAt     time.Time `json:"month_reset_at"`
+	ID                string    `json:"id"`
+	Name              string    `json:"name"`
+	Slug              string    `json:"slug"`
+	PlanID            string    `json:"plan_id"`
+	PaymentCustomerID string    `json:"payment_customer_id,omitempty"`
+	PaymentSubID      string    `json:"payment_sub_id,omitempty"`
+	OwnerUserID       string    `json:"owner_user_id"`
+	Active            bool      `json:"active"`
+	CreatedAt         time.Time `json:"created_at"`
+	EventsThisMonth   int       `json:"events_this_month"`
+	MonthResetAt      time.Time `json:"month_reset_at"`
 }
 
 // GetPlan returns the tenant's plan configuration.
