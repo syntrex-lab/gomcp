@@ -289,7 +289,8 @@ func HandleUpdateTenantPlan(tenantStore *TenantStore) http.HandlerFunc {
 		}
 
 		if err := tenantStore.UpdatePlan(claims.TenantID, req.PlanID); err != nil {
-			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+			slog.Error("plan update failed", "tenant_id", claims.TenantID, "plan", req.PlanID, "error", err)
+			http.Error(w, `{"error":"plan update failed"}`, http.StatusBadRequest)
 			return
 		}
 

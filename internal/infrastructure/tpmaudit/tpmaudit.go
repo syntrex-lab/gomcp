@@ -101,6 +101,7 @@ func NewSealedLogger(auditDir string, hmacSecret string) (*SealedLogger, error) 
 		mode = SealSoftware
 		if hmacSecret == "" {
 			hmacSecret = "sentinel-dev-key-not-for-production"
+			slog.Warn("tpmaudit: using hardcoded dev HMAC key — set SOC_HMAC_SECRET in production")
 		}
 		hmacKey = []byte(hmacSecret)
 	}

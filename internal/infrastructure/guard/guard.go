@@ -79,12 +79,13 @@ type Guard struct {
 	policy   *Policy
 	handlers []ViolationHandler
 	logger   *slog.Logger
+	statsMu  sync.Mutex   // protects stats
 	stats    GuardStats
 }
 
 // GuardStats tracks guard operation metrics.
+// This is a pure data struct (no mutex) so it can be safely returned by value.
 type GuardStats struct {
-	mu             sync.Mutex
 	TotalEvents    int64            `json:"total_events"`
 	Violations     int64            `json:"violations"`
 	Blocked        int64            `json:"blocked"`
@@ -314,8 +315,8 @@ func (g *Guard) CheckMemory(processName string, pid int, memoryMB int) *Violatio
 
 // Stats returns current guard statistics.
 func (g *Guard) Stats() GuardStats {
-	g.stats.mu.Lock()
-	defer g.stats.mu.Unlock()
+	g.statsMu.Lock()
+	defer g.statsMu.Unlock()
 
 	// Return a copy.
 	cp := GuardStats{
@@ -352,7 +353,7 @@ func (g *Guard) SetMode(mode Mode) {
 
 // recordViolation updates stats and notifies handlers.
 func (g *Guard) recordViolation(v Violation) {
-	g.stats.mu.Lock()
+	g.statsMu.Lock()
 	g.stats.TotalEvents++
 	g.stats.Violations++
 	if v.Action == "blocked" {
@@ -360,7 +361,7 @@ func (g *Guard) recordViolation(v Violation) {
 	}
 	g.stats.ByProcess[v.ProcessName]++
 	g.stats.ByType[v.Type]++
-	g.stats.mu.Unlock()
+	g.statsMu.Unlock()
 
 	g.logger.Warn("policy violation",
 		"process", v.ProcessName,

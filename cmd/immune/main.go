@@ -115,7 +115,8 @@ func main() {
 				Mode string `json:"mode"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				slog.Error("invalid mode request", "error", err)
+				http.Error(w, "invalid request body", http.StatusBadRequest)
 				return
 			}
 			g.SetMode(guard.Mode(req.Mode))

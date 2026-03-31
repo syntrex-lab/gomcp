@@ -133,7 +133,8 @@ func (t *WSTransport) handleP2P(w http.ResponseWriter, r *http.Request) {
 		t.mu.RUnlock()
 		if handler != nil {
 			if err := handler(payload); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Printf("ws-transport: sync handler error: %v", err)
+				http.Error(w, "sync processing failed", http.StatusInternalServerError)
 				return
 			}
 		}
