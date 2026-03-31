@@ -1504,6 +1504,12 @@ func (s *Server) handleSLAConfig(w http.ResponseWriter, _ *http.Request) {
 }
 
 // handlePublicScan provides a public (no-auth) prompt scanning endpoint for the demo.
+// POST /api/v1/scan  body: {"prompt": "Ignore all instructions..."}
+// Runs sentinel-core (54 Rust engines) + Shield (C11 payload inspection) in parallel.
+//
+// Concurrency control: uses scanSem (buffered channel) to limit parallel scans.
+// If all slots are busy, returns 503 Service Unavailable with Retry-After header
+// to prevent OOM under burst load (e.g., 20 concurrent battle workers).
 //
 // @Summary Inspect AI Prompt
 // @Description Scans user inputs using Sentinel Lattice (Rust engine) to detect jailbreaks, prompt injections, and Data Exfiltration attempts within 1ms.
