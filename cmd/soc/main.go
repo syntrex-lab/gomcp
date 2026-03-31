@@ -209,6 +209,9 @@ func main() {
 	// Start background retention scheduler (§19)
 	socSvc.StartRetentionScheduler(ctx, 0) // 0 = default 1 hour
 
+	// Start WebSocket Event Bridge for live real-time streams
+	srv.StartEventBridge(ctx)
+
 	// pprof profiling (§P4C) — enabled by SOC_PPROF=true
 	if env("SOC_PPROF", "") == "true" {
 		srv.EnablePprof()

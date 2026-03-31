@@ -16,53 +16,48 @@ func (s *Server) runDemoSimulator(ctx context.Context) {
 		return
 	}
 
-	ticker := time.NewTicker(45 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
-	slog.Info("SOC Demo event simulator active")
+	// Helper to send a fake event
+	sendFakeEvent := func() {
+		var demoTenantID string
+		tenants := s.tenantStore.ListTenants()
+		for _, t := range tenants {
+			if t.Slug == "syntrex-demo" || t.Slug == "demo" {
+				demoTenantID = t.ID
+				break
+			}
+		}
+
+		if demoTenantID == "" {
+			return // Setup not done yet
+		}
+
+		event := s.generateFakeEvent()
+		event.TenantID = demoTenantID
+
+		if err := s.socSvc.Repo().InsertEvent(event); err != nil {
+			slog.Error("demo fake event persist failed", "error", err)
+			return
+		}
+
+		if bus := s.socSvc.EventBus(); bus != nil {
+			bus.Publish(event)
+		}
+	}
+
+	slog.Info("SOC Demo event simulator active (10s intervals)")
+
+	// Send one immediately to avoid waiting 10s on fresh load.
+	go sendFakeEvent()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			// Ensure syntrex-demo tenant exists. Handled by /api/auth/demo
-			var demoTenantID string
-			tenants := s.tenantStore.ListTenants()
-			for _, t := range tenants {
-				if t.Slug == "syntrex-demo" {
-					demoTenantID = t.ID
-					break
-				}
-			}
-
-			if demoTenantID == "" {
-				continue // Setup not done yet
-			}
-
-			event := s.generateFakeEvent()
-			event.TenantID = demoTenantID
-
-			// Bypass strict rate limits and auth for demo injection
-			// Directly persist, correlate, and publish SSE.
-			
-			// 1. Persist
-			if err := s.socSvc.Repo().InsertEvent(event); err != nil {
-				slog.Error("demo fake event persist failed", "error", err)
-				continue
-			}
-
-			// 2. Publish to UI
-			if bus := s.socSvc.EventBus(); bus != nil {
-				bus.Publish(event)
-			}
-
-			// 3. Optional correlation (we just insert some realistic ones to trigger built-ins)
-			// For a fully self-contained demo, we periodically just insert incidents directly
-			// or rely on the actual correlate() if we bypass private scope. 
-			// But since correlate is private, we will just simulate incidents if needed,
-			// or better yet, our generator can just generate some CRITICAL alerts 
-			//.
+			sendFakeEvent()
 		}
 	}
 }
