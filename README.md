@@ -33,15 +33,70 @@ gomcp init
 gomcp serve --port 9100
 ```
 
+## 📦 Installation Options
+
+### From Source
+```bash
+git clone https://github.com/syntrex-lab/gomcp.git
+cd gomcp
+go build -o gomcp ./cmd/gomcp
+```
+
+### Docker
+```bash
+docker run -d -p 9100:9100 syntrex/gomcp:latest
+```
+
+### Package Managers
+- **Homebrew (macOS)**: `brew install syntrex-lab/tap/gomcp` *(planned)*
+- **Chocolatey (Windows)**: `choco install gomcp` *(planned)*
+
 ## 🧠 Use Cases
 - **Autonomous Agents:** Build agents with infinite, structured memory.
 - **Secure RAG:** Query codebases with provable bounds and role-based clearance. 
 - **Local AI Context:** Supercharge your local LLMs (Ollama, vLLM) with a centralized context nervous system.
 
 ## 🏗️ Architecture
+
+```text
+┌─────────────────┐       ┌─────────────────────────────────┐       ┌─────────────────┐
+│                 │ MCP   │ GoMCP Server                    │ Tools │                 │
+│  LLM Agent      │◀─────▶│ ├─ DIP Pipeline & Oracle Guard  │◀─────▶│ Environment &   │
+│ (Ollama/vLLM)   │       │ ├─ C³ Memory (L0-L3)            │       │ Local Resources │
+│                 │       │ └─ Sentinel Lattice Sync        │       │                 │
+└─────────────────┘       └─────────────────────────────────┘       └─────────────────┘
+```
+
+GoMCP sits between your LLM and the world, providing:
+- Persistent memory across sessions
+- Secure tool execution with DIP validation
+- Real-time threat detection via Sentinel Lattice
+
 GoMCP is the open-source core of Syntrex AI SOC. It handles memory and orchestration, while the enterprise layer adds correlation, dashboards, and compliance reporting.
 
-## 🛡️ Enterprise CTA
+## 🛡️ Security Model
+
+GoMCP implements defense-in-depth with multiple layers:
+
+| Layer | Protection | Mechanism |
+|-------|------------|-----------|
+| **Intent** | Malicious prompts | DIP Pipeline + Oracle Deny-First |
+| **Memory** | Data leakage | CAFL capability flow control |
+| **Tools** | Tool abuse | Entropy Gate + Circuit Breaker |
+| **Audit** | Tampering | SHA-256 Decision Logger (immutable) |
+| **Network** | Unauthorized access | mTLS + Genome Verification |
+
+All security primitives are based on the [Sentinel Lattice](docs/lattice.md) framework with mathematical guarantees.
+
+## 📚 Learn More
+
+- 📚 [Full Documentation](docs/)
+- 🛡️ [Sentinel Lattice Specification](docs/lattice.md)
+- 🔧 [MCP Tools Reference](docs/mcp-tools.md)
+- 🏢 [Enterprise Features](https://syntrex.pro)
+- 💬 [Discord Community](https://discord.gg/syntrex)
+
+## 🏢 Enterprise CTA
 Need a full SOC dashboard, 66 offensive Rust engines, and distributed intelligence orchestration?  
 Check out our enterprise platform: **[Syntrex AI SOC](https://syntrex.pro)**
 
