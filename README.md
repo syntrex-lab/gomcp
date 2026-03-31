@@ -58,13 +58,17 @@ docker run -d -p 9100:9100 syntrex/gomcp:latest
 
 ## 🏗️ Architecture
 
-```text
-┌─────────────────┐       ┌─────────────────────────────────┐       ┌─────────────────┐
-│                 │ MCP   │ GoMCP Server                    │ Tools │                 │
-│  LLM Agent      │◀─────▶│ ├─ DIP Pipeline & Oracle Guard  │◀─────▶│ Environment &   │
-│ (Ollama/vLLM)   │       │ ├─ C³ Memory (L0-L3)            │       │ Local Resources │
-│                 │       │ └─ Sentinel Lattice Sync        │       │                 │
-└─────────────────┘       └─────────────────────────────────┘       └─────────────────┘
+```mermaid
+graph LR
+    LLM["🤖 LLM Agent<br/>(Ollama/vLLM)"] <-->|MCP| Server
+
+    subgraph Server["🛡️ GoMCP Server"]
+        DIP["DIP Pipeline & Oracle Guard"]
+        Mem["C³ Memory (L0-L3)"]
+        Sync["Sentinel Lattice Sync"]
+    end
+
+    Server <-->|Tools| Env["💻 Environment &<br/>Local Resources"]
 ```
 
 GoMCP sits between your LLM and the world, providing:
@@ -80,18 +84,18 @@ GoMCP implements defense-in-depth with multiple layers:
 
 | Layer | Protection | Mechanism |
 |-------|------------|-----------|
-| **Intent** | Malicious prompts | DIP Pipeline + Oracle Deny-First |
-| **Memory** | Data leakage | CAFL capability flow control |
+| **Intent** | Malicious prompts | [DIP Pipeline](docs/security/dip_pipeline.md) + Oracle Deny-First |
+| **Memory** | Data leakage | [CAFL](docs/security/cafl.md) capability flow control |
 | **Tools** | Tool abuse | Entropy Gate + Circuit Breaker |
 | **Audit** | Tampering | SHA-256 Decision Logger (immutable) |
 | **Network** | Unauthorized access | mTLS + Genome Verification |
 
-All security primitives are based on the [Sentinel Lattice](docs/lattice.md) framework with mathematical guarantees.
+All security primitives are based on the [Sentinel Lattice](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md) framework with mathematical guarantees.
 
 ## 📚 Learn More
 
-- 📚 [Full Documentation](docs/)
-- 🛡️ [Sentinel Lattice Specification](docs/lattice.md)
+- 📚 [Full Documentation](docs/README.md)
+- 🛡️ [Sentinel Lattice Specification](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md)
 - 🔧 [MCP Tools Reference](docs/mcp-tools.md)
 - 🏢 [Enterprise Features](https://syntrex.pro)
 - 💬 [Discord Community](https://discord.gg/syntrex)
