@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 
-	ctxdomain "github.com/syntrex/gomcp/internal/domain/context"
+	ctxdomain "github.com/syntrex-lab/gomcp/internal/domain/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

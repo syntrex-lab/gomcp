@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/syntrex/gomcp/internal/domain/crystal"
-	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/crystal"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 )
 
 // ThreatFinding represents a single finding from the threat model scanner.

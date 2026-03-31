@@ -25,7 +25,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/application/sidecar"
+	"github.com/syntrex-lab/gomcp/internal/application/sidecar"
 )
 
 func main() {

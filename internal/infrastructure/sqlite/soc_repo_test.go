@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 func setupSOCRepo(t *testing.T) *SOCRepo {

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 )
 
 // FactService implements MCP tool logic for hierarchical fact operations.

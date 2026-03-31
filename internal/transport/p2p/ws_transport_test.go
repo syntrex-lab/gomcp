@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/peer"
+	"github.com/syntrex-lab/gomcp/internal/domain/peer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 )
 
 // Default configuration values.

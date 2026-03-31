@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/application/resilience"
+	"github.com/syntrex-lab/gomcp/internal/application/resilience"
 )
 
 // ResilienceAPI holds references to the SARL engines for HTTP handlers.

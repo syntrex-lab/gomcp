@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 )
 
 // Decision represents a routing decision.

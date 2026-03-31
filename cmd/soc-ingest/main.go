@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/syntrex/gomcp/internal/application/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/audit"
-	"github.com/syntrex/gomcp/internal/infrastructure/ipc"
-	"github.com/syntrex/gomcp/internal/infrastructure/logging"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
-	sochttp "github.com/syntrex/gomcp/internal/transport/http"
+	"github.com/syntrex-lab/gomcp/internal/application/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/ipc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/logging"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
+	sochttp "github.com/syntrex-lab/gomcp/internal/transport/http"
 )
 
 func main() {

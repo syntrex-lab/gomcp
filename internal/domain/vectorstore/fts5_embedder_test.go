@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

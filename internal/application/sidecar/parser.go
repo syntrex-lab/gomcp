@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // Parser converts a raw log line into a SOCEvent.

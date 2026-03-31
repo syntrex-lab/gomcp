@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/syntrex/gomcp/internal/domain/memory"
-	"github.com/syntrex/gomcp/internal/domain/session"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/session"
 )
 
 // Provider serves MCP resources (rlm://state, rlm://facts, rlm://stats).

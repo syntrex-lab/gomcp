@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/syntrex/gomcp/internal/application/resources"
-	"github.com/syntrex/gomcp/internal/application/tools"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
+	"github.com/syntrex-lab/gomcp/internal/application/resources"
+	"github.com/syntrex-lab/gomcp/internal/application/tools"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
 )
 
 // newTestServer creates a fully-wired Server backed by in-memory SQLite databases.

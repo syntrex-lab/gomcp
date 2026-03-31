@@ -23,9 +23,9 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/ipc"
-	"github.com/syntrex/gomcp/internal/infrastructure/logging"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/ipc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/logging"
 )
 
 func main() {

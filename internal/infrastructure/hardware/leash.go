@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/alert"
+	"github.com/syntrex-lab/gomcp/internal/domain/alert"
 )
 
 // ---------- State Machine (v3.2) ----------

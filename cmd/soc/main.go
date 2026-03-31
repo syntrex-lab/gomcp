@@ -28,17 +28,17 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/syntrex/gomcp/internal/application/soc"
-	socdomain "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/domain/engines"
-	"github.com/syntrex/gomcp/internal/infrastructure/auth"
-	"github.com/syntrex/gomcp/internal/infrastructure/audit"
-	"github.com/syntrex/gomcp/internal/infrastructure/email"
-	"github.com/syntrex/gomcp/internal/infrastructure/logging"
-	"github.com/syntrex/gomcp/internal/infrastructure/postgres"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
-	"github.com/syntrex/gomcp/internal/infrastructure/tracing"
-	sochttp "github.com/syntrex/gomcp/internal/transport/http"
+	"github.com/syntrex-lab/gomcp/internal/application/soc"
+	socdomain "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/domain/engines"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/auth"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/email"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/logging"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/postgres"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/tracing"
+	sochttp "github.com/syntrex-lab/gomcp/internal/transport/http"
 )
 
 func main() {

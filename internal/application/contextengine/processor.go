@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/memory"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
 )
 
 // InteractionProcessor processes unprocessed interaction log entries

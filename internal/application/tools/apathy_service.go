@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/entropy"
-	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/entropy"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 )
 
 // ApathySignal represents a detected infrastructure apathy pattern.

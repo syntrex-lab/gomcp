@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/alert"
+	"github.com/syntrex-lab/gomcp/internal/domain/alert"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

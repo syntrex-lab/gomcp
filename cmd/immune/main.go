@@ -26,8 +26,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/infrastructure/guard"
-	"github.com/syntrex/gomcp/internal/infrastructure/logging"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/guard"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/logging"
 )
 
 func main() {

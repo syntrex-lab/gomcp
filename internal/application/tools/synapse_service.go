@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/syntrex/gomcp/internal/domain/synapse"
+	"github.com/syntrex-lab/gomcp/internal/domain/synapse"
 )
 
 // SynapseService implements MCP tool logic for synapse operations.

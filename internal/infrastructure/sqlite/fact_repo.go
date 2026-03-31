@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
 )
 
 const timeFormat = time.RFC3339Nano

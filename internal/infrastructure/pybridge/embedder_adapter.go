@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 )
 
 // PyBridgeEmbedder wraps the Python bridge as an Embedder.

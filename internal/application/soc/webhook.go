@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // WebhookConfig holds SOAR webhook settings.

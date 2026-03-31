@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/syntrex/gomcp/internal/domain/session"
+	"github.com/syntrex-lab/gomcp/internal/domain/session"
 )
 
 // SessionService implements MCP tool logic for cognitive state operations.

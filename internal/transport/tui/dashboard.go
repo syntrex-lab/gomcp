@@ -11,11 +11,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/syntrex/gomcp/internal/application/orchestrator"
-	"github.com/syntrex/gomcp/internal/domain/alert"
-	"github.com/syntrex/gomcp/internal/domain/memory"
-	"github.com/syntrex/gomcp/internal/domain/peer"
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/application/orchestrator"
+	"github.com/syntrex-lab/gomcp/internal/domain/alert"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/peer"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 )
 
 // tickMsg is sent periodically to refresh the dashboard.

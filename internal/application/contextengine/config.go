@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	ctxdomain "github.com/syntrex/gomcp/internal/domain/context"
+	ctxdomain "github.com/syntrex-lab/gomcp/internal/domain/context"
 )
 
 // LoadConfig loads engine configuration from a JSON file.

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"

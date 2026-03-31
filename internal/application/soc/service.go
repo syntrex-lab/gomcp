@@ -15,10 +15,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/oracle"
-	"github.com/syntrex/gomcp/internal/domain/peer"
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex-lab/gomcp/internal/domain/oracle"
+	"github.com/syntrex-lab/gomcp/internal/domain/peer"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/audit"
 )
 
 const (

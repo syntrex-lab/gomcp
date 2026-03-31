@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/causal"
+	"github.com/syntrex-lab/gomcp/internal/domain/causal"
 )
 
 // CausalRepo implements causal.CausalStore using SQLite.

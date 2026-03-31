@@ -15,10 +15,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/circuitbreaker"
-	"github.com/syntrex/gomcp/internal/domain/entropy"
-	"github.com/syntrex/gomcp/internal/domain/intent"
-	"github.com/syntrex/gomcp/internal/domain/oracle"
+	"github.com/syntrex-lab/gomcp/internal/domain/circuitbreaker"
+	"github.com/syntrex-lab/gomcp/internal/domain/entropy"
+	"github.com/syntrex-lab/gomcp/internal/domain/intent"
+	"github.com/syntrex-lab/gomcp/internal/domain/oracle"
 )
 
 // Stage represents a processing stage.

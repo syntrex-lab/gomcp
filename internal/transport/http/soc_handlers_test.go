@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	appsoc "github.com/syntrex/gomcp/internal/application/soc"
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
+	appsoc "github.com/syntrex-lab/gomcp/internal/application/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
 )
 
 // newTestServer creates an HTTP test server with a real SOC service backed by in-memory SQLite.

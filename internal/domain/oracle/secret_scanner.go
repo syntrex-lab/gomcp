@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/syntrex/gomcp/internal/domain/entropy"
+	"github.com/syntrex-lab/gomcp/internal/domain/entropy"
 )
 
 // SecretScanResult holds the result of scanning content for secrets.

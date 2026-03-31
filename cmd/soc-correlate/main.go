@@ -24,12 +24,12 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	appsoc "github.com/syntrex/gomcp/internal/application/soc"
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/audit"
-	"github.com/syntrex/gomcp/internal/infrastructure/ipc"
-	"github.com/syntrex/gomcp/internal/infrastructure/logging"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
+	appsoc "github.com/syntrex-lab/gomcp/internal/application/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/ipc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/logging"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	shadowai "github.com/syntrex/gomcp/internal/application/shadow_ai"
+	shadowai "github.com/syntrex-lab/gomcp/internal/application/shadow_ai"
 )
 
 // --- GET /api/v1/shadow-ai/stats ---

@@ -111,7 +111,7 @@ func (g *Generator) GenerateSPDX() (*SPDXDocument, error) {
 			Name:        g.productName,
 			Version:     g.version,
 			License:     "Proprietary",
-			DownloadURL: "https://github.com/syntrex/gomcp",
+			DownloadURL: "https://github.com/syntrex-lab/gomcp",
 		}}, g.packages...),
 	}
 

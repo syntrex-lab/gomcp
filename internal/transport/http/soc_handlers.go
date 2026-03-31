@@ -13,10 +13,10 @@ import (
 	"sync"
 	"time"
 
-	appsoc "github.com/syntrex/gomcp/internal/application/soc"
-	"github.com/syntrex/gomcp/internal/domain/engines"
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/auth"
+	appsoc "github.com/syntrex-lab/gomcp/internal/application/soc"
+	"github.com/syntrex-lab/gomcp/internal/domain/engines"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/auth"
 )
 
 // MaxRequestBodySize limits POST body size to prevent OOM (T3-3).

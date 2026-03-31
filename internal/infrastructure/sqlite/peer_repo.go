@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/peer"
+	"github.com/syntrex-lab/gomcp/internal/domain/peer"
 )
 
 // PeerRepo implements peer.PeerStore using SQLite.

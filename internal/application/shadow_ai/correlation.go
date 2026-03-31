@@ -3,7 +3,7 @@ package shadow_ai
 import (
 	"time"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // ShadowAICorrelationRules returns SOC correlation rules specific to Shadow AI

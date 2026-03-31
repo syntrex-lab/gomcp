@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // SOCRepo provides PostgreSQL persistence for SOC events, incidents, and sensors.

@@ -5,7 +5,7 @@ package onnx
 import (
 	"log"
 
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 )
 
 // NewEmbedderWithFallback attempts to create an ONNX embedder.

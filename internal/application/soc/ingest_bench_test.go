@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
-	"github.com/syntrex/gomcp/internal/infrastructure/audit"
-	"github.com/syntrex/gomcp/internal/infrastructure/sqlite"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/audit"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/sqlite"
 )
 
 // newBenchService creates a minimal SOC service for benchmarking.

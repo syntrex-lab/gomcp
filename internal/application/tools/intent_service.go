@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/syntrex/gomcp/internal/domain/intent"
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/intent"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 )
 
 // IntentService provides MCP tool logic for intent distillation.

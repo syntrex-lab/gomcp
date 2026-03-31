@@ -8,9 +8,9 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 
-	appsoc "github.com/syntrex/gomcp/internal/application/soc"
-	"github.com/syntrex/gomcp/internal/application/tools"
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	appsoc "github.com/syntrex-lab/gomcp/internal/application/soc"
+	"github.com/syntrex-lab/gomcp/internal/application/tools"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // SetSOCService enables SOC tools (soc_ingest, soc_events, soc_incidents, soc_sensors, soc_dashboard).

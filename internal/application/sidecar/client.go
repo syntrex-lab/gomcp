@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // BusClient sends security events to the SOC Event Bus via HTTP POST.

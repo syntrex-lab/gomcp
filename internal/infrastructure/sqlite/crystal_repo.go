@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/syntrex/gomcp/internal/domain/crystal"
+	"github.com/syntrex-lab/gomcp/internal/domain/crystal"
 )
 
 // CrystalRepo implements crystal.CrystalStore using SQLite.

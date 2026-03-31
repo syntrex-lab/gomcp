@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/syntrex/gomcp/internal/domain/causal"
+	"github.com/syntrex-lab/gomcp/internal/domain/causal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

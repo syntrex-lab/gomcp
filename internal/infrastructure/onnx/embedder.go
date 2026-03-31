@@ -11,7 +11,7 @@ import (
 
 	ort "github.com/yalue/onnxruntime_go"
 
-	"github.com/syntrex/gomcp/internal/domain/vectorstore"
+	"github.com/syntrex-lab/gomcp/internal/domain/vectorstore"
 )
 
 // Embedder implements vectorstore.Embedder using ONNX Runtime.

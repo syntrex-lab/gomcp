@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	domsoc "github.com/syntrex/gomcp/internal/domain/soc"
+	domsoc "github.com/syntrex-lab/gomcp/internal/domain/soc"
 )
 
 // runDemoSimulator runs a background goroutine that injects

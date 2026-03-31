@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/syntrex/gomcp/internal/domain/alert"
-	"github.com/syntrex/gomcp/internal/domain/memory"
-	"github.com/syntrex/gomcp/internal/domain/peer"
+	"github.com/syntrex-lab/gomcp/internal/domain/alert"
+	"github.com/syntrex-lab/gomcp/internal/domain/memory"
+	"github.com/syntrex-lab/gomcp/internal/domain/peer"
 )
 
 // pipePath returns the platform-specific IPC socket path.

@@ -17,12 +17,12 @@ import (
 	"sync"
 	"time"
 
-	shadowai "github.com/syntrex/gomcp/internal/application/shadow_ai"
-	appsoc "github.com/syntrex/gomcp/internal/application/soc"
-	"github.com/syntrex/gomcp/internal/domain/engines"
-	"github.com/syntrex/gomcp/internal/infrastructure/auth"
-	"github.com/syntrex/gomcp/internal/infrastructure/email"
-	"github.com/syntrex/gomcp/internal/infrastructure/tracing"
+	shadowai "github.com/syntrex-lab/gomcp/internal/application/shadow_ai"
+	appsoc "github.com/syntrex-lab/gomcp/internal/application/soc"
+	"github.com/syntrex-lab/gomcp/internal/domain/engines"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/auth"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/email"
+	"github.com/syntrex-lab/gomcp/internal/infrastructure/tracing"
 )
 
 // Server provides HTTP API endpoints for SOC monitoring.
