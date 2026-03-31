@@ -24,6 +24,16 @@ func SeedDemoTenant(userStore *UserStore, tenantStore *TenantStore, socRepo doms
 	// Check if demo user already exists
 	if _, err := userStore.GetByEmail(DemoUserEmail); err == nil {
 		slog.Debug("demo tenant already seeded", "email", DemoUserEmail)
+		// Force update the plan ID to enforce strict demo limits (1000 events)
+		if tenantStore.db != nil {
+			tenantStore.db.Exec("UPDATE tenants SET plan_id = 'demo' WHERE id = $1", DemoTenantID)
+		}
+		// Also update in-memory cache
+		tenantStore.mu.Lock()
+		if t, ok := tenantStore.tenants[DemoTenantID]; ok {
+			t.PlanID = "demo"
+		}
+		tenantStore.mu.Unlock()
 		return
 	}
 
@@ -50,12 +60,12 @@ func SeedDemoTenant(userStore *UserStore, tenantStore *TenantStore, socRepo doms
 		userStore.persistUser(demoUser)
 	}
 
-	// 2. Create demo tenant (starter plan)
+	// 2. Create demo tenant (demo plan 1000 events max)
 	demoTenant := &Tenant{
 		ID:          DemoTenantID,
 		Name:        "SYNTREX Demo",
 		Slug:        "demo",
-		PlanID:      "starter",
+		PlanID:      "demo",
 		OwnerUserID: demoUser.ID,
 		Active:      true,
 		CreatedAt:   time.Now(),

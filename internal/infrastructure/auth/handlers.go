@@ -212,14 +212,14 @@ func HandleMe(store *UserStore) http.HandlerFunc {
 func HandleListUsers(store *UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := GetClaims(r.Context())
-		if claims == nil || claims.Role != "admin" {
-			writeAuthError(w, http.StatusForbidden, "admin role required")
+		if claims == nil || (claims.Role != "admin" && claims.Role != "superadmin") {
+			writeAuthError(w, http.StatusForbidden, "admin or superadmin role required")
 			return
 		}
 
 		// SEC-HIGH1: Block listing when TenantID is empty — prevents
 		// empty-string match showing all users without a tenant.
-		if claims.TenantID == "" {
+		if claims.TenantID == "" && claims.Role != "superadmin" {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{
 				"users": []*User{},
@@ -232,7 +232,7 @@ func HandleListUsers(store *UserStore) http.HandlerFunc {
 		allUsers := store.ListUsers()
 		var filtered []*User
 		for _, u := range allUsers {
-			if u.TenantID == claims.TenantID {
+			if claims.Role == "superadmin" || u.TenantID == claims.TenantID {
 				filtered = append(filtered, u)
 			}
 		}
@@ -399,7 +399,7 @@ func HandleCreateAPIKey(store *UserStore) http.HandlerFunc {
 	}
 }
 
-// HandleListAPIKeys returns API keys for the authenticated user.
+// HandleListAPIKeys returns API keys for the authenticated user, or all keys for superadmin.
 // GET /api/auth/keys
 func HandleListAPIKeys(store *UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -415,7 +415,13 @@ func HandleListAPIKeys(store *UserStore) http.HandlerFunc {
 			return
 		}
 
-		keys, err := store.ListAPIKeys(user.ID)
+		var keys []APIKey
+		if user.Role == "superadmin" {
+			keys, err = store.ListAllAPIKeys()
+		} else {
+			keys, err = store.ListAPIKeys(user.ID)
+		}
+
 		if err != nil {
 			writeAuthError(w, http.StatusInternalServerError, err.Error())
 			return

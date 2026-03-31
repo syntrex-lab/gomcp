@@ -46,6 +46,15 @@ var DefaultPlans = map[string]Plan{
 		SOCEnabled: false, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
 		PriceMonthCents: 0,
 	},
+	"demo": {
+		ID: "demo", Name: "Demo Sandbox",
+		Description: "Общая демо-песочница. Жёсткий лимит.",
+		MaxUsers: 10, MaxEventsMonth: 1000, MaxIncidents: 100, MaxSensors: 5,
+		MaxScansMonth: 1000,
+		RetentionDays: 1,
+		SOCEnabled: true, SLAEnabled: false, SOAREnabled: false, ComplianceEnabled: false,
+		PriceMonthCents: 0,
+	},
 	"starter": {
 		ID: "starter", Name: "Starter",
 		Description: "AI-мониторинг: до 5 сенсоров, базовая корреляция и алерты",

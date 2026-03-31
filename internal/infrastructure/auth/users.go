@@ -489,6 +489,32 @@ func (s *UserStore) ListAPIKeys(userID string) ([]APIKey, error) {
 	return keys, nil
 }
 
+// ListAllAPIKeys returns all API keys across all users (for superadmin).
+func (s *UserStore) ListAllAPIKeys() ([]APIKey, error) {
+	if s.db == nil {
+		return nil, nil
+	}
+	rows, err := s.db.Query(`SELECT id, user_id, name, role, created_at, last_used FROM api_keys`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var keys []APIKey
+	for rows.Next() {
+		var ak APIKey
+		var lastUsed sql.NullTime
+		if err := rows.Scan(&ak.ID, &ak.UserID, &ak.Name, &ak.Role, &ak.CreatedAt, &lastUsed); err != nil {
+			continue
+		}
+		if lastUsed.Valid {
+			ak.LastUsed = &lastUsed.Time
+		}
+		keys = append(keys, ak)
+	}
+	return keys, nil
+}
+
 // DeleteAPIKey revokes an API key.
 func (s *UserStore) DeleteAPIKey(keyID, userID string) error {
 	if s.db == nil {
