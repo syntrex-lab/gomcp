@@ -1,5 +1,11 @@
 // Package main provides the standalone SOC API server entry point.
 //
+// @title SYNTREX Sentinel SOC API
+// @version 1.0
+// @description Enterprise API for AI Firewall and Security Operations Center. Auto-generated via Doc-as-Code.
+// @host localhost:9100
+// @BasePath /
+//
 // Usage:
 //
 //	go run ./cmd/soc/

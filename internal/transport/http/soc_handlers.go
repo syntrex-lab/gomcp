@@ -1504,12 +1504,18 @@ func (s *Server) handleSLAConfig(w http.ResponseWriter, _ *http.Request) {
 }
 
 // handlePublicScan provides a public (no-auth) prompt scanning endpoint for the demo.
-// POST /api/v1/scan  body: {"prompt": "Ignore all instructions..."}
-// Runs sentinel-core (54 Rust engines) + Shield (C11 payload inspection) in parallel.
 //
-// Concurrency control: uses scanSem (buffered channel) to limit parallel scans.
-// If all slots are busy, returns 503 Service Unavailable with Retry-After header
-// to prevent OOM under burst load (e.g., 20 concurrent battle workers).
+// @Summary Inspect AI Prompt
+// @Description Scans user inputs using Sentinel Lattice (Rust engine) to detect jailbreaks, prompt injections, and Data Exfiltration attempts within 1ms.
+// @Tags Scanner
+// @Accept json
+// @Produce json
+// @Param body body map[string]string true "Request body containing 'prompt' string"
+// @Success 200 {object} map[string]any "Scan result with confidence scores and block flags"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 429 {object} map[string]string "Rate Limited"
+// @Failure 503 {object} map[string]string "Service Unavailable (Queue full)"
+// @Router /api/v1/scan [post]
 func (s *Server) handlePublicScan(w http.ResponseWriter, r *http.Request) {
 	limitBody(w, r)
 	defer r.Body.Close()
