@@ -2,7 +2,6 @@
 
 [🇺🇸 English](README.md) | [🇷🇺 Русский](README_ru.md) | [🇨🇳 简体中文](README_zh.md)
 
-[![Build Status](https://github.com/syntrex-lab/gomcp/actions/workflows/test.yml/badge.svg)](https://github.com/syntrex-lab/gomcp/actions)
 [![Go Version](https://img.shields.io/badge/go-1.22+-blue.svg)](https://go.dev)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Protocol](https://img.shields.io/badge/MCP-Supported-orange.svg)](https://modelcontextprotocol.io/)
