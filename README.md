@@ -7,7 +7,7 @@
 ![Protocol](https://img.shields.io/badge/MCP-Supported-orange.svg)
 [![Build Status](https://github.com/syntrex-lab/gomcp/actions/workflows/test.yml/badge.svg)](https://github.com/syntrex-lab/gomcp/actions)
 
-> **"Единственный RLM-сервер памяти с математически доказанной безопасностью (Sentinel Lattice). Работает локально, масштабируется глобально."**
+> **"The only RLM memory server with mathematically proven security (Sentinel Lattice). Runs locally, scales globally."**
 > Part of the [Syntrex AI SOC](https://syntrex.pro) ecosystem.
 
 GoMCP is the enterprise core of the Syntrex AI SOC ecosystem. It is an extremely fast, secure, and persistent Model Context Protocol (MCP) server entirely written in Go. GoMCP gives Large Language Models a permanent, evolving memory and self-modifying context, transforming standard text agents into self-improving persistent intelligences.
