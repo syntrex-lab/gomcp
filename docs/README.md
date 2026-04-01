@@ -10,4 +10,4 @@ Welcome to the GoMCP documentation. GoMCP is the open-source, mathematically pro
 
 ## About Sentinel Lattice
 
-GoMCP uses the Sentinel Lattice framework to enforce security primitives. For in-depth theoretical understanding, see the [Sentinel Lattice Architecture Specification](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md).
+GoMCP uses the Sentinel Lattice framework to enforce security primitives. For in-depth theoretical understanding, see the [Sentinel Lattice Architecture Specification](lattice.md).

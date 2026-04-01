@@ -12,4 +12,4 @@ Traditional security proxies rely heavily on blacklists, regex, or second-model 
 
 ## Lattice Integration
 
-DIP feeds directly into the larger [Sentinel Lattice](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md) architecture by creating early *Provenance Certificates*. This guarantees that even if a prompt "tricks" the semantic layers, the root source (the external untrusted user) is forever linked mathematically to the parsed intent.
+DIP feeds directly into the larger [Sentinel Lattice](../lattice.md) architecture by creating early *Provenance Certificates*. This guarantees that even if a prompt "tricks" the semantic layers, the root source (the external untrusted user) is forever linked mathematically to the parsed intent.

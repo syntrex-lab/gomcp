@@ -28,4 +28,4 @@ Trust boundary crossings inherently attenuate capabilities unless explicitly aut
 
 This means that even if a prompt injection tricks the LLM into initiating an exfiltration attempt, the mathematical capabilities of the data prevent the outbound network call.
 
-See the full mathematical foundation in the [Sentinel Lattice Architecture Specification](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md).
+See the full mathematical foundation in the [Sentinel Lattice Architecture Specification](../lattice.md).

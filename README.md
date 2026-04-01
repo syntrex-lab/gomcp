@@ -90,12 +90,12 @@ GoMCP implements defense-in-depth with multiple layers:
 | **Audit** | Tampering | SHA-256 Decision Logger (immutable) |
 | **Network** | Unauthorized access | mTLS + Genome Verification |
 
-All security primitives are based on the [Sentinel Lattice](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md) framework with mathematical guarantees.
+All security primitives are based on the [Sentinel Lattice](docs/lattice.md) framework with mathematical guarantees.
 
 ## 📚 Learn More
 
 - 📚 [Full Documentation](docs/README.md)
-- 🛡️ [Sentinel Lattice Specification](https://github.com/syntrex-lab/sentinel-community/blob/main/docs/rnd/2026-02-25-sentinel-lattice-architecture.md)
+- 🛡️ [Sentinel Lattice Specification](docs/lattice.md)
 - 🔧 [MCP Tools Reference](docs/mcp-tools.md)
 - 🏢 [Enterprise Features](https://syntrex.pro)
 - 💬 [Discord Community](https://discord.gg/syntrex)
